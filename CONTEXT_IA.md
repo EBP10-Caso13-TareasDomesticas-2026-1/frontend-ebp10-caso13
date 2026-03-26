@@ -34,7 +34,7 @@
 
 - **Componentes genéricos:** `/components/ui/NombreComponente.jsx`
 - **Componentes de layout:** `/components/layout/NombreComponente.jsx`
-- **Páginas:** `/app/nombre-ruta/page.jsx`
+- **Páginas:** `/app/(Route Group)/nombre-ruta/page.jsx`
 - **Servicios:** `/services/entidadService.js`
 - **Mocks:** `/mocks/entidad.js` — un archivo por entidad, exporta un array o un objeto
 - **Contextos:** `/context/NombreContext.jsx`
@@ -52,14 +52,15 @@
 ```cmd
 [nombre-proyecto]/
 ├── app/                        ← pages
-│   └── nombre-ruta/
-│       └── page.jsx
+│   └── (Route group)/          ← (app): rutas protegidas por autenticación, (auth): rutas de autenticación
+│       └── nombre-ruta/
+│           └── page.jsx
 ├── components/
 │   ├── ui/                     ← Button, Input, Table, Card, Badge, Modal...
 │   └── layout/                 ← Navbar, Sidebar, Footer, Layout...
 ├── context/                    ← AuthContext, etc.
 ├── hooks/                      ← useAuth, useFetch, etc.
-├── lib/                        ← formatearFecha, validarEmail, etc.
+├── lib/                        ← formatDate, validateEmail, etc.
 ├── mocks/                      ← usuarios.js, tareas.js, etc.
 ├── services/                   ← usuarioService.js, tareaService.js, etc.
 ├── public/
