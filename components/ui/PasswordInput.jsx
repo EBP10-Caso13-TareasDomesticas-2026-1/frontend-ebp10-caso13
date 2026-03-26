@@ -1,6 +1,18 @@
 import { useState } from "react";
 import Input from "@/components/ui/Input";
-
+/*
+  PROPS:
+  - label       (string)    Texto encima del input. Ej: "Contraseña"
+  - placeholder (string)    Texto gris dentro del input vacío
+  - value       (string)    Valor actual. Viene desde la pantalla padre
+  - onChange    (function)  Se ejecuta cada vez que el usuario escribe
+  - error       (string)    Mensaje de error debajo del input
+  - disabled    (boolean)   Si es true, el input no se puede editar. Default: false
+  - className   (string)    Clases CSS extra opcionales desde afuera
+ 
+  NOTA: No tiene prop "type" porque siempre es "password" o "text"
+  según el estado interno showPassword. Eso lo maneja el componente solo.
+*/
 export default function PasswordInput({
   label,
   placeholder = "",
@@ -30,7 +42,7 @@ export default function PasswordInput({
         placeholder={placeholder}
         type={showPassword ? "text" : "password"}
         value={value}
-        onChange={handleChange}
+        onChange={onChange}
         error={error}
         disabled={disabled}
       ></Input>
