@@ -21,12 +21,12 @@
 
 | Nombre | Rol | Responsabilidad |
 | -------- | ----- | ----------------- |
-| Camila | Arquitecto | Setup, services, hooks, context, integración con backend |
-| Daniel | Componentes | Todos los componentes reutilizables de /components/ |
-| [Nombre 3] | Pantallas | HU-[X] |
-| [Nombre 4] | Pantallas | HU-[X] |
-| [Nombre 5] | Pantallas | HU-[X] |
-| [Nombre 6] | Pantallas | HU-[X] |
+| Camila Torres | Arquitecto | Setup, services, hooks, context, integración con backend |
+| Daniel Sanchez | Componentes | Todos los componentes reutilizables de /components/ |
+| Salome Toro | Pantallas | HU-001, Pantalla de Bienvenida |
+| David Sanchez | Pantallas | HU-002 |
+| Alejandro Toro | Pantallas | HU-004 |
+| Daniel Salas | Pantallas | HU-005 |
 
 ---
 
@@ -128,11 +128,11 @@
 
 | ID | Descripción | Estado | Responsable |
 | ---- | ------------- | -------- | ------------- |
-| HU-001 | Como usuario, quiero registrarme en la plataforma con nombre, correo, contraseña y pin de seguridad, para crear mi cuenta y acceder a las funcionalidades del sistema. | pendiente | [nombre] |
-| HU-002 | Como usuario registrado, quiero iniciar sesión con mi correo y contraseña, para acceder a mi cuenta. | pendiente | [nombre] |
-| HU-003 | Como usuario registrado, quiero cerrar sesión en la plataforma, para proteger mi cuenta cuando termine de usarla. | pendiente | [nombre] |
-| HU-004 | Como usuario registrado, quiero crear un grupo familiar, para organizar las tareas del hogar con los integrantes de mi grupo familiar, convirtiéndome en administrador del mismo. | pendiente | [nombre] |
-| HU-005 | Como administrador del grupo familiar, quiero invitar usuarios al grupo familiar mediante un código de invitación, para integrarlos en la organización de tareas del hogar. | pendiente | [nombre] |
+| HU-001 | Como usuario, quiero registrarme en la plataforma con nombre, correo, contraseña y pin de seguridad, para crear mi cuenta y acceder a las funcionalidades del sistema. | pendiente | Salome Toro |
+| HU-002 | Como usuario registrado, quiero iniciar sesión con mi correo y contraseña, para acceder a mi cuenta. | pendiente | David Sanchez |
+| HU-003 | Como usuario registrado, quiero cerrar sesión en la plataforma, para proteger mi cuenta cuando termine de usarla. | pendiente | Daniel Sanchez |
+| HU-004 | Como usuario registrado, quiero crear un grupo familiar, para organizar las tareas del hogar con los integrantes de mi grupo familiar, convirtiéndome en administrador del mismo. | pendiente | Alejandro Toro |
+| HU-005 | Como administrador del grupo familiar, quiero invitar usuarios al grupo familiar mediante un código de invitación, para integrarlos en la organización de tareas del hogar. | pendiente | Daniel Salas |
 
 **Estados:** `pendiente` · `en progreso` · `pantalla lista` · `integrada` · `completada`
 
@@ -190,4 +190,4 @@
 
 | Fecha | Quién | Qué se actualizó |
 |-------|-------|------------------|
-| [fecha] | [nombre] | Creación inicial |
+| 25/03/26 | Camila Torres | Creación inicial |
