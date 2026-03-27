@@ -100,7 +100,11 @@
 
 | Archivo | Entidad | Estructura del objeto |
 |---------|---------|-----------------------|
-| *(vacío)* | *(vacío)* | *(vacío)* |
+| /mocks/usuarios.js | Usuario | idUsuario, nombre, correo, telefono, fotoPerfil, creadoEn |
+| /mocks/sesiones.js | Sesión / InicioSesionResponse | idUsuario, nombre, correo, token, mensaje + export mockSesionActiva |
+| /mocks/grupos.js | Grupo | id, nombre, descripcion, codigoInvitacion, creadoEn |
+| /mocks/roles.js | Rol | id, nombre |
+| /mocks/miembrosGrupo.js | MiembroGrupo | id, usuarioId, grupoId, rolId, puntaje, racha, fechaUnion |
 
 ---
 
@@ -191,3 +195,4 @@
 | Fecha | Quién | Qué se actualizó |
 |-------|-------|------------------|
 | 25/03/26 | Camila Torres | Creación inicial |
+| 27/03/26 | Camila Torres | Creación de data mocks |
