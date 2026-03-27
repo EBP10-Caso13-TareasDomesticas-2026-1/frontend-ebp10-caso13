@@ -1,43 +1,35 @@
-"use client";
-import { useState } from "react";
-import LogOut from "@/components/ui/LogOut";
+import CenteredLayout from "@/components/layout/CenteredLayout";
+import Button from "@/components/ui/Button";
+import Input from "@/components/ui/Input";
 
-export default function TestModal() {
-  const [isOpen, setIsOpen] = useState(false);
-
-  const handleConfirm = () => {
-    console.log("Confirmó cerrar sesión");
-    setIsOpen(false);
-  };
-
-  const handleCancel = () => {
-    console.log("Canceló");
-    setIsOpen(false);
-  };
-
+export default function TestCenteredPage() {
   return (
-    <div className="h-screen flex items-center justify-center bg-background">
+    <CenteredLayout
+      navbarContent={
+        <Button variant="primary">Registrarse</Button>
+      }
+    >
+      <div className="card flex flex-col gap-4 text-center">
 
-      {/* Botón para abrir el modal */}
-      <button
-        onClick={() => setIsOpen(true)}
-        className="bg-primary text-white px-4 py-2 rounded-md"
-      >
-        Abrir Modal
-      </button>
+        <h2>Crear tu grupo familiar</h2>
+        <p className="text-sm text-secondary">
+          Organiza las tareas de tu hogar con tu familia en un solo lugar.
+        </p>
 
-      {/* Tu modal */}
-      <LogOut
-        isOpen={isOpen}
-        title="¿Cerrar sesión?"
-        description="Esta acción cerrará tu sesión actual."
-        confirmText="Sí, salir"
-        cancelText="Cancelar"
-        variant="primary"
-        onConfirm={handleConfirm}
-        onCancel={handleCancel}
-      />
+        <Input
+          label="Nombre del grupo"
+          placeholder="Ej: Familia García"
+        />
 
-    </div>
+        <Button className="w-full">
+          Crear grupo
+        </Button>
+
+        <Button variant="secondary" className="w-full">
+          Cancelar
+        </Button>
+
+      </div>
+    </CenteredLayout>
   );
 }

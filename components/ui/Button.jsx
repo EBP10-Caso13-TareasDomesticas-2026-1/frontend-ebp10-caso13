@@ -8,7 +8,7 @@ props:
     onClick = función que se ejecuta al hacer click
     className = clases CSS opcionales, por defecto va vacío
 */
-
+"use client";
 export default function Button({
   children,
   variant = "primary",

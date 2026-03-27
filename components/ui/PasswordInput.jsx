@@ -1,5 +1,6 @@
 import { useState } from "react";
 import Input from "@/components/ui/Input";
+"use client";
 /*
   PROPS:
   - label       (string)    Texto encima del input. Ej: "Contraseña"

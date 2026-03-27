@@ -4,6 +4,7 @@
                      Opciones: "sm" | "md" | "lg"
   - className (string) Clases CSS extra opcionales desde afuera
 */
+"use client";
 export default function Logo({ size = "md", className = "" }) {
 
   // ─── TAMAÑOS ───────────────────────────────────────────────────

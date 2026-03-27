@@ -12,6 +12,7 @@
   - disabled    (boolean)   Si es true, el input no se puede editar. Default: false
   - className   (string)    Clases CSS extra opcionales desde afuera
 */
+"use client";
 export default function Input({
   label,
   placeholder = "",

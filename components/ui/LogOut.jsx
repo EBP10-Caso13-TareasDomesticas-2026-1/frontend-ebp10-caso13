@@ -2,7 +2,7 @@
 
 // Importamos Button para reutilizarlo en las acciones del modal
 import Button from "@/components/ui/Button";
-
+"use client";
 /*
   PROPS:
   - isOpen        (boolean)   Si es true el modal se muestra, si es false se oculta

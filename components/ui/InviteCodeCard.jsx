@@ -1,6 +1,6 @@
 import { useState } from "react";
 import Button from "@/components/ui/Button";
-
+"use client";
 /*
   PROPS:
   - code      (string)    El código de invitación a mostrar. Ej: "2026-XYZ"
