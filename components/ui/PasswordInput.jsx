@@ -1,5 +1,6 @@
 import { useState } from "react";
 import Input from "@/components/ui/Input";
+import Image from "next/image"
 "use client";
 /*
   PROPS:
@@ -33,7 +34,7 @@ export default function PasswordInput({
       className="text-secondary hover:text-foreground transition-colors"
     >
       {/* Muestra un ícono diferente según si la contraseña es visible */}
-      {showPassword ? <img src="/hide.ico" width={16} height={16} /> : <img src="/visible.ico" width={16} height={16} />}
+      {showPassword ? <Image src="/hide.ico" width={16} height={16} /> : <Image src="/visible.ico" width={16} height={16} />}
     </button>
   );
   return (

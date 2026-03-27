@@ -2,6 +2,7 @@
 
 // Importamos Button para reutilizarlo en las acciones del modal
 import Button from "@/components/ui/Button";
+import Image from "next/image"
 "use client";
 /*
   PROPS:
@@ -18,7 +19,7 @@ import Button from "@/components/ui/Button";
 */
 export default function LogOut({
   isOpen,
-  icon = <img src="/salida.png" width={32} height={32} />,
+  icon = <Image src="/salida.png" width={32} height={32} />,
   title = "¿Cerrar Sesión?",
   description ="¿Estás seguro que deseas cerrar sesión? Tendrás que volver a ingresar tus credenciales para acceder.",
   confirmText = "Si, cerrar sesión",
