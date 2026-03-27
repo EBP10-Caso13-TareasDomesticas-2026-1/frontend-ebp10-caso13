@@ -78,13 +78,21 @@
 
 | Archivo | Qué hace | Props |
 |---------|----------|-------|
-| *(vacío)* | *(vacío)* | *(vacío)* |
+| Button.jsx | Botón reutilizable con variantes (primary, secondary, danger) | `children`, `variant` (default: "primary"), `type` (default: "button"), `disabled` (default: false), `onClick`, `className` |
+| Input.jsx | Campo de entrada de texto con label, ícono opcional, validación de error e ícono | `label`, `placeholder`, `type` (default: "text"), `value`, `onChange`, `error`, `icon`, `disabled`, `className` |
+| PasswordInput.jsx | Input especializado para contraseñas con toggle para mostrar/ocultar | `label`, `placeholder`, `value`, `onChange`, `error`, `disabled`, `className` |
+| Logo.jsx | Logo de HomeSync con soporte para 3 tamaños (sm, md, lg) | `size` (default: "md"), `className` |
+| InviteCodeCard.jsx | Tarjeta que muestra código de invitación con botón para copiar al portapapeles | `code`, `className` |
+| LogOut.jsx | Modal de confirmación para cerrar sesión | `isOpen`, `icon`, `title`, `description`, `confirmText`, `cancelText`, `onConfirm`, `onCancel`, `variant` |
 
 ### /components/layout/
 
 | Archivo | Qué hace | Props |
 |---------|----------|-------|
-| *(vacío)* | *(vacío)* | *(vacío)* |
+| Navbar.jsx | Barra de navegación con logo a la izquierda y contenido dinámico a la derecha | `children` (contenido dinámico en navbar) |
+| AppLayout.jsx | Layout principal: navbar + main + footer. Main ocupa todo el ancho disponible | `children` (contenido principal), `navbarContent` (elementos de navbar) |
+| CenteredLayout.jsx | Layout para formularios: navbar + main centrado + footer | `children` (contenido centrado), `navbarContent` (elementos de navbar) |
+| Footer.jsx | Pie de página simple con copyright | - |
 
 ---
 
@@ -134,7 +142,7 @@
 | ---- | ------------- | -------- | ------------- |
 | HU-001 | Como usuario, quiero registrarme en la plataforma con nombre, correo, contraseña y pin de seguridad, para crear mi cuenta y acceder a las funcionalidades del sistema. | pendiente | Salome Toro |
 | HU-002 | Como usuario registrado, quiero iniciar sesión con mi correo y contraseña, para acceder a mi cuenta. | pendiente | David Sanchez |
-| HU-003 | Como usuario registrado, quiero cerrar sesión en la plataforma, para proteger mi cuenta cuando termine de usarla. | pendiente | Daniel Sanchez |
+| HU-003 | Como usuario registrado, quiero cerrar sesión en la plataforma, para proteger mi cuenta cuando termine de usarla. | pantalla lista | Daniel Sanchez |
 | HU-004 | Como usuario registrado, quiero crear un grupo familiar, para organizar las tareas del hogar con los integrantes de mi grupo familiar, convirtiéndome en administrador del mismo. | pendiente | Alejandro Toro |
 | HU-005 | Como administrador del grupo familiar, quiero invitar usuarios al grupo familiar mediante un código de invitación, para integrarlos en la organización de tareas del hogar. | pendiente | Daniel Salas |
 
@@ -195,4 +203,5 @@
 | Fecha | Quién | Qué se actualizó |
 |-------|-------|------------------|
 | 25/03/26 | Camila Torres | Creación inicial |
-| 27/03/26 | Camila Torres | Creación de data mocks |
+| 27/03/26 | Camila Torres | Creación de data mocks, authService, groupService|
+| 27/03/26 | Daniel Sánchez | Especificación de componentes UI y Layout |
