@@ -1,21 +1,42 @@
-// Ubicación: /app/test/page.jsx
-// Para verla: http://localhost:3000/test
-
 "use client";
+import { useState } from "react";
+import LogOut from "@/components/ui/LogOut";
 
-import InviteCodeCard from "@/components/ui/InviteCodeCard";
+export default function TestModal() {
+  const [isOpen, setIsOpen] = useState(false);
 
-export default function TestPage() {
+  const handleConfirm = () => {
+    console.log("Confirmó cerrar sesión");
+    setIsOpen(false);
+  };
+
+  const handleCancel = () => {
+    console.log("Canceló");
+    setIsOpen(false);
+  };
+
   return (
-    <div className="p-8 flex flex-col gap-6 max-w-sm">
+    <div className="h-screen flex items-center justify-center bg-background">
 
-      <h1>Testing: InviteCodeCard</h1>
+      {/* Botón para abrir el modal */}
+      <button
+        onClick={() => setIsOpen(true)}
+        className="bg-primary text-white px-4 py-2 rounded-md"
+      >
+        Abrir Modal
+      </button>
 
-      {/* Código de prueba */}
-      <InviteCodeCard code="2026-XYZ" />
-
-      {/* Otro código para verificar que la prop funciona */}
-      <InviteCodeCard code="ABCD-123" />
+      {/* Tu modal */}
+      <LogOut
+        isOpen={isOpen}
+        title="¿Cerrar sesión?"
+        description="Esta acción cerrará tu sesión actual."
+        confirmText="Sí, salir"
+        cancelText="Cancelar"
+        variant="primary"
+        onConfirm={handleConfirm}
+        onCancel={handleCancel}
+      />
 
     </div>
   );
