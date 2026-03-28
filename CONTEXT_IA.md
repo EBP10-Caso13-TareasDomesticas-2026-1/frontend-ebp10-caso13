@@ -10,7 +10,7 @@
 
 - **Nombre del sistema:** HomeSync
 - **Descripción:** Sistema de Gestión de Tareas Domésticas
-- **Backend:** Django en `[URL, por definir]`
+- **Backend:** Spring Boot (Java) en `http://localhost:8080` (desarrollo local)
 - **Framework frontend:** Next.js 14 con App Router
 - **Estilos:** Tailwind CSS con colores personalizados
 - **Lenguaje:** JavaScript/JSX (sin TypeScript)
@@ -77,14 +77,22 @@
 ### /components/ui/
 
 | Archivo | Qué hace | Props |
-|---------|----------|-------|
-| *(vacío)* | *(vacío)* | *(vacío)* |
+| --------- | ---------- | ------- |
+| `Button.jsx` | Botón reutilizable con variantes (primary, secondary, danger) | `children`, `variant` (default: "primary"), `type` (default: "button"), `disabled` (default: false), `onClick`, `className` |
+| `Input.jsx` | Campo de entrada de texto con label, ícono opcional, validación de error e ícono | `label`, `placeholder`, `type` (default: "text"), `value`, `onChange`, `error`, `icon`, `disabled`, `className` |
+| `PasswordInput.jsx` | Input especializado para contraseñas con toggle para mostrar/ocultar | `label`, `placeholder`, `value`, `onChange`, `error`, `disabled`, `className` |
+| `Logo.jsx` | Logo de HomeSync con soporte para 3 tamaños (sm, md, lg) | `size` (default: "md"), `className` |
+| `InviteCodeCard.jsx` | Tarjeta que muestra código de invitación con botón para copiar al portapapeles | `code`, `className` |
+| `LogOut.jsx` | Modal de confirmación para cerrar sesión | `isOpen`, `icon`, `t itle`, `description`, `confirmText`, `cancelText`, `onConfirm`, `onCancel`, `variant` |
 
 ### /components/layout/
 
 | Archivo | Qué hace | Props |
-|---------|----------|-------|
-| *(vacío)* | *(vacío)* | *(vacío)* |
+| --------- | ---------- | ------- |
+| `Navbar.jsx` | Barra de navegación con logo a la izquierda y contenido dinámico a la derecha | `children` (contenido dinámico en navbar) |
+| `AppLayout.jsx` | Layout principal: navbar + main + footer. Main ocupa todo el ancho disponible | `children` (contenido principal), `navbarContent` (elementos de navbar) |
+| `CenteredLayout.jsx` | Layout para formularios: navbar + main centrado + footer | `children` (contenido centrado), `navbarContent` (elementos de navbar) |
+| `Footer.jsx` | Pie de página simple con copyright | - |
 
 ---
 
@@ -98,17 +106,31 @@
 
 ## MOCKS DISPONIBLES
 
+### /mocks
+
 | Archivo | Entidad | Estructura del objeto |
-|---------|---------|-----------------------|
-| *(vacío)* | *(vacío)* | *(vacío)* |
+| --------- | --------- | ----------------------- |
+| `usuarios.js` | Usuario | idUsuario, nombre, correo, telefono, fotoPerfil, creadoEn |
+| `sesiones.js` | Sesión / InicioSesionResponse | idUsuario, nombre, correo, token, mensaje + export mockSesionActiva |
+| `grupos.js` | Grupo | id, nombre, descripcion, codigoInvitacion, creadoEn |
+| `roles.js` | Rol | id, nombre |
+| `miembrosGrupo.js` | MiembroGrupo | id, usuarioId, grupoId, rolId, puntaje, racha, fechaUnion |
 
 ---
 
 ## SERVICES DISPONIBLES
 
+### /services
+
 | Archivo | Función | Método | Endpoint |
-|---------|---------|--------|----------|
-| *(vacío)* | *(vacío)* | *(vacío)* |
+| --------- | --------- | -------- | ---------- |
+| `authService.js` | `registrarUsuario(data)` | POST | `/usuarios/registro` |
+| `authService.js` | `iniciarSesion(data)` | POST | `/usuarios/login` |
+| `authService.js` | `cerrarSesion(token)` | POST | `/usuarios/logout` |
+| `groupService.js` | `obtenerGrupoDeUsuario(usuarioId, token)` | GET | `/miembros-grupo/usuario/{id}` |
+| `groupService.js` | `crearGrupo(data, token, usuarioId)` | POST | `/grupos` |
+| `groupService.js` | `unirseConCodigo(codigoInvitacion, token)` | POST | `/grupos/unirse` |
+| `groupService.js` | `obtenerGrupo(grupoId, token)` | GET | `/grupos/{id}` |
 
 ---
 
@@ -130,7 +152,7 @@
 | ---- | ------------- | -------- | ------------- |
 | HU-001 | Como usuario, quiero registrarme en la plataforma con nombre, correo, contraseña y pin de seguridad, para crear mi cuenta y acceder a las funcionalidades del sistema. | pendiente | Salome Toro |
 | HU-002 | Como usuario registrado, quiero iniciar sesión con mi correo y contraseña, para acceder a mi cuenta. | pendiente | David Sanchez |
-| HU-003 | Como usuario registrado, quiero cerrar sesión en la plataforma, para proteger mi cuenta cuando termine de usarla. | pendiente | Daniel Sanchez |
+| HU-003 | Como usuario registrado, quiero cerrar sesión en la plataforma, para proteger mi cuenta cuando termine de usarla. | pantalla lista | Daniel Sanchez |
 | HU-004 | Como usuario registrado, quiero crear un grupo familiar, para organizar las tareas del hogar con los integrantes de mi grupo familiar, convirtiéndome en administrador del mismo. | pendiente | Alejandro Toro |
 | HU-005 | Como administrador del grupo familiar, quiero invitar usuarios al grupo familiar mediante un código de invitación, para integrarlos en la organización de tareas del hogar. | pendiente | Daniel Salas |
 
@@ -182,12 +204,20 @@
 
 ## NOTAS Y DECISIONES TÉCNICAS
 
-- [ ] *(vacío)*
+### CONFIGURACIÓN
+
+| Archivo | Propósito |
+|---------|-----------|
+| `lib/api.js` | Config central de API. Cambiar `USE_MOCK = false` para conectar al backend real. Requiere `NEXT_PUBLIC_API_URL` en `.env.local` |
+
+- Por ahora se usa mock data para simular llamadas a la api y se definio una estrutura base para llamada a la api con endpoints propuestos
 
 ---
 
 ## HISTORIAL DE CAMBIOS
 
 | Fecha | Quién | Qué se actualizó |
-|-------|-------|------------------|
+| ------- | ------- | ------------------ |
 | 25/03/26 | Camila Torres | Creación inicial |
+| 27/03/26 | Camila Torres | Creación de data mocks, authService, groupService y lib/api.js |
+| 27/03/26 | Daniel Sánchez | Especificación de componentes UI y Layout |

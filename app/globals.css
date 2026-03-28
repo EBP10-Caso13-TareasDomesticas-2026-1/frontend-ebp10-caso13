@@ -1,3 +1,181 @@
+/* =========================================================
+   globals.css — HomeSync
+   Ubicación: /app/globals.css
+   =========================================================
+   REGLA DEL PROYECTO: Este es el ÚNICO archivo .css permitido.
+   Todo lo demás se hace con clases de Tailwind en el JSX.
+   ========================================================= */
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+/* ─────────────────────────────────────────────────────────── */
+
+
+/* ─── FUENTE PRINCIPAL ────────────────────────────────────────
+   Inter se carga desde Google Fonts.
+   Se aplica automáticamente al body más abajo.
+   ──────────────────────────────────────────────────────────── */
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
+
+
+/* ─── BASE ────────────────────────────────────────────────────
+   Afecta elementos HTML nativos: body, h1, input, a...
+   ──────────────────────────────────────────────────────────── */
+@layer base {
+
+  /* Fondo y texto por defecto en toda la app */
+  body {
+    @apply bg-background text-foreground font-sans;
+    -webkit-font-smoothing: antialiased; /* Texto más nítido en Mac/iOS */
+  }
+
+  /* Encabezados */
+  h1 { @apply text-3xl font-bold text-foreground; }
+  h2 { @apply text-2xl font-semibold text-foreground; }
+  h3 { @apply text-xl font-semibold text-foreground; }
+  h4 { @apply text-lg font-medium text-foreground; }
+
+  /* Links */
+  a {
+    @apply text-primary no-underline;
+    transition: color 0.15s ease;
+  }
+  a:hover { @apply text-primary-hover; }
+
+  /* Inputs y selects: elimina el outline nativo del navegador */
+  input, textarea, select {
+    @apply outline-none;
+  }
+
+  /* Botones: elimina cursor por defecto */
+  button { @apply cursor-pointer; }
+}
+
+
+/* ─── COMPONENTES ─────────────────────────────────────────────
+   Clases reutilizables que combinan varias utilidades de Tailwind.
+   Se usan así en JSX:  className="btn-primary"
+   ──────────────────────────────────────────────────────────── */
+@layer components {
+
+  /* ── BOTONES ── */
+
+  /* Acción principal: Registrarse, Guardar, Continuar... */
+  .btn-primary {
+    @apply bg-primary text-white font-semibold px-4 py-2 rounded-md
+           hover:bg-primary-hover
+           disabled:opacity-50 disabled:cursor-not-allowed
+           transition-colors duration-150;
+  }
+
+  /* Acción secundaria: Cancelar, Volver... */
+  .btn-secondary {
+    @apply bg-white text-secondary font-medium px-4 py-2 rounded-md
+           border border-border
+           hover:bg-background
+           disabled:opacity-50 disabled:cursor-not-allowed
+           transition-colors duration-150;
+  }
+
+  /* Acción peligrosa: Eliminar, Salir del grupo... */
+  .btn-danger {
+    @apply bg-error text-white font-semibold px-4 py-2 rounded-md
+           hover:bg-red-700
+           disabled:opacity-50 disabled:cursor-not-allowed
+           transition-colors duration-150;
+  }
+
+
+  /* ── FORMULARIOS ── */
+
+  /* Campo de texto estándar */
+  .input-base {
+    @apply w-full px-3 py-2 text-sm text-foreground
+           bg-white border border-border rounded-md
+           placeholder:text-secondary-light
+           focus:border-primary focus:ring-2 focus:ring-primary/20
+           transition-colors duration-150;
+  }
+
+  /* Campo de texto con error de validación */
+  .input-error {
+    @apply w-full px-3 py-2 text-sm text-foreground
+           bg-white border border-error rounded-md
+           placeholder:text-secondary-light
+           focus:border-error focus:ring-2 focus:ring-error/20
+           transition-colors duration-150;
+  }
+
+  /* Etiqueta encima de un campo */
+  .label-base {
+    @apply block text-sm font-medium text-foreground mb-1;
+  }
+
+  /* Mensaje de error debajo de un campo */
+  .error-message {
+    @apply text-xs text-error mt-1;
+  }
+
+
+  /* ── CARDS ── */
+
+  /* Tarjeta con sombra — contenido principal */
+  .card {
+    @apply bg-white rounded-lg shadow-md p-6;
+  }
+
+  /* Tarjeta con solo borde — contenido secundario */
+  .card-outlined {
+    @apply bg-white rounded-lg border border-border p-6;
+  }
+
+
+  /* ── BADGES ── */
+  /* Uso: <span className="badge-primary">Admin</span>  */
+
+  .badge-primary {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full
+           text-xs font-medium bg-primary-light text-primary;
+  }
+
+  .badge-success {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full
+           text-xs font-medium bg-success-light text-success;
+  }
+
+  .badge-error {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full
+           text-xs font-medium bg-error-light text-error;
+  }
+
+  .badge-secondary {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full
+           text-xs font-medium bg-background text-secondary;
+  }
+
+
+  /* ── LAYOUT ── */
+
+  /* Contenedor general de página */
+  .page-container {
+    @apply max-w-5xl mx-auto px-4 py-8;
+  }
+
+  /* Contenedor angosto para formularios (login, registro) */
+  .form-container {
+    @apply max-w-md mx-auto;
+  }
+}
+
+
+/* ─── UTILIDADES EXTRA ────────────────────────────────────────
+   Clases atómicas que Tailwind no incluye por defecto.
+   ──────────────────────────────────────────────────────────── */
+@layer utilities {
+
+  /* Truncar texto en una sola línea con "..." */
+  .truncate-1 {
+    @apply overflow-hidden whitespace-nowrap text-ellipsis;
+  }
+}
