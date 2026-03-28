@@ -99,8 +99,13 @@
 ## HOOKS Y CONTEXTOS DISPONIBLES
 
 | Archivo | Qué hace | Cómo se usa |
-|---------|----------|-------------|
-| *(vacío)* | *(vacío)* | *(vacío)* |
+| --------- | ---------- | ------------- |
+| ``context/AuthContext.jsx`` | Sesión del usuario (token, datos, login/logout/register) | Envuelve la app en ``<AuthProvider>`` |
+| ``context/GroupContext.jsx`` | Grupo activo, miembros y rol del usuario | Envuelve la app en ``<GroupProvider>`` (dentro de *AuthProvider*) |
+| ``hooks/useAuth.js`` | Consume AuthContext | ```const { usuario, login } = useAuth()``` |
+| ``hooks/useGroup.js`` | Consume GroupContext | ``const { grupo, rolActual, crearGrupo } = useGroup()`` |
+| ``hooks/useLocalStorage.js`` | Persistencia reactiva en localStorage | Usado internamente por AuthContext |
+| ``hooks/useFetch.js`` | Estado loading/error/data para llamadas a servicios puntuales | ``const { data, loading, execute } = useFetch(servicio)`` |
 
 ---
 
@@ -204,13 +209,13 @@
 
 ## NOTAS Y DECISIONES TÉCNICAS
 
+- Por ahora se usa mock data para simular llamadas a la api y se definio una estrutura base para llamada a la api con endpoints propuestos
+
 ### CONFIGURACIÓN
 
 | Archivo | Propósito |
 |---------|-----------|
 | `lib/api.js` | Config central de API. Cambiar `USE_MOCK = false` para conectar al backend real. Requiere `NEXT_PUBLIC_API_URL` en `.env.local` |
-
-- Por ahora se usa mock data para simular llamadas a la api y se definio una estrutura base para llamada a la api con endpoints propuestos
 
 ---
 
@@ -221,3 +226,4 @@
 | 25/03/26 | Camila Torres | Creación inicial |
 | 27/03/26 | Camila Torres | Creación de data mocks, authService, groupService y lib/api.js |
 | 27/03/26 | Daniel Sánchez | Especificación de componentes UI y Layout |
+| 27/03/26 | Camila Torres | Creación context y hooks necesarios |
