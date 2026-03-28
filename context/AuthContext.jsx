@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useCallback } from "react";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
-import { iniciarSesion, registrarUsuario, cerrarSesion } from "@/services/authService";
+import authService from "@/services/authService";
 
 /**
  * AuthContext
@@ -38,7 +38,7 @@ export function AuthProvider({ children }) {
    */
   const register = useCallback(async (data) => {
     try {
-      await registrarUsuario(data);
+      await authService.registrarUsuario(data);
       return { ok: true };
     } catch (error) {
       return { ok: false, error: error.message ?? "Error al registrarse" };
@@ -52,7 +52,7 @@ export function AuthProvider({ children }) {
    */
   const login = useCallback(async (data) => {
     try {
-      const respuesta = await iniciarSesion(data);
+      const respuesta = await authService.iniciarSesion(data);
       // respuesta esperada: { idUsuario, nombre, correo, token, mensaje }
       setSesion({
         token: respuesta.token,
@@ -73,7 +73,7 @@ export function AuthProvider({ children }) {
   const logout = useCallback(async () => {
     try {
       if (token) {
-        await cerrarSesion(token);
+        await authService.cerrarSesion(token);
       }
     } catch (error) {
       // Aunque falle el backend, limpiamos la sesión local igual

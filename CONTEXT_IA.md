@@ -209,13 +209,13 @@
 
 ## NOTAS Y DECISIONES TÉCNICAS
 
+- Por ahora se usa mock data para simular llamadas a la api y se definio una estrutura base para llamada a la api con endpoints propuestos
+
 ### CONFIGURACIÓN
 
 | Archivo | Propósito |
 |---------|-----------|
 | `lib/api.js` | Config central de API. Cambiar `USE_MOCK = false` para conectar al backend real. Requiere `NEXT_PUBLIC_API_URL` en `.env.local` |
-
-- Por ahora se usa mock data para simular llamadas a la api y se definio una estrutura base para llamada a la api con endpoints propuestos
 
 ---
 
