@@ -1,35 +1,37 @@
-import CenteredLayout from "@/components/layout/CenteredLayout";
+// Ubicación: /app/test/page.jsx
+// Para verla: http://localhost:3000/test
+
+"use client"; // necesario porque usamos useState
+
+import { useState } from "react";
+import LogOut from "@/components/ui/LogOut";
 import Button from "@/components/ui/Button";
-import Input from "@/components/ui/Input";
 
-export default function TestCenteredPage() {
+export default function TestPage() {
+
+  // Controla si el modal está abierto o cerrado
+  const [showModal, setShowModal] = useState(false);
+
   return (
-    <CenteredLayout
-      navbarContent={
-        <Button variant="primary">Registrarse</Button>
-      }
-    >
-      <div className="card flex flex-col gap-4 text-center">
+    <div className="p-8 flex flex-col gap-4 max-w-sm">
 
-        <h2>Crear tu grupo familiar</h2>
-        <p className="text-sm text-secondary">
-          Organiza las tareas de tu hogar con tu familia en un solo lugar.
-        </p>
+      <h1>Testing: Modal</h1>
 
-        <Input
-          label="Nombre del grupo"
-          placeholder="Ej: Familia García"
-        />
+      {/* Botón para abrir el modal */}
+      <Button variant="danger" onClick={() => setShowModal(true)}>
+        Cerrar sesión
+      </Button>
 
-        <Button className="w-full">
-          Crear grupo
-        </Button>
+      {/* El modal — solo se muestra cuando showModal es true */}
+      <LogOut
+        isOpen={showModal}
+        onConfirm={() => {
+          alert("✅ Confirmado — aquí iría el logout real");
+          setShowModal(false);
+        }}
+        onCancel={() => setShowModal(false)}
+      />
 
-        <Button variant="secondary" className="w-full">
-          Cancelar
-        </Button>
-
-      </div>
-    </CenteredLayout>
+    </div>
   );
 }
