@@ -1,9 +1,9 @@
-// Ubicación: /components/ui/Modal.jsx
+// Ubicación: /components/ui/LogOut.jsx
 
 // Importamos Button para reutilizarlo en las acciones del modal
 import Button from "@/components/ui/Button";
 import Image from "next/image"
-"use client";
+// "use client";
 /*
   PROPS:
   - isOpen        (boolean)   Si es true el modal se muestra, si es false se oculta
