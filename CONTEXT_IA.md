@@ -228,3 +228,4 @@
 | 27/03/26 | Daniel Sánchez | Especificación de componentes UI y Layout |
 | 27/03/26 | Camila Torres | Creación context y hooks necesarios |
 | 28/03/26 | Salome Toro | Creación pantalla HU-001 |
+| 29/03/26 | Salome Toro | Proceso creacion pantalla HU-001 |
