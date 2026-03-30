@@ -2,12 +2,8 @@
 
 import { createContext, useContext, useState, useCallback } from "react";
 import { useAuth } from "@/hooks/useAuth";
-import {
-  obtenerGrupoDeUsuario,
-  crearGrupo,
-  unirseConCodigo,
-  obtenerGrupo,
-} from "@/services/groupService";
+import groupService from "@/services/groupService";
+const { obtenerGrupoDeUsuario, crearGrupo, unirseConCodigo, obtenerGrupo } = groupService;
 
 /**
  * GroupContext
