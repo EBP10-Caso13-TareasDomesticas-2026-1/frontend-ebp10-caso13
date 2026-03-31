@@ -35,4 +35,5 @@ export const usuarios = [
     fotoPerfil: null, // caso real: usuario sin foto ni teléfono
     creadoEn: "2026-03-04T14:00:00.000Z",
   },
+  
 ];
