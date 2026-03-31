@@ -227,3 +227,5 @@
 | 27/03/26 | Camila Torres | Creación de data mocks, authService, groupService y lib/api.js |
 | 27/03/26 | Daniel Sánchez | Especificación de componentes UI y Layout |
 | 27/03/26 | Camila Torres | Creación context y hooks necesarios |
+| 31/03/26 | Alejandro Toro | Creación hu 004|
+| 31/03/26 | Alejandro Toro | Cambios miembrosGrupo.js|
