@@ -2,6 +2,7 @@
 import { useState } from "react";
 import Input from "@/components/ui/Input";
 import Image from "next/image"
+import { Eye, EyeOff } from "lucide-react";
 /*
   PROPS:
   - label       (string)    Texto encima del input. Ej: "Contraseña"
@@ -34,7 +35,7 @@ export default function PasswordInput({
       className="text-secondary hover:text-foreground transition-colors"
     >
       {/* Muestra un ícono diferente según si la contraseña es visible */}
-      {showPassword ? <Image src="/hide.ico" width={16} height={16} /> : <Image src="/visible.ico" width={16} height={16} />}
+      {showPassword ? <EyeOff size={16} /> : <Eye size={16}/>}
     </button>
   );
   return (
