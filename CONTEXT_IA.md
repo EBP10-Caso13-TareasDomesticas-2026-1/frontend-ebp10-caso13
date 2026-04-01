@@ -155,7 +155,7 @@
 
 | ID | Descripción | Estado | Responsable |
 | ---- | ------------- | -------- | ------------- |
-| HU-001 | Como usuario, quiero registrarme en la plataforma con nombre, correo, contraseña y pin de seguridad, para crear mi cuenta y acceder a las funcionalidades del sistema. | pendiente | Salome Toro |
+| HU-001 | Como usuario, quiero registrarme en la plataforma con nombre, correo, contraseña y pin de seguridad, para crear mi cuenta y acceder a las funcionalidades del sistema. | pantalla lista | Salome Toro |
 | HU-002 | Como usuario registrado, quiero iniciar sesión con mi correo y contraseña, para acceder a mi cuenta. | pendiente | David Sanchez |
 | HU-003 | Como usuario registrado, quiero cerrar sesión en la plataforma, para proteger mi cuenta cuando termine de usarla. | pantalla lista | Daniel Sanchez |
 | HU-004 | Como usuario registrado, quiero crear un grupo familiar, para organizar las tareas del hogar con los integrantes de mi grupo familiar, convirtiéndome en administrador del mismo. | pendiente | Alejandro Toro |
@@ -227,3 +227,6 @@
 | 27/03/26 | Camila Torres | Creación de data mocks, authService, groupService y lib/api.js |
 | 27/03/26 | Daniel Sánchez | Especificación de componentes UI y Layout |
 | 27/03/26 | Camila Torres | Creación context y hooks necesarios |
+| 28/03/26 | Salome Toro | Creación pantalla HU-001 |
+| 29/03/26 | Salome Toro | Proceso creacion pantalla bienvenida |
+| 30/03/26 | Salome Toro | Cambio en el GroupContext |
