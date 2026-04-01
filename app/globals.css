@@ -167,9 +167,9 @@
     @apply max-w-5xl mx-auto px-4 py-8;
   }
 
-  /* Contenedor angosto para formularios (login, registro) */
+  /* Contenedor para formularios (login, registro) */
   .form-container {
-    @apply max-w-md mx-auto;
+    @apply w-full max-w-md mx-auto;
   }
 }
 
