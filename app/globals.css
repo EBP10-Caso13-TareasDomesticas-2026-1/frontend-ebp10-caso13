@@ -50,6 +50,11 @@
 
   /* Botones: elimina cursor por defecto */
   button { @apply cursor-pointer; }
+
+  input::-ms-reveal,
+  input::-webkit-credentials-auto-fill-button {
+    display: none;
+  }
 }
 
 
