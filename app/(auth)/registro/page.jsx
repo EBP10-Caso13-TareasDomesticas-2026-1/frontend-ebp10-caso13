@@ -161,7 +161,7 @@ export default function RegistroPage() {
 
   const navbarContent = (
     <a
-      href="/(auth)/login"
+      href="/login"
       className="text-sm font-medium text-primary hover:underline"
     >
       Iniciar sesión
@@ -175,7 +175,7 @@ export default function RegistroPage() {
       <div className="flex flex-col items-center gap-6 w-full">
 
         {/* ── Ícono y encabezado ── */}
-        <div className="flex flex-col items-center gap-2">
+        <div className="flex flex-col items-center gap-2 mt-4">
           <div className="bg-primary/10 p-3 rounded-full">
             <UserCheck size={28} className="text-primary" />
           </div>
@@ -272,7 +272,7 @@ export default function RegistroPage() {
         <p className="text-sm text-secondary">
           ¿Ya tienes cuenta?{" "}
           <a
-            href="/(auth)/login"
+            href="/login"
             className="text-primary font-medium hover:underline"
           >
             Inicia sesión
