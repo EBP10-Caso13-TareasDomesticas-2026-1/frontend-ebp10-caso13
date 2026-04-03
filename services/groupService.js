@@ -30,36 +30,69 @@ const resolverGrupo = (grupo) => ({
 // La api real lo ignora porque el backend identifica al usuario por el token JWT.
 // Las pantallas siempre llaman con la misma firma — nunca cambian.
 
-// Usuario simulado activo en modo mock (refleja lo que vendría del AuthContext)
-const MOCK_USUARIO_ACTIVO_ID = 4; // David Sanchez — no pertenece a ningún grupo aún
-
 const mock = {
   // HU-002 escenario 6 / HU-004 escenario 4
   obtenerGrupoDeUsuario: async (usuarioId, _token) => {
     await delay(400);
     const membresia = miembrosGrupo.find((m) => m.usuarioId === usuarioId);
     if (!membresia) return null;
-    const grupo = grupos.find((g) => g.id === membresia.grupoId);
-    return grupo ? { ...resolverGrupo(grupo), rolId: membresia.rolId } : null;
+    return { ...membresia };
   },
 
   // HU-004
-  crearGrupo: async (data, _token) => {
+  crearGrupo: async (data, _token, usuarioId) => {
     await delay(600);
-    const yaTieneGrupo = miembrosGrupo.some((m) => m.usuarioId === MOCK_USUARIO_ACTIVO_ID);
+    if (!usuarioId) throw new Error("Usuario no identificado.");
+
+    const yaTieneGrupo = miembrosGrupo.some((m) => m.usuarioId === usuarioId);
     if (yaTieneGrupo) throw new Error("Ya perteneces a un grupo familiar. Debes abandonar o eliminar tu grupo actual para poder crear uno nuevo.");
+
     const { nombre, descripcion = "" } = data;
-    return { id: grupos.length + 1, nombre, descripcion, codigoInvitacion: generarCodigo(), creadoEn: new Date().toISOString() };
+    const nuevoGrupo = {
+      id: grupos.length + 1,
+      nombre,
+      descripcion,
+      codigoInvitacion: generarCodigo(),
+      creadoEn: new Date().toISOString(),
+    };
+    grupos.push(nuevoGrupo);
+
+    miembrosGrupo.push({
+      id: miembrosGrupo.length + 1,
+      usuarioId,
+      grupoId: nuevoGrupo.id,
+      rolId: 1,
+      puntaje: 0,
+      racha: 0,
+      fechaUnion: new Date().toISOString(),
+    });
+
+    return nuevoGrupo;
   },
 
   // HU-005
-  unirseConCodigo: async (codigoInvitacion, _token) => {
+  unirseConCodigo: async (codigoInvitacion, _token, usuarioId) => {
     await delay(600);
-    const yaTieneGrupo = miembrosGrupo.some((m) => m.usuarioId === MOCK_USUARIO_ACTIVO_ID);
+    if (!usuarioId) throw new Error("Usuario no identificado.");
+
+    const yaTieneGrupo = miembrosGrupo.some((m) => m.usuarioId === usuarioId);
     if (yaTieneGrupo) throw new Error("Ya formas parte de un hogar. Debes abandonar tu grupo actual en tu perfil para poder unirte a uno nuevo.");
+
     const grupo = grupos.find((g) => g.codigoInvitacion === codigoInvitacion);
     if (!grupo) throw new Error("Código inválido o expirado. Por favor, verifica con el administrador de tu grupo.");
-    return { mensaje: `¡Bienvenido al grupo ${grupo.nombre}!`, grupo: { id: grupo.id, nombre: grupo.nombre } };
+
+    const nuevaMembresia = {
+      id: miembrosGrupo.length + 1,
+      usuarioId,
+      grupoId: grupo.id,
+      rolId: 2,
+      puntaje: 0,
+      racha: 0,
+      fechaUnion: new Date().toISOString(),
+    };
+    miembrosGrupo.push(nuevaMembresia);
+
+    return nuevaMembresia;
   },
 
   // HU-004 / HU-005

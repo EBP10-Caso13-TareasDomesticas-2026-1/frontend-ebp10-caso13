@@ -200,15 +200,19 @@ export default function LoginPage() {
 
       // Escenario 1 vs 6: verificar membresía en grupo.
       // cargarGrupo() lee usuario y token del AuthContext (ya actualizados).
-      // { ok: false } aquí NO es error — es Escenario 6 válido (sin grupo).
       const resultado = await cargarGrupo();
 
       if (resultado.ok) {
         // Escenario 1: tiene grupo → tablero principal
         router.push("/dashboard");
-      } else {
+      } else if (resultado.noGrupo) {
         // Escenario 6: sin grupo → pantalla de bienvenida
         router.push("/bienvenida");
+      } else {
+        // Error inesperado al consultar grupo
+        setErrorGlobal(resultado.error || "No se pudo cargar la información del grupo.");
+        setLoading(false);
+        return;
       }
     } catch (error) {
       // Solo llega aquí si login() lanzó excepción (credenciales incorrectas)

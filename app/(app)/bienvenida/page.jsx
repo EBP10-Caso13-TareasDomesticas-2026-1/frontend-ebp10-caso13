@@ -26,6 +26,7 @@ export default function BienvenidaPage() {
     <>
       <Button
         variant="secondary"
+        disabled
         onClick={() => router.push("/perfil")} // TODO: actualizar cuando exista pantalla de perfil
       >
         <span className="flex items-center gap-2">
@@ -95,7 +96,7 @@ export default function BienvenidaPage() {
             <Button
               variant="primary"
               className="w-full"
-              onClick={() => router.push("/grupo/crear-grupo")}
+              onClick={() => router.push("/grupo/crear")}
             >
               ⊕ Crear grupo
             </Button>
@@ -104,6 +105,7 @@ export default function BienvenidaPage() {
             <Button
               variant="secondary"
               className="w-full"
+              disabled
               onClick={() => router.push("/unirse-grupo")}
             >
               Unirse a un Grupo

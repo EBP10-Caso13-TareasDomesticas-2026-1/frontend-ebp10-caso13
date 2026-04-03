@@ -10,6 +10,7 @@ import { useAuth } from "@/hooks/useAuth";
 import groupService from "@/services/groupService";
 
 const MAX_NAME_LENGTH = 50;
+const LogOut = dynamic(() => import("@/components/ui/LogOut"), { ssr: false });
 
 export default function CrearGrupoPage() {
   const router = useRouter();

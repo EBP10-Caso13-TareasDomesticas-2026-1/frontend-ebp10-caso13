@@ -63,14 +63,21 @@ export function GroupProvider({ children }) {
     _resetError();
     setLoading(true);
     try {
-      // Devuelve el MiembroGrupo con info del grupo y rol
+      // Devuelve el MiembroGrupo si el usuario pertenece a un grupo
       const miembroData = await obtenerGrupoDeUsuario(usuario.idUsuario, token);
+
+      if (!miembroData) {
+        // Escenario 6: sin grupo asignado
+        setGrupo(null);
+        setMiembros([]);
+        setRolActual(null);
+        return { ok: false, noGrupo: true };
+      }
 
       // Con el grupoId obtenemos el detalle completo del grupo
       const grupoData = await obtenerGrupo(miembroData.grupoId, token);
 
       setGrupo(grupoData);
-      // obtenerGrupoDeUsuario devuelve un solo miembro; los demás se cargan si se necesitan
       setMiembros([miembroData]);
       setRolActual(_resolverRol([miembroData]));
       return { ok: true };
@@ -121,7 +128,7 @@ export function GroupProvider({ children }) {
       _resetError();
       setLoading(true);
       try {
-        const miembroData = await unirseConCodigo(codigoInvitacion, token);
+      const miembroData = await unirseConCodigo(codigoInvitacion, token, usuario.idUsuario);
         const grupoData = await obtenerGrupo(miembroData.grupoId, token);
         setGrupo(grupoData);
         setMiembros([miembroData]);
