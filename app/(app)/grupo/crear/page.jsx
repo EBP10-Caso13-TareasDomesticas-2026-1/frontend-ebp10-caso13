@@ -15,7 +15,7 @@ const LogOut = dynamic(() => import("@/components/ui/LogOut"), { ssr: false });
 export default function CrearGrupoPage() {
   const router = useRouter();
   const { isAuthenticated, usuario, token, logout } = useAuth();
-
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [nombre, setNombre] = useState("");
   const [error, setError] = useState("");
   const [info, setInfo] = useState("");
@@ -27,6 +27,11 @@ export default function CrearGrupoPage() {
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  const handleLogout = async () => {
+    await logout();
+    router.push("/login");
+  };
 
   useEffect(() => {
     let active = true;
@@ -42,20 +47,24 @@ export default function CrearGrupoPage() {
       setError("");
 
       try {
-        const miembroData = await groupService.obtenerGrupoDeUsuario(usuario.idUsuario, token);
+        const miembroData = await groupService.obtenerGrupoDeUsuario(
+          usuario.idUsuario,
+          token,
+        );
         if (!active) return;
 
         if (miembroData) {
           setHasGroup(true);
           setInfo(
-            "Ya perteneces a un grupo familiar. Debes abandonar tu grupo actual para poder crear uno nuevo."
+            "Ya perteneces a un grupo familiar. Debes abandonar tu grupo actual para poder crear uno nuevo.",
           );
         } else {
           setHasGroup(false);
         }
       } catch (err) {
         if (!active) return;
-        const mensaje = err?.message || "No se pudo verificar tu grupo familiar.";
+        const mensaje =
+          err?.message || "No se pudo verificar tu grupo familiar.";
         setError(mensaje);
       } finally {
         if (active) setMembershipLoading(false);
@@ -79,13 +88,7 @@ export default function CrearGrupoPage() {
         Perfil
       </Button>
       {isAuthenticated ? (
-        <Button
-          variant="primary"
-          onClick={async () => {
-            await logout();
-            router.push("/login");
-          }}
-        >
+        <Button variant="primary" onClick={() => setShowLogoutModal(true)}>
           Cerrar sesión
         </Button>
       ) : (
@@ -124,7 +127,7 @@ export default function CrearGrupoPage() {
 
     if (hasGroup) {
       setError(
-        "Ya perteneces a un grupo familiar. Debes abandonar tu grupo actual para poder crear uno nuevo."
+        "Ya perteneces a un grupo familiar. Debes abandonar tu grupo actual para poder crear uno nuevo.",
       );
       return;
     }
@@ -132,9 +135,12 @@ export default function CrearGrupoPage() {
     setLoading(true);
 
     try {
-      const grupoCreado = await groupService.crearGrupo({ nombre: trimmed }, token);
+      const grupoCreado = await groupService.crearGrupo(
+        { nombre: trimmed },
+        token,
+      );
       router.push(
-        `/grupo/invitar?codigo=${encodeURIComponent(grupoCreado.codigoInvitacion)}`
+        `/grupo/invitar?codigo=${encodeURIComponent(grupoCreado.codigoInvitacion)}`,
       );
     } catch (err) {
       setError(err?.message || "No se pudo crear el grupo.");
@@ -157,7 +163,7 @@ export default function CrearGrupoPage() {
     );
   }
 
-  return (
+  return ( <>
     <AppLayout navbarContent={navbarContent}>
       <div className="min-h-[70vh] flex items-center justify-center px-4 py-8">
         <div className="w-full max-w-xl">
@@ -189,69 +195,80 @@ export default function CrearGrupoPage() {
             </p>
           </div>
 
-            {!isAuthenticated ? (
-              <div className="card-outlined p-6 text-center">
-                <h3 className="mb-3">Necesitas iniciar sesión</h3>
-                <p className="text-sm text-secondary mb-6">
-                  Inicia sesión para crear tu grupo familiar y convertirte en administrador.
+          {!isAuthenticated ? (
+            <div className="card-outlined p-6 text-center">
+              <h3 className="mb-3">Necesitas iniciar sesión</h3>
+              <p className="text-sm text-secondary mb-6">
+                Inicia sesión para crear tu grupo familiar y convertirte en
+                administrador.
+              </p>
+              <Button className="w-full" onClick={() => router.push("/login")}>
+                Ir a iniciar sesión
+              </Button>
+            </div>
+          ) : (
+            <form
+              onSubmit={handleSubmit}
+              className="card-outlined p-6 space-y-6"
+            >
+              <div className="space-y-4">
+                <Input
+                  label="Nombre del grupo"
+                  placeholder="Ej. Casa Familia Pérez"
+                  value={nombre}
+                  onChange={handleNombreChange}
+                  error={error}
+                  disabled={loading || membershipLoading || hasGroup}
+                />
+                <p className="text-xs text-secondary">
+                  Máximo {MAX_NAME_LENGTH} caracteres.
                 </p>
-                <Button className="w-full" onClick={() => router.push("/login")}>
-                  Ir a iniciar sesión
+              </div>
+
+              {membershipLoading && (
+                <div className="text-sm text-secondary text-center">
+                  Verificando tu grupo familiar…
+                </div>
+              )}
+
+              {info && !error && (
+                <div className="rounded-lg bg-primary/10 border border-primary text-primary px-4 py-3 text-sm">
+                  {info}
+                </div>
+              )}
+
+              {error && (
+                <div className="rounded-lg bg-error/10 border border-error text-error px-4 py-3 text-sm">
+                  {error}
+                </div>
+              )}
+
+              <div className="flex flex-col gap-3">
+                <Button
+                  type="submit"
+                  className="w-full"
+                  disabled={loading || membershipLoading || hasGroup}
+                >
+                  {loading ? "Creando grupo…" : "Crear"}
+                </Button>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  className="w-full"
+                  onClick={() => router.push("/bienvenida")}
+                >
+                  Volver a bienvenida
                 </Button>
               </div>
-            ) : (
-              <form onSubmit={handleSubmit} className="card-outlined p-6 space-y-6">
-                <div className="space-y-4">
-                  <Input
-                    label="Nombre del grupo"
-                    placeholder="Ej. Casa Familia Pérez"
-                    value={nombre}
-                    onChange={handleNombreChange}
-                    error={error}
-                    disabled={loading || membershipLoading || hasGroup}
-                  />
-                  <p className="text-xs text-secondary">Máximo {MAX_NAME_LENGTH} caracteres.</p>
-                </div>
-
-                {membershipLoading && (
-                  <div className="text-sm text-secondary text-center">Verificando tu grupo familiar…</div>
-                )}
-
-                {info && !error && (
-                  <div className="rounded-lg bg-primary/10 border border-primary text-primary px-4 py-3 text-sm">
-                    {info}
-                  </div>
-                )}
-
-                {error && (
-                  <div className="rounded-lg bg-error/10 border border-error text-error px-4 py-3 text-sm">
-                    {error}
-                  </div>
-                )}
-
-                <div className="flex flex-col gap-3">
-                  <Button
-                    type="submit"
-                    className="w-full"
-                    disabled={loading || membershipLoading || hasGroup}
-                  >
-                    {loading ? "Creando grupo…" : "Crear"}
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    className="w-full"
-                    onClick={() => router.push("/bienvenida")}
-                  >
-                    Volver a bienvenida
-                  </Button>
-                </div>
-              </form>
-            )}
-          </div>
+            </form>
+          )}
         </div>
-      </AppLayout>
-
-
+      </div>
+    </AppLayout>
+    <LogOut
+  isOpen={showLogoutModal}
+  onConfirm={handleLogout}
+  onCancel={() => setShowLogoutModal(false)}
+/> </>
   );
 }

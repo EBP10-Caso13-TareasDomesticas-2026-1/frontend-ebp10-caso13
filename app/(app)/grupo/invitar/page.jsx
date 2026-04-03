@@ -1,5 +1,6 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { Suspense, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
@@ -8,16 +9,26 @@ import Button from "@/components/ui/Button";
 import InviteCodeCard from "@/components/ui/InviteCodeCard";
 import { useAuth } from "@/hooks/useAuth";
 
+const LogOut = dynamic(() => import("@/components/ui/LogOut"), {
+  ssr: false,
+});
+
 function InvitarGrupoContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { isAuthenticated, logout } = useAuth();
   const codigo = searchParams.get("codigo");
   const [mounted, setMounted] = useState(false);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  const handleLogout = async () => {
+    await logout();
+    router.push("/login");
+  };
 
   const navbarContent = mounted ? (
     <>
@@ -29,15 +40,15 @@ function InvitarGrupoContent() {
       >
         Perfil
       </Button>
-      <Button
-        variant="primary"
-        onClick={async () => {
-          await logout();
-          router.push("/login");
-        }}
-      >
-        Cerrar sesión
-      </Button>
+      {isAuthenticated ? (
+              <Button variant="primary" onClick={() => setShowLogoutModal(true)}>
+                Cerrar sesión
+              </Button>
+            ) : (
+              <Button variant="primary" onClick={() => router.push("/login")}>
+                Iniciar sesión
+              </Button>
+            )}
     </>
   ) : null;
 
@@ -61,9 +72,13 @@ function InvitarGrupoContent() {
         <div className="card-outlined p-6 text-center">
           <h3 className="mb-3">Código no disponible</h3>
           <p className="text-sm text-secondary mb-6">
-            No se recibió un código de invitación. Regresa a la pantalla de crear grupo.
+            No se recibió un código de invitación. Regresa a la pantalla de
+            crear grupo.
           </p>
-          <Button className="w-full" onClick={() => router.push("/grupo/crear")}>
+          <Button
+            className="w-full"
+            onClick={() => router.push("/grupo/crear")}
+          >
             Volver a crear grupo
           </Button>
         </div>
@@ -74,9 +89,14 @@ function InvitarGrupoContent() {
       <div className="flex flex-col items-center gap-6">
         <InviteCodeCard code={codigo} className="w-full max-w-md" />
         <p className="text-center text-sm text-secondary max-w-md">
-          Comparte este código con los miembros de tu hogar para que puedan unirse.
+          Comparte este código con los miembros de tu hogar para que puedan
+          unirse.
         </p>
-        <Button className="w-full max-w-md" disabled onClick={() => router.push("/dashboard")}>
+        <Button
+          className="w-full max-w-md"
+          disabled
+          onClick={() => router.push("/dashboard")}
+        >
           Ir al tablero →
         </Button>
       </div>
@@ -85,6 +105,7 @@ function InvitarGrupoContent() {
 
   if (!mounted) {
     return (
+      <>
       <AppLayout navbarContent={null}>
         <div className="min-h-[70vh] flex items-center justify-center px-4 py-8">
           <div className="w-full max-w-2xl">
@@ -94,10 +115,16 @@ function InvitarGrupoContent() {
           </div>
         </div>
       </AppLayout>
+      <LogOut
+        isOpen={showLogoutModal}
+        onConfirm={handleLogout}
+        onCancel={() => setShowLogoutModal(false)}
+      />
+      </>
     );
   }
 
-  return (
+  return (<>
     <AppLayout navbarContent={navbarContent}>
       <div className="min-h-[70vh] flex items-center justify-center px-4 py-8">
         <div className="w-full max-w-2xl">
@@ -135,20 +162,32 @@ function InvitarGrupoContent() {
         </div>
       </div>
     </AppLayout>
+    <LogOut
+        isOpen={showLogoutModal}
+        onConfirm={handleLogout}
+        onCancel={() => setShowLogoutModal(false)}
+      /> </>
   );
 }
 
 function InvitarFallback() {
   return (
-    <AppLayout navbarContent={null}>
-      <div className="min-h-[70vh] flex items-center justify-center px-4 py-8">
-        <div className="w-full max-w-2xl">
-          <div className="card-outlined p-6 text-center">
-            <p className="text-sm text-secondary">Cargando…</p>
+    <>
+      <AppLayout navbarContent={null}>
+        <div className="min-h-[70vh] flex items-center justify-center px-4 py-8">
+          <div className="w-full max-w-2xl">
+            <div className="card-outlined p-6 text-center">
+              <p className="text-sm text-secondary">Cargando…</p>
+            </div>
           </div>
         </div>
-      </div>
-    </AppLayout>
+      </AppLayout>
+      <LogOut
+        isOpen={showLogoutModal}
+        onConfirm={handleLogout}
+        onCancel={() => setShowLogoutModal(false)}
+      />
+    </>
   );
 }
 
