@@ -80,7 +80,6 @@ export default function CrearGrupoPage() {
       {isAuthenticated ? (
         <Button
           variant="primary"
-          disabled
           onClick={async () => {
             await logout();
             router.push("/login");
@@ -89,7 +88,7 @@ export default function CrearGrupoPage() {
           Cerrar sesión
         </Button>
       ) : (
-        <Button variant="primary" disabled onClick={() => router.push("/login")}>
+        <Button variant="primary" onClick={() => router.push("/login")}>
           Iniciar sesión
         </Button>
       )}
@@ -195,7 +194,7 @@ export default function CrearGrupoPage() {
                 <p className="text-sm text-secondary mb-6">
                   Inicia sesión para crear tu grupo familiar y convertirte en administrador.
                 </p>
-                <Button className="w-full" disabled onClick={() => router.push("/login")}>
+                <Button className="w-full" onClick={() => router.push("/login")}>
                   Ir a iniciar sesión
                 </Button>
               </div>

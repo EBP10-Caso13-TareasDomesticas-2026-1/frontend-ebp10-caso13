@@ -31,7 +31,6 @@ function InvitarGrupoContent() {
       </Button>
       <Button
         variant="primary"
-        disabled
         onClick={async () => {
           await logout();
           router.push("/login");
@@ -50,7 +49,7 @@ function InvitarGrupoContent() {
           <p className="text-sm text-secondary mb-6">
             Solo los usuarios registrados pueden ver el código de invitación.
           </p>
-          <Button className="w-full" disabled onClick={() => router.push("/login")}>
+          <Button className="w-full" onClick={() => router.push("/login")}>
             Ir a iniciar sesión
           </Button>
         </div>
@@ -64,7 +63,7 @@ function InvitarGrupoContent() {
           <p className="text-sm text-secondary mb-6">
             No se recibió un código de invitación. Regresa a la pantalla de crear grupo.
           </p>
-          <Button className="w-full" onClick={() => router.push("/grupo/crear-grupo")}>
+          <Button className="w-full" onClick={() => router.push("/grupo/crear")}>
             Volver a crear grupo
           </Button>
         </div>
@@ -77,7 +76,7 @@ function InvitarGrupoContent() {
         <p className="text-center text-sm text-secondary max-w-md">
           Comparte este código con los miembros de tu hogar para que puedan unirse.
         </p>
-        <Button className="w-full max-w-md" onClick={() => router.push("/bienvenida")}>
+        <Button className="w-full max-w-md" disabled onClick={() => router.push("/dashboard")}>
           Ir al tablero →
         </Button>
       </div>
