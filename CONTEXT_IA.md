@@ -83,7 +83,7 @@
 | `PasswordInput.jsx` | Input especializado para contraseñas con toggle para mostrar/ocultar | `label`, `placeholder`, `value`, `onChange`, `error`, `disabled`, `className` |
 | `Logo.jsx` | Logo de HomeSync con soporte para 3 tamaños (sm, md, lg) | `size` (default: "md"), `className` |
 | `InviteCodeCard.jsx` | Tarjeta que muestra código de invitación con botón para copiar al portapapeles | `code`, `className` |
-| `LogOut.jsx` | Modal de confirmación para cerrar sesión | `isOpen`, `icon`, `t itle`, `description`, `confirmText`, `cancelText`, `onConfirm`, `onCancel`, `variant` |
+| `LogOut.jsx` | Modal de confirmación para cerrar sesión | `isOpen`, `icon`, `title`, `description`, `confirmText`, `cancelText`, `onConfirm`, `onCancel`, `variant` |
 
 ### /components/layout/
 
@@ -100,12 +100,17 @@
 
 | Archivo | Qué hace | Cómo se usa |
 | --------- | ---------- | ------------- |
-| ``context/AuthContext.jsx`` | Sesión del usuario (token, datos, login/logout/register) | Envuelve la app en ``<AuthProvider>`` |
-| ``context/GroupContext.jsx`` | Grupo activo, miembros y rol del usuario | Envuelve la app en ``<GroupProvider>`` (dentro de *AuthProvider*) |
-| ``hooks/useAuth.js`` | Consume AuthContext | ```const { usuario, login } = useAuth()``` |
-| ``hooks/useGroup.js`` | Consume GroupContext | ``const { grupo, rolActual, crearGrupo } = useGroup()`` |
-| ``hooks/useLocalStorage.js`` | Persistencia reactiva en localStorage | Usado internamente por AuthContext |
-| ``hooks/useFetch.js`` | Estado loading/error/data para llamadas a servicios puntuales | ``const { data, loading, execute } = useFetch(servicio)`` |
+| `context/AuthContext.jsx` | Sesión del usuario (token, datos, login/logout/register) | Envuelve la app en `<AuthProvider>` |
+| `context/GroupContext.jsx` | Grupo activo, miembros y rol del usuario | Envuelve la app en `<GroupProvider>` (dentro de *AuthProvider*) |
+| `hooks/useAuth.js` | Consume AuthContext | `const { usuario, login } = useAuth()` |
+| `hooks/useGroup.js` | Consume GroupContext | `const { grupo, rolActual, crearGrupo, cargarGrupo } = useGroup()` |
+| `hooks/useLocalStorage.js` | Persistencia reactiva en localStorage | Usado internamente por AuthContext |
+| `hooks/useFetch.js` | Estado loading/error/data para llamadas a servicios puntuales | `const { data, loading, execute } = useFetch(servicio)` |
+
+### Notas de acoplamiento entre contextos
+- `GroupContext` lee `usuario` y `token` directamente de `AuthContext` — **no** se le pasan como parámetros.
+- `cargarGrupo()` no recibe argumentos. Retorna `{ ok: true }` si el usuario tiene grupo, `{ ok: false, error }` si no. Un `{ ok: false }` **no es un error**, es el caso válido de usuario sin grupo (ver HU-002 Escenario 6).
+- `login()` de AuthContext probablemente retorna `void` — guarda la sesión en estado interno. Pendiente confirmar con Camila.
 
 ---
 
@@ -143,7 +148,7 @@
 
 | Rama git | Ruta | Archivo | Estado | HU | Responsable |
 |----------|------|---------|--------|----|-------------|
-| *(vacío)* | *(vacío)* | *(vacío)* | *(vacío)* | *(vacío)* | *(vacío)* |
+| hu-002 | /login | app/(auth)/login/page.jsx | con mocks | HU-002 | David Sanchez |
 
 **Estados:** `en progreso` · `con mocks` · `conectada al backend` · `revisada`
 
@@ -155,8 +160,8 @@
 
 | ID | Descripción | Estado | Responsable |
 | ---- | ------------- | -------- | ------------- |
-| HU-001 | Como usuario, quiero registrarme en la plataforma con nombre, correo, contraseña y pin de seguridad, para crear mi cuenta y acceder a las funcionalidades del sistema. | pantalla lista | Salome Toro |
-| HU-002 | Como usuario registrado, quiero iniciar sesión con mi correo y contraseña, para acceder a mi cuenta. | pendiente | David Sanchez |
+| HU-001 | Como usuario, quiero registrarme en la plataforma con nombre, correo, contraseña y pin de seguridad, para crear mi cuenta y acceder a las funcionalidades del sistema. | pendiente | Salome Toro |
+| HU-002 | Como usuario registrado, quiero iniciar sesión con mi correo y contraseña, para acceder a mi cuenta. | pantalla lista | David Sanchez |
 | HU-003 | Como usuario registrado, quiero cerrar sesión en la plataforma, para proteger mi cuenta cuando termine de usarla. | pantalla lista | Daniel Sanchez |
 | HU-004 | Como usuario registrado, quiero crear un grupo familiar, para organizar las tareas del hogar con los integrantes de mi grupo familiar, convirtiéndome en administrador del mismo. | pendiente | Alejandro Toro |
 | HU-005 | Como administrador del grupo familiar, quiero invitar usuarios al grupo familiar mediante un código de invitación, para integrarlos en la organización de tareas del hogar. | pendiente | Daniel Salas |
@@ -205,17 +210,21 @@
 
 ---
 
----
-
 ## NOTAS Y DECISIONES TÉCNICAS
 
-- Por ahora se usa mock data para simular llamadas a la api y se definio una estrutura base para llamada a la api con endpoints propuestos
+- Por ahora se usa mock data para simular llamadas a la api y se definió una estructura base para llamada a la api con endpoints propuestos
 
 ### CONFIGURACIÓN
 
 | Archivo | Propósito |
 |---------|-----------|
 | `lib/api.js` | Config central de API. Cambiar `USE_MOCK = false` para conectar al backend real. Requiere `NEXT_PUBLIC_API_URL` en `.env.local` |
+
+### DECISIONES HU-002
+
+- El bloqueo por 5 intentos fallidos se maneja en **frontend** con `localStorage` (claves: `hs_login_intentos`, `hs_login_bloqueo_hasta`). Cuando el backend esté listo, puede retornar HTTP 429/423 y el bloqueo frontend queda como respaldo.
+- `cargarGrupo()` puede retornar `{ ok: false }` después de un login exitoso — eso **no es un error**, es el Escenario 6 (usuario sin grupo). No tratar como excepción.
+- El Escenario 7 (redirigir al dashboard si usuario con grupo entra a `/bienvenida`) debe implementarse en `app/(auth)/bienvenida/page.jsx` — responsabilidad de Salome Toro.
 
 ---
 
@@ -227,4 +236,6 @@
 | 27/03/26 | Camila Torres | Creación de data mocks, authService, groupService y lib/api.js |
 | 27/03/26 | Daniel Sánchez | Especificación de componentes UI y Layout |
 | 27/03/26 | Camila Torres | Creación context y hooks necesarios |
-| 02/04/26 | Alejandro Toro | finalización de HU-004 |
+| 31/03/26 | Alejandro Toro | Creación hu 004 |
+| 31/03/26 | Alejandro Toro | Cambios miembrosGrupo.js |
+| 02/04/26 | David Sanchez | HU-002: pantalla de login con mocks. Notas de acoplamiento GroupContext/AuthContext |
