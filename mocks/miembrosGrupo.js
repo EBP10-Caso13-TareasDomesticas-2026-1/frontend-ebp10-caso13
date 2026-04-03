@@ -40,12 +40,6 @@ export const miembrosGrupo = [
     fechaUnion: "2026-03-10T17:00:00.000Z"
   },
   {
-    id: 5,
-    usuarioId: 4,   // David — miembro de Apartamento 204, sin racha aún
-    grupoId: 2,
-    rolId: 2,
-    puntaje: 30,
-    racha: 0,
-    fechaUnion: "2026-03-11T12:00:00.000Z"
+    
   }
 ];

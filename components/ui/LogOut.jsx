@@ -18,7 +18,7 @@ import Image from "next/image"
                               Opciones: "primary" | "danger"
 */
 export default function LogOut({
-  isOpen,
+  isOpen = false,
   icon = <Image src="/salida.png" width={32} height={32} />,
   title = "¿Cerrar Sesión?",
   description ="¿Estás seguro que deseas cerrar sesión? Tendrás que volver a ingresar tus credenciales para acceder.",

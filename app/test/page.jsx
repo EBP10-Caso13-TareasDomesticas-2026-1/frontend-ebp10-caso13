@@ -35,3 +35,23 @@ export default function TestPage() {
     </div>
   );
 }
+
+<div>
+  {/*
+    para hacer la prueba con un ususario que no tiene grupo se escribe en la consola de la página: 
+  window.localStorage.setItem(
+    "homesync_sesion",
+    JSON.stringify({
+      token: "mock_token_4",
+      idUsuario: 4,
+      nombre: "David Sanchez",
+      correo: "david.sanchez@homesync.com"
+    })
+  );
+  window.location.reload();
+
+  y para probar con un usuario con grupo se cmabian los datos por cualquira de los otros usuarios.
+  */}
+  
+  
+</div> 
