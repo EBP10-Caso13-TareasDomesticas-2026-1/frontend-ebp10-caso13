@@ -95,7 +95,7 @@ export default function BienvenidaPage() {
             <Button
               variant="primary"
               className="w-full"
-              onClick={() => router.push("/crear-grupo")}
+              onClick={() => router.push("/grupo/crear-grupo")}
             >
               ⊕ Crear grupo
             </Button>

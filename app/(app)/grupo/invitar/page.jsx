@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
 import AppLayout from "@/components/layout/AppLayout";
@@ -8,7 +8,7 @@ import Button from "@/components/ui/Button";
 import InviteCodeCard from "@/components/ui/InviteCodeCard";
 import { useAuth } from "@/hooks/useAuth";
 
-export default function InvitarGrupoPage() {
+function InvitarGrupoContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { isAuthenticated, logout } = useAuth();
@@ -23,6 +23,7 @@ export default function InvitarGrupoPage() {
     <>
       <Button
         variant="secondary"
+        disabled
         onClick={() => router.push("/perfil")}
         className="hidden sm:inline-flex"
       >
@@ -30,6 +31,7 @@ export default function InvitarGrupoPage() {
       </Button>
       <Button
         variant="primary"
+        disabled
         onClick={async () => {
           await logout();
           router.push("/login");
@@ -48,7 +50,9 @@ export default function InvitarGrupoPage() {
           <p className="text-sm text-secondary mb-6">
             Solo los usuarios registrados pueden ver el código de invitación.
           </p>
-          <Button className="w-full" onClick={() => router.push("/login")}>Ir a iniciar sesión</Button>
+          <Button className="w-full" disabled onClick={() => router.push("/login")}>
+            Ir a iniciar sesión
+          </Button>
         </div>
       );
     }
@@ -60,7 +64,9 @@ export default function InvitarGrupoPage() {
           <p className="text-sm text-secondary mb-6">
             No se recibió un código de invitación. Regresa a la pantalla de crear grupo.
           </p>
-          <Button className="w-full" onClick={() => router.push("/grupo/crear")}>Volver a crear grupo</Button>
+          <Button className="w-full" onClick={() => router.push("/grupo/crear-grupo")}>
+            Volver a crear grupo
+          </Button>
         </div>
       );
     }
@@ -71,7 +77,9 @@ export default function InvitarGrupoPage() {
         <p className="text-center text-sm text-secondary max-w-md">
           Comparte este código con los miembros de tu hogar para que puedan unirse.
         </p>
-        <Button className="w-full max-w-md" onClick={() => router.push("/bienvenida")}>Ir al tablero →</Button>
+        <Button className="w-full max-w-md" onClick={() => router.push("/bienvenida")}>
+          Ir al tablero →
+        </Button>
       </div>
     );
   }, [codigo, isAuthenticated, router]);
@@ -128,5 +136,27 @@ export default function InvitarGrupoPage() {
         </div>
       </div>
     </AppLayout>
+  );
+}
+
+function InvitarFallback() {
+  return (
+    <AppLayout navbarContent={null}>
+      <div className="min-h-[70vh] flex items-center justify-center px-4 py-8">
+        <div className="w-full max-w-2xl">
+          <div className="card-outlined p-6 text-center">
+            <p className="text-sm text-secondary">Cargando…</p>
+          </div>
+        </div>
+      </div>
+    </AppLayout>
+  );
+}
+
+export default function InvitarGrupoPage() {
+  return (
+    <Suspense fallback={<InvitarFallback />}>
+      <InvitarGrupoContent />
+    </Suspense>
   );
 }

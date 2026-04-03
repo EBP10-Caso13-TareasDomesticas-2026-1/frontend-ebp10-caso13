@@ -71,6 +71,7 @@ export default function CrearGrupoPage() {
     <>
       <Button
         variant="secondary"
+        disabled
         onClick={() => router.push("/perfil")}
         className="hidden sm:inline-flex"
       >
@@ -79,6 +80,7 @@ export default function CrearGrupoPage() {
       {isAuthenticated ? (
         <Button
           variant="primary"
+          disabled
           onClick={async () => {
             await logout();
             router.push("/login");
@@ -87,10 +89,7 @@ export default function CrearGrupoPage() {
           Cerrar sesión
         </Button>
       ) : (
-        <Button
-          variant="primary"
-          onClick={() => router.push("/login")}
-        >
+        <Button variant="primary" disabled onClick={() => router.push("/login")}>
           Iniciar sesión
         </Button>
       )}
@@ -190,68 +189,69 @@ export default function CrearGrupoPage() {
             </p>
           </div>
 
-          {!isAuthenticated ? (
-            <div className="card-outlined p-6 text-center">
-              <h3 className="mb-3">Necesitas iniciar sesión</h3>
-              <p className="text-sm text-secondary mb-6">
-                Inicia sesión para crear tu grupo familiar y convertirte en administrador.
-              </p>
-              <Button className="w-full" onClick={() => router.push("/login")}>Ir a iniciar sesión</Button>
-            </div>
-          ) : (
-            <form onSubmit={handleSubmit} className="card-outlined p-6 space-y-6">
-              <div className="space-y-4">
-                <Input
-                  label="Nombre del grupo"
-                  placeholder="Ej. Casa Familia Pérez"
-                  value={nombre}
-                  onChange={handleNombreChange}
-                  error={error}
-                  disabled={loading || membershipLoading || hasGroup}
-                />
-                <p className="text-xs text-secondary">
-                  Máximo {MAX_NAME_LENGTH} caracteres.
+            {!isAuthenticated ? (
+              <div className="card-outlined p-6 text-center">
+                <h3 className="mb-3">Necesitas iniciar sesión</h3>
+                <p className="text-sm text-secondary mb-6">
+                  Inicia sesión para crear tu grupo familiar y convertirte en administrador.
                 </p>
-              </div>
-
-              {membershipLoading && (
-                <div className="text-sm text-secondary text-center">Verificando tu grupo familiar…</div>
-              )}
-
-              {info && !error && (
-                <div className="rounded-lg bg-primary/10 border border-primary text-primary px-4 py-3 text-sm">
-                  {info}
-                </div>
-              )}
-
-              {error && (
-                <div className="rounded-lg bg-error/10 border border-error text-error px-4 py-3 text-sm">
-                  {error}
-                </div>
-              )}
-
-              <div className="flex flex-col gap-3">
-                <Button
-                  type="submit"
-                  className="w-full"
-                  disabled={loading || membershipLoading || hasGroup}
-                >
-                  {loading ? "Creando grupo…" : "Crear"}
-                </Button>
-                <Button
-                  type="button"
-                  variant="secondary"
-                  className="w-full"
-                  onClick={() => router.push("/bienvenida")}
-                >
-                  Volver a bienvenida
+                <Button className="w-full" disabled onClick={() => router.push("/login")}>
+                  Ir a iniciar sesión
                 </Button>
               </div>
-            </form>
-          )}
+            ) : (
+              <form onSubmit={handleSubmit} className="card-outlined p-6 space-y-6">
+                <div className="space-y-4">
+                  <Input
+                    label="Nombre del grupo"
+                    placeholder="Ej. Casa Familia Pérez"
+                    value={nombre}
+                    onChange={handleNombreChange}
+                    error={error}
+                    disabled={loading || membershipLoading || hasGroup}
+                  />
+                  <p className="text-xs text-secondary">Máximo {MAX_NAME_LENGTH} caracteres.</p>
+                </div>
+
+                {membershipLoading && (
+                  <div className="text-sm text-secondary text-center">Verificando tu grupo familiar…</div>
+                )}
+
+                {info && !error && (
+                  <div className="rounded-lg bg-primary/10 border border-primary text-primary px-4 py-3 text-sm">
+                    {info}
+                  </div>
+                )}
+
+                {error && (
+                  <div className="rounded-lg bg-error/10 border border-error text-error px-4 py-3 text-sm">
+                    {error}
+                  </div>
+                )}
+
+                <div className="flex flex-col gap-3">
+                  <Button
+                    type="submit"
+                    className="w-full"
+                    disabled={loading || membershipLoading || hasGroup}
+                  >
+                    {loading ? "Creando grupo…" : "Crear"}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    className="w-full"
+                    onClick={() => router.push("/bienvenida")}
+                  >
+                    Volver a bienvenida
+                  </Button>
+                </div>
+              </form>
+            )}
+          </div>
         </div>
-      </div>
-    </AppLayout>
+      </AppLayout>
+
+
   );
 }
-''
