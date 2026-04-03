@@ -116,7 +116,7 @@ export default function InvitarMiembrosPage() {
     <>
       <Button
         variant="secondary"
-        onClick={() => router.push("/perfil")}
+        disabled={true}
         className="hidden sm:inline-flex"
       >
         Perfil
