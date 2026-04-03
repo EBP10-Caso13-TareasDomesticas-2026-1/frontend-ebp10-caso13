@@ -173,10 +173,27 @@ export default function LoginPage() {
       // Escenario 1/2/3: login via AuthContext.
       // Internamente llama a authService.iniciarSesion y guarda
       // { usuario, token } en el estado del contexto.
-      await login({
+      const resultadoLogin = await login({
         correo: form.correo.trim(),
         contrasena: form.contrasena,
       });
+
+      if (!resultadoLogin.ok) {
+        const estado = registrarIntentoFallido();
+        if (estado.bloqueado) {
+          // Escenario 4: 5 intentos alcanzados → bloquear cuenta
+          setBloqueado(true);
+          setBloqueoHasta(estado.hasta);
+          setErrorGlobal(
+            "Tu cuenta ha sido bloqueada temporalmente por múltiples intentos fallidos. Intenta de nuevo más tarde."
+          );
+        } else {
+          // Escenario 2 y 3: mensaje genérico (nunca revelar cuál campo falló)
+          setErrorGlobal("El correo o la contraseña son incorrectos.");
+        }
+        setLoading(false);
+        return;
+      }
 
       // Login exitoso → limpiar intentos fallidos acumulados
       limpiarIntentos();
