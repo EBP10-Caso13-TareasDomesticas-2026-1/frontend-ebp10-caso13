@@ -2,12 +2,7 @@
 
 import { createContext, useContext, useState, useCallback } from "react";
 import { useAuth } from "@/hooks/useAuth";
-import {
-  obtenerGrupoDeUsuario,
-  crearGrupo,
-  unirseConCodigo,
-  obtenerGrupo,
-} from "@/services/groupService";
+import groupService from "@/services/groupService";
 
 /**
  * GroupContext
@@ -64,7 +59,7 @@ export function GroupProvider({ children }) {
     setLoading(true);
     try {
       // Devuelve el MiembroGrupo si el usuario pertenece a un grupo
-      const miembroData = await obtenerGrupoDeUsuario(usuario.idUsuario, token);
+      const miembroData = await groupService.obtenerGrupoDeUsuario(usuario.idUsuario, token);
 
       if (!miembroData) {
         // Escenario 6: sin grupo asignado
@@ -75,7 +70,7 @@ export function GroupProvider({ children }) {
       }
 
       // Con el grupoId obtenemos el detalle completo del grupo
-      const grupoData = await obtenerGrupo(miembroData.grupoId, token);
+      const grupoData = await groupService.obtenerGrupo(miembroData.grupoId, token);
 
       setGrupo(grupoData);
       setMiembros([miembroData]);
@@ -101,7 +96,7 @@ export function GroupProvider({ children }) {
       _resetError();
       setLoading(true);
       try {
-        const grupoCreado = await crearGrupo(data, token, usuario.idUsuario);
+        const grupoCreado = await groupService.crearGrupo(data, token, usuario.idUsuario);
         setGrupo(grupoCreado);
         setRolActual("admin");
         setMiembros([]);
@@ -128,8 +123,8 @@ export function GroupProvider({ children }) {
       _resetError();
       setLoading(true);
       try {
-      const miembroData = await unirseConCodigo(codigoInvitacion, token, usuario.idUsuario);
-        const grupoData = await obtenerGrupo(miembroData.grupoId, token);
+      const miembroData = await groupService.unirseConCodigo(codigoInvitacion, token, usuario.idUsuario);
+        const grupoData = await groupService.obtenerGrupo(miembroData.grupoId, token);
         setGrupo(grupoData);
         setMiembros([miembroData]);
         setRolActual("miembro");
