@@ -239,3 +239,4 @@
 | 31/03/26 | Alejandro Toro | Creación hu 004 |
 | 31/03/26 | Alejandro Toro | Cambios miembrosGrupo.js |
 | 02/04/26 | David Sanchez | HU-002: pantalla de login con mocks. Notas de acoplamiento GroupContext/AuthContext |
+| 03/04/26 | Camula Torres | Ajustes de consistencia y realización de pruebas |

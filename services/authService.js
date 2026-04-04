@@ -26,9 +26,43 @@ const mock = {
 };
 
 const api = {
-  registrarUsuario: (data)  => apiRequest("/usuarios/registro", { method: "POST", body: data }),
-  iniciarSesion:    (data)  => apiRequest("/usuarios/login",    { method: "POST", body: data }),
-  cerrarSesion:     (token) => apiRequest("/usuarios/logout",   { method: "POST" }, token), // pendiente en backend
+  async registrarUsuario(data) {
+    return apiRequest(
+      "/usuarios/registro",
+      {
+        method: "POST",
+        body: data,
+      }
+    );
+  },
+
+  async iniciarSesion(data) {
+    const res = await apiRequest(
+      "/usuarios/login",
+      {
+        method: "POST",
+        body: data,
+      }
+    );
+
+    return {
+      idUsuario: res.idUsuario,
+      nombre: res.nombre,
+      correo: res.correo,
+      token: res.token,
+      mensaje: res.mensaje,
+    };
+  },
+
+  async cerrarSesion(token) {
+    return apiRequest(
+      "/sesiones/logout",
+      {
+        method: "POST",
+      },
+      token
+    );
+  },
 };
 
 const authService = USE_MOCK ? mock : api;

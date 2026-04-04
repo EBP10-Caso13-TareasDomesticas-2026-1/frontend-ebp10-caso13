@@ -32,11 +32,9 @@ const resolverGrupo = (grupo) => ({
 
 const mock = {
   // HU-002 escenario 6 / HU-004 escenario 4
-  obtenerGrupoDeUsuario: async (usuarioId, _token) => {
-    await delay(400);
-    const membresia = miembrosGrupo.find((m) => m.usuarioId === usuarioId);
-    if (!membresia) return null;
-    return { ...membresia };
+  async obtenerGrupoDeUsuario(usuarioId, token) {
+  const miembros = await apiRequest("/miembros-grupo", { method: "GET" }, token);
+  return miembros.find(m => m.usuarioId === usuarioId) || null;
   },
 
   // HU-004
@@ -105,10 +103,69 @@ const mock = {
 };
 
 const api = {
-  obtenerGrupoDeUsuario: (usuarioId, token)       => apiRequest(`/miembros-grupo/usuario/${usuarioId}`, { method: "GET" }, token),
-  crearGrupo:            (data, token)            => apiRequest("/grupos",                              { method: "POST", body: data }, token),
-  unirseConCodigo:       (codigoInvitacion, token)=> apiRequest("/grupos/unirse",                      { method: "POST", body: { codigoInvitacion } }, token),
-  obtenerGrupo:          (grupoId, token)         => apiRequest(`/grupos/${grupoId}`,                  { method: "GET" }, token),
+  async obtenerGrupoDeUsuario(usuarioId, token) {
+    const miembros = await apiRequest("/miembros-grupo", { method: "GET" }, token);
+
+    const membresia = miembros.find(m => m.usuarioId === usuarioId);
+    return membresia || null;
+  },
+
+  async crearGrupo(data, token, usuarioId) {
+  if (!usuarioId) throw new Error("Usuario no identificado.");
+
+  return apiRequest(
+    "/grupos",
+    {
+      method: "POST",
+      body: {
+        ...data,
+        idUsuario: usuarioId, // IMPORTANTE
+      },
+    },
+    token
+  );
+},
+
+  async unirseConCodigo(codigoInvitacion, token, usuarioId) {
+  if (!usuarioId) throw new Error("Usuario no identificado.");
+
+  return apiRequest(
+    "/miembros-grupo",
+    {
+      method: "POST",
+      body: {
+        idUsuario: usuarioId,
+        codigoInvitacion,
+      },
+    },
+    token
+  );
+},
+
+  async obtenerGrupo(grupoId, token) {
+    const [grupos, miembros, usuarios] = await Promise.all([
+      apiRequest("/grupos", { method: "GET" }, token),
+      apiRequest("/miembros-grupo", { method: "GET" }, token),
+      apiRequest("/usuarios", { method: "GET" }, token),
+    ]);
+
+    const grupo = grupos.find(g => g.id === Number(grupoId));
+    if (!grupo) throw new Error("Grupo no encontrado.");
+
+    return {
+      ...grupo,
+      miembros: miembros
+        .filter(m => m.grupoId === grupo.id)
+        .map(m => {
+          const usuario = usuarios.find(u => u.id === m.usuarioId);
+          return {
+            ...m,
+            nombre: usuario?.nombre,
+            correo: usuario?.correo,
+          };
+        }),
+    };
+  },
 };
 
 const groupService = USE_MOCK ? mock : api;

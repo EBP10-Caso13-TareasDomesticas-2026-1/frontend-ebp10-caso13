@@ -45,13 +45,13 @@ export function useFetch(serviceFn, options = {}) {
       } catch (err) {
         const mensaje = err.message ?? "Ocurrió un error inesperado";
         setError(mensaje);
-        onError?.(mensaje);
-        return { ok: false, error: mensaje };
+        onError?.(err); // pasas el error completo
+        return { ok: false, error: mensaje, status: err.status };
       } finally {
         setLoading(false);
       }
     },
-    [serviceFn, onSuccess, onError]
+    [serviceFn, onSuccess, onError],
   );
 
   /** Resetea el estado completo (útil al desmontar o limpiar formularios) */
