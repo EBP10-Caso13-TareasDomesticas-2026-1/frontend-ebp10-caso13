@@ -204,7 +204,7 @@ export default function LoginPage() {
 
       if (resultado.ok) {
         // Escenario 1: tiene grupo → tablero principal
-        router.push("/dashboard");
+        router.push("/bienvenida"); // TODO:en el siguiente Sprint se cambia por dashboard
       } else if (resultado.noGrupo) {
         // Escenario 6: sin grupo → pantalla de bienvenida
         router.push("/bienvenida");

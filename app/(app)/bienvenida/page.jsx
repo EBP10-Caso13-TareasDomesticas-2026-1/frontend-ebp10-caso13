@@ -106,7 +106,7 @@ export default function BienvenidaPage() {
               variant="secondary"
               className="w-full"
               disabled
-              onClick={() => router.push("/unirse-grupo")}
+              onClick={() => router.push("/grupo/unirse")}
             >
               Unirse a un Grupo
             </Button>

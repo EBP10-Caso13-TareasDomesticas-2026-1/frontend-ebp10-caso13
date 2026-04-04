@@ -33,65 +33,54 @@ const resolverGrupo = (grupo) => ({
 const mock = {
   // HU-002 escenario 6 / HU-004 escenario 4
   async obtenerGrupoDeUsuario(usuarioId, token) {
-  const miembros = await apiRequest("/miembros-grupo", { method: "GET" }, token);
-  return miembros.find(m => m.usuarioId === usuarioId) || null;
+    return miembrosGrupo.find((m) => m.usuarioId === usuarioId) || null;
   },
 
   // HU-004
   crearGrupo: async (data, _token, usuarioId) => {
-    await delay(600);
-    if (!usuarioId) throw new Error("Usuario no identificado.");
-
-    const yaTieneGrupo = miembrosGrupo.some((m) => m.usuarioId === usuarioId);
-    if (yaTieneGrupo) throw new Error("Ya perteneces a un grupo familiar. Debes abandonar o eliminar tu grupo actual para poder crear uno nuevo.");
-
-    const { nombre, descripcion = "" } = data;
-    const nuevoGrupo = {
-      id: grupos.length + 1,
-      nombre,
-      descripcion,
-      codigoInvitacion: generarCodigo(),
-      creadoEn: new Date().toISOString(),
-    };
-    grupos.push(nuevoGrupo);
-
-    miembrosGrupo.push({
-      id: miembrosGrupo.length + 1,
-      usuarioId,
-      grupoId: nuevoGrupo.id,
-      rolId: 1,
-      puntaje: 0,
-      racha: 0,
-      fechaUnion: new Date().toISOString(),
-    });
-
-    return nuevoGrupo;
-  },
+  await delay(600);
+  if (!usuarioId) throw new Error("Usuario no identificado.");
+  // Quita el check yaTieneGrupo — el backend lo valida
+  const { nombre, descripcion = "" } = data;
+  const nuevoGrupo = {
+    id: grupos.length + 1,
+    nombre,
+    descripcion,
+    codigoInvitacion: generarCodigo(),
+    creadoEn: new Date().toISOString(),
+  };
+  grupos.push(nuevoGrupo);
+  miembrosGrupo.push({
+    id: miembrosGrupo.length + 1,
+    usuarioId,
+    grupoId: nuevoGrupo.id,
+    rolId: 1,  // Admin
+    puntaje: 0,
+    racha: 0,
+    fechaUnion: new Date().toISOString(),
+  });
+  return nuevoGrupo;
+},
 
   // HU-005
   unirseConCodigo: async (codigoInvitacion, _token, usuarioId) => {
-    await delay(600);
-    if (!usuarioId) throw new Error("Usuario no identificado.");
-
-    const yaTieneGrupo = miembrosGrupo.some((m) => m.usuarioId === usuarioId);
-    if (yaTieneGrupo) throw new Error("Ya formas parte de un hogar. Debes abandonar tu grupo actual en tu perfil para poder unirte a uno nuevo.");
-
-    const grupo = grupos.find((g) => g.codigoInvitacion === codigoInvitacion);
-    if (!grupo) throw new Error("Código inválido o expirado. Por favor, verifica con el administrador de tu grupo.");
-
-    const nuevaMembresia = {
-      id: miembrosGrupo.length + 1,
-      usuarioId,
-      grupoId: grupo.id,
-      rolId: 2,
-      puntaje: 0,
-      racha: 0,
-      fechaUnion: new Date().toISOString(),
-    };
-    miembrosGrupo.push(nuevaMembresia);
-
-    return nuevaMembresia;
-  },
+  await delay(600);
+  if (!usuarioId) throw new Error("Usuario no identificado.");
+  // Quita checks — el backend los maneja
+  const grupo = grupos.find((g) => g.codigoInvitacion === codigoInvitacion);
+  if (!grupo) throw new Error("Código inválido o expirado...");
+  const nuevaMembresia = {
+    id: miembrosGrupo.length + 1,
+    usuarioId,
+    grupoId: grupo.id,
+    rolId: 2,  // Miembro
+    puntaje: 0,
+    racha: 0,
+    fechaUnion: new Date().toISOString(),
+  };
+  miembrosGrupo.push(nuevaMembresia);
+  return nuevaMembresia;
+},
 
   // HU-004 / HU-005
   obtenerGrupo: async (grupoId, _token) => {
@@ -105,9 +94,8 @@ const mock = {
 const api = {
   async obtenerGrupoDeUsuario(usuarioId, token) {
     const miembros = await apiRequest("/miembros-grupo", { method: "GET" }, token);
-
     const membresia = miembros.find(m => m.usuarioId === usuarioId);
-    return membresia || null;
+    return membresia || null;  // Devuelve la membresía si existe
   },
 
   async crearGrupo(data, token, usuarioId) {
@@ -118,7 +106,7 @@ const api = {
     {
       method: "POST",
       body: {
-        ...data,
+        nombre: data.nombre,
         idUsuario: usuarioId, // IMPORTANTE
       },
     },
