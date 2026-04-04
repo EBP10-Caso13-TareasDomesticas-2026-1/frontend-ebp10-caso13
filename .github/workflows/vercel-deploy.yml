@@ -1,0 +1,48 @@
+name: Build and Deploy to Vercel
+
+on:
+  push:
+    branches:
+      - feature/deploy
+
+jobs:
+  build-and-validate:
+    runs-on: ubuntu-latest
+    name: Build & Validate
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Validate build
+        run: npm run build
+      
+      - name: Run linter (if available)
+        run: npm run lint
+        continue-on-error: true
+
+  deploy-to-vercel:
+    needs: build-and-validate
+    runs-on: ubuntu-latest
+    name: Deploy to Vercel
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Deploy to Vercel
+        uses: vercel/action@main
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
