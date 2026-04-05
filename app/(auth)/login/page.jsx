@@ -200,7 +200,7 @@ export default function LoginPage() {
 
       // Escenario 1 vs 6: verificar membresía en grupo.
       // cargarGrupo() lee usuario y token del AuthContext (ya actualizados).
-      const resultado = await cargarGrupo();
+      const resultado = await cargarGrupo(resultadoLogin.idUsuario, resultadoLogin.token);
 
       if (resultado.ok) {
         // Escenario 1: tiene grupo → tablero principal

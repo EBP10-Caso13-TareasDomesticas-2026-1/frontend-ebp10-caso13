@@ -43,7 +43,7 @@ export function GroupProvider({ children }) {
       if (!yo) return null;
       return yo.rolId === 1 ? "admin" : "miembro";
     },
-    [usuario]
+    [usuario],
   );
 
   // ─── Acciones ─────────────────────────────────────────────────
@@ -53,37 +53,49 @@ export function GroupProvider({ children }) {
    * Se llama al montar pantallas que necesitan datos del grupo.
    * @returns {{ ok: boolean, error?: string }}
    */
-  const cargarGrupo = useCallback(async () => {
-    if (!usuario || !token) return { ok: false, error: "Sin sesión activa" };
-    _resetError();
-    setLoading(true);
-    try {
-      // Devuelve el MiembroGrupo si el usuario pertenece a un grupo
-      const miembroData = await groupService.obtenerGrupoDeUsuario(usuario.idUsuario, token);
+  const cargarGrupo = useCallback(
+    async (usuarioIdParam, tokenParam) => {
+      const usuarioId = usuarioIdParam ?? usuario?.idUsuario;
+      const tokenUsar = tokenParam ?? token;
+      if (!usuarioId || !tokenUsar)
+        return { ok: false, error: "Sin sesión activa" };
+      _resetError();
+      setLoading(true);
+      try {
+        // Devuelve el MiembroGrupo si el usuario pertenece a un grupo
+        const miembroData = await groupService.obtenerGrupoDeUsuario(
+          usuario.idUsuario,
+          token,
+        );
 
-      if (!miembroData) {
-        // Escenario 6: sin grupo asignado
-        setGrupo(null);
-        setMiembros([]);
-        setRolActual(null);
-        return { ok: false, noGrupo: true };
+        if (!miembroData) {
+          // Escenario 6: sin grupo asignado
+          setGrupo(null);
+          setMiembros([]);
+          setRolActual(null);
+          return { ok: false, noGrupo: true };
+        }
+
+        // Con el grupoId obtenemos el detalle completo del grupo
+        const grupoData = await groupService.obtenerGrupo(
+          miembroData.grupoId,
+          token,
+        );
+
+        setGrupo(grupoData);
+        setMiembros([miembroData]);
+        setRolActual(_resolverRol([miembroData]));
+        return { ok: true };
+      } catch (err) {
+        const mensaje = err.message ?? "Error al cargar el grupo";
+        setError(mensaje);
+        return { ok: false, error: mensaje };
+      } finally {
+        setLoading(false);
       }
-
-      // Con el grupoId obtenemos el detalle completo del grupo
-      const grupoData = await groupService.obtenerGrupo(miembroData.grupoId, token);
-
-      setGrupo(grupoData);
-      setMiembros([miembroData]);
-      setRolActual(_resolverRol([miembroData]));
-      return { ok: true };
-    } catch (err) {
-      const mensaje = err.message ?? "Error al cargar el grupo";
-      setError(mensaje);
-      return { ok: false, error: mensaje };
-    } finally {
-      setLoading(false);
-    }
-  }, [usuario, token, _resolverRol]);
+    },
+    [usuario, token, _resolverRol]
+  );
 
   /**
    * Crea un nuevo grupo familiar. El usuario queda como administrador.
@@ -96,7 +108,11 @@ export function GroupProvider({ children }) {
       _resetError();
       setLoading(true);
       try {
-        const grupoCreado = await groupService.crearGrupo(data, token, usuario.idUsuario);
+        const grupoCreado = await groupService.crearGrupo(
+          data,
+          token,
+          usuario.idUsuario,
+        );
         setGrupo(grupoCreado);
         setRolActual("admin");
         setMiembros([]);
@@ -109,7 +125,7 @@ export function GroupProvider({ children }) {
         setLoading(false);
       }
     },
-    [usuario, token]
+    [usuario, token],
   );
 
   /**
@@ -123,8 +139,15 @@ export function GroupProvider({ children }) {
       _resetError();
       setLoading(true);
       try {
-      const miembroData = await groupService.unirseConCodigo(codigoInvitacion, token, usuario.idUsuario);
-        const grupoData = await groupService.obtenerGrupo(miembroData.grupoId, token);
+        const miembroData = await groupService.unirseConCodigo(
+          codigoInvitacion,
+          token,
+          usuario.idUsuario,
+        );
+        const grupoData = await groupService.obtenerGrupo(
+          miembroData.grupoId,
+          token,
+        );
         setGrupo(grupoData);
         setMiembros([miembroData]);
         setRolActual("miembro");
@@ -137,7 +160,7 @@ export function GroupProvider({ children }) {
         setLoading(false);
       }
     },
-    [usuario, token]
+    [usuario, token],
   );
 
   /**
@@ -152,9 +175,9 @@ export function GroupProvider({ children }) {
 
   // ─── Valor del contexto ───────────────────────────────────────
   const value = {
-    grupo,          // objeto grupo | null
-    miembros,       // array de MiembroGrupo
-    rolActual,      // "admin" | "miembro" | null
+    grupo, // objeto grupo | null
+    miembros, // array de MiembroGrupo
+    rolActual, // "admin" | "miembro" | null
     loading,
     error,
     cargarGrupo,
@@ -163,7 +186,9 @@ export function GroupProvider({ children }) {
     limpiarGrupo,
   };
 
-  return <GroupContext.Provider value={value}>{children}</GroupContext.Provider>;
+  return (
+    <GroupContext.Provider value={value}>{children}</GroupContext.Provider>
+  );
 }
 
 export { GroupContext };
