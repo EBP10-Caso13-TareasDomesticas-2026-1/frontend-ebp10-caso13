@@ -20,12 +20,19 @@ import authService from "@/services/authService";
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
-  const [sesion, setSesion, removeSesion] = useLocalStorage("homesync_sesion", null);
+  const [sesion, setSesion, removeSesion] = useLocalStorage(
+    "homesync_sesion",
+    null,
+  );
 
   // ─── Derivados ────────────────────────────────────────────────
   const isAuthenticated = !!sesion?.token;
   const usuario = sesion
-    ? { idUsuario: sesion.idUsuario, nombre: sesion.nombre, correo: sesion.correo }
+    ? {
+        idUsuario: sesion.idUsuario,
+        nombre: sesion.nombre,
+        correo: sesion.correo,
+      }
     : null;
   const token = sesion?.token ?? null;
 
@@ -50,21 +57,31 @@ export function AuthProvider({ children }) {
    * @param {{ correo, contrasena }} data
    * @returns {{ ok: boolean, error?: string }}
    */
-  const login = useCallback(async (data) => {
-    try {
-      const respuesta = await authService.iniciarSesion(data);
-      // respuesta esperada: { idUsuario, nombre, correo, token, mensaje }
-      setSesion({
-        token: respuesta.token,
-        idUsuario: respuesta.idUsuario,
-        nombre: respuesta.nombre,
-        correo: respuesta.correo,
-      });
-      return { ok: true };
-    } catch (error) {
-      return { ok: false, error: error.message ?? "Credenciales incorrectas" };
-    }
-  }, [setSesion]);
+  const login = useCallback(
+    async (data) => {
+      try {
+        const respuesta = await authService.iniciarSesion(data);
+        setSesion({
+          token: respuesta.token,
+          idUsuario: respuesta.idUsuario,
+          nombre: respuesta.nombre,
+          correo: respuesta.correo,
+        });
+        // Devuelve la data para que el LoginPage la use
+        return {
+          ok: true,
+          idUsuario: respuesta.idUsuario,
+          token: respuesta.token,
+        };
+      } catch (error) {
+        return {
+          ok: false,
+          error: error.message ?? "Credenciales incorrectas",
+        };
+      }
+    },
+    [setSesion],
+  );
 
   /**
    * Cierra sesión: invalida el token en el backend y limpia localStorage.
@@ -77,7 +94,10 @@ export function AuthProvider({ children }) {
       }
     } catch (error) {
       // Aunque falle el backend, limpiamos la sesión local igual
-      console.warn("[AuthContext] Error al cerrar sesión en el servidor:", error);
+      console.warn(
+        "[AuthContext] Error al cerrar sesión en el servidor:",
+        error,
+      );
     } finally {
       removeSesion();
     }
@@ -86,8 +106,8 @@ export function AuthProvider({ children }) {
 
   // ─── Valor del contexto ───────────────────────────────────────
   const value = {
-    usuario,       // { idUsuario, nombre, correo } | null
-    token,         // string | null
+    usuario, // { idUsuario, nombre, correo } | null
+    token, // string | null
     isAuthenticated,
     login,
     logout,
