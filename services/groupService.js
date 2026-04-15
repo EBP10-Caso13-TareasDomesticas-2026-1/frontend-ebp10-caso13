@@ -22,7 +22,7 @@ const resolverGrupo = (grupo) => ({
 
 // Firma pública uniforme para mock y api:
 //   obtenerGrupoDeUsuario(usuarioId, token)
-//   crearGrupo(data, token)
+//   crearGrupo(data, token, usuarioId)
 //   unirseConCodigo(codigoInvitacion, token)
 //   obtenerGrupo(grupoId, token)
 //

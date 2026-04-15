@@ -10,7 +10,7 @@
 
 - **Nombre del sistema:** HomeSync
 - **Descripción:** Sistema de Gestión de Tareas Domésticas
-- **Backend:** Spring Boot (Java) en `http://localhost:8080` (desarrollo local)
+- **Backend:** Spring Boot (Java)
 - **Framework frontend:** Next.js 14 con App Router
 - **Estilos:** Tailwind CSS con colores personalizados
 - **Lenguaje:** JavaScript/JSX (sin TypeScript)
@@ -108,6 +108,7 @@
 | `hooks/useFetch.js` | Estado loading/error/data para llamadas a servicios puntuales | `const { data, loading, execute } = useFetch(servicio)` |
 
 ### Notas de acoplamiento entre contextos
+
 - `GroupContext` lee `usuario` y `token` directamente de `AuthContext` — **no** se le pasan como parámetros.
 - `cargarGrupo()` no recibe argumentos. Retorna `{ ok: true }` si el usuario tiene grupo, `{ ok: false, error }` si no. Un `{ ok: false }` **no es un error**, es el caso válido de usuario sin grupo (ver HU-002 Escenario 6).
 - `login()` de AuthContext probablemente retorna `void` — guarda la sesión en estado interno. Pendiente confirmar con Camila.
@@ -137,34 +138,24 @@
 | `authService.js` | `registrarUsuario(data)` | POST | `/usuarios/registro` |
 | `authService.js` | `iniciarSesion(data)` | POST | `/usuarios/login` |
 | `authService.js` | `cerrarSesion(token)` | POST | `/usuarios/logout` |
-| `groupService.js` | `obtenerGrupoDeUsuario(usuarioId, token)` | GET | `/miembros-grupo/usuario/{id}` |
+| `groupService.js` | `obtenerGrupoDeUsuario(usuarioId, token)` | GET | `/miembros-grupo/` |
 | `groupService.js` | `crearGrupo(data, token, usuarioId)` | POST | `/grupos` |
-| `groupService.js` | `unirseConCodigo(codigoInvitacion, token)` | POST | `/grupos/unirse` |
+| `groupService.js` | `unirseConCodigo(codigoInvitacion, token, usuarioId)` | POST | `/grupos/unirse` |
 | `groupService.js` | `obtenerGrupo(grupoId, token)` | GET | `/grupos/{id}` |
-
----
-
-## PÁGINAS / PANTALLAS
-
-| Rama git | Ruta | Archivo | Estado | HU | Responsable |
-|----------|------|---------|--------|----|-------------|
-| hu-002 | /login | app/(auth)/login/page.jsx | con mocks | HU-002 | David Sanchez |
-
-**Estados:** `en progreso` · `con mocks` · `conectada al backend` · `revisada`
 
 ---
 
 ## HISTORIAS DE USUARIO — SPRINT ACTUAL
 
-**Sprint 1**
+### **Sprint 1**
 
 | ID | Descripción | Estado | Responsable |
 | ---- | ------------- | -------- | ------------- |
-| HU-001 | Como usuario, quiero registrarme en la plataforma con nombre, correo, contraseña y pin de seguridad, para crear mi cuenta y acceder a las funcionalidades del sistema. | pendiente | Salome Toro |
-| HU-002 | Como usuario registrado, quiero iniciar sesión con mi correo y contraseña, para acceder a mi cuenta. | pantalla lista | David Sanchez |
-| HU-003 | Como usuario registrado, quiero cerrar sesión en la plataforma, para proteger mi cuenta cuando termine de usarla. | pantalla lista | Daniel Sanchez |
-| HU-004 | Como usuario registrado, quiero crear un grupo familiar, para organizar las tareas del hogar con los integrantes de mi grupo familiar, convirtiéndome en administrador del mismo. | pendiente | Alejandro Toro |
-| HU-005 | Como administrador del grupo familiar, quiero invitar usuarios al grupo familiar mediante un código de invitación, para integrarlos en la organización de tareas del hogar. | pendiente | Daniel Salas |
+| HU-001 | Como usuario, quiero registrarme en la plataforma con nombre, correo, contraseña y pin de seguridad, para crear mi cuenta y acceder a las funcionalidades del sistema. | completada | Salome Toro |
+| HU-002 | Como usuario registrado, quiero iniciar sesión con mi correo y contraseña, para acceder a mi cuenta. | completada | David Sanchez |
+| HU-003 | Como usuario registrado, quiero cerrar sesión en la plataforma, para proteger mi cuenta cuando termine de usarla. | completada | Daniel Sanchez |
+| HU-004 | Como usuario registrado, quiero crear un grupo familiar, para organizar las tareas del hogar con los integrantes de mi grupo familiar, convirtiéndome en administrador del mismo. | pantalla lista | Alejandro Toro |
+| HU-005 | Como administrador del grupo familiar, quiero invitar usuarios al grupo familiar mediante un código de invitación, para integrarlos en la organización de tareas del hogar. | pantalla lista | Daniel Salas |
 
 **Estados:** `pendiente` · `en progreso` · `pantalla lista` · `integrada` · `completada`
 
@@ -239,4 +230,5 @@
 | 31/03/26 | Alejandro Toro | Creación hu 004 |
 | 31/03/26 | Alejandro Toro | Cambios miembrosGrupo.js |
 | 02/04/26 | David Sanchez | HU-002: pantalla de login con mocks. Notas de acoplamiento GroupContext/AuthContext |
-| 03/04/26 | Camula Torres | Ajustes de consistencia y realización de pruebas |
+| 03/04/26 | Camila Torres | Ajustes de consistencia y realización de pruebas |
+| 13/04/26 | Camila Torres | Ajustes de consistencia y arreglo de bug en relación al login |
