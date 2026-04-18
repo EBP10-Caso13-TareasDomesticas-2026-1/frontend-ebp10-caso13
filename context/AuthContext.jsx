@@ -1,8 +1,9 @@
 "use client";
 
-import { createContext, useContext, useCallback } from "react";
+import { createContext, useContext, useCallback, useEffect } from "react";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
 import authService from "@/services/authService";
+import { isTokenExpired, getTimeUntilExpiry } from "@/lib/jwt";
 
 /**
  * AuthContext
@@ -26,7 +27,8 @@ export function AuthProvider({ children }) {
   );
 
   // ─── Derivados ────────────────────────────────────────────────
-  const isAuthenticated = !!sesion?.token;
+  // Incluye validación de expiración
+  const isAuthenticated = !!sesion?.token && !isTokenExpired(sesion.token);
   const usuario = sesion
     ? {
         idUsuario: sesion.idUsuario,
@@ -35,6 +37,30 @@ export function AuthProvider({ children }) {
       }
     : null;
   const token = sesion?.token ?? null;
+
+  // ─── Effect: Logout si token expirado ──────────────────────────
+  useEffect(() => {
+    if (!token) return;
+
+    // Si token ya expiró, limpiar inmediatamente
+    if (isTokenExpired(token)) {
+      removeSesion();
+      return;
+    }
+
+    // Obtener tiempo hasta expiración
+    const msUntilExpiry = getTimeUntilExpiry(token);
+
+    // Si token no tiene expiration, no hacer nada
+    if (msUntilExpiry === Infinity) return;
+
+    // Setup timeout para cuando expire
+    const timeoutId = setTimeout(() => {
+      removeSesion();
+    }, msUntilExpiry);
+
+    return () => clearTimeout(timeoutId);
+  }, [token, removeSesion]);
 
   // ─── Acciones ─────────────────────────────────────────────────
 
