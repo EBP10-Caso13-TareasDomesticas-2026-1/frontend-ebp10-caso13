@@ -328,7 +328,6 @@ export default function LoginPage() {
           <Button
             type="submit"
             variant="primary"
-            onClick={handleSubmit}
             disabled={loading || bloqueado}
             className="w-full"
           >

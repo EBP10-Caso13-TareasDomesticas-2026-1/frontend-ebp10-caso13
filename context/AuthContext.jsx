@@ -55,7 +55,7 @@ export function AuthProvider({ children }) {
   /**
    * Inicia sesión y persiste la sesión en localStorage.
    * @param {{ correo, contrasena }} data
-   * @returns {{ ok: boolean, error?: string }}
+   * @returns {{ ok: true, idUsuario: number, token: string } | { ok: false, error: string }}
    */
   const login = useCallback(
     async (data) => {

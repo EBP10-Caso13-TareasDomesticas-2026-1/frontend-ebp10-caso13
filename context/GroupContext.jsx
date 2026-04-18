@@ -79,7 +79,7 @@ export function GroupProvider({ children }) {
         // Con el grupoId obtenemos el detalle completo del grupo
         const grupoData = await groupService.obtenerGrupo(
           miembroData.grupoId,
-          token,
+          tokenUser,
         );
 
         setGrupo(grupoData);

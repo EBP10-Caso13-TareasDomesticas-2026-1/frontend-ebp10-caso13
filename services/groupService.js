@@ -23,7 +23,7 @@ const resolverGrupo = (grupo) => ({
 // Firma pública uniforme para mock y api:
 //   obtenerGrupoDeUsuario(usuarioId, token)
 //   crearGrupo(data, token, usuarioId)
-//   unirseConCodigo(codigoInvitacion, token)
+//   unirseConCodigo(codigoInvitacion, token, usuarioId)
 //   obtenerGrupo(grupoId, token)
 //
 // El mock recibe usuarioId como primer argumento cuando lo necesita.

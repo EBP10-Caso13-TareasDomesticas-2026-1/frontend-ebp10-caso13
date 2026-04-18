@@ -109,9 +109,9 @@
 
 ### Notas de acoplamiento entre contextos
 
-- `GroupContext` lee `usuario` y `token` directamente de `AuthContext` — **no** se le pasan como parámetros.
-- `cargarGrupo()` no recibe argumentos. Retorna `{ ok: true }` si el usuario tiene grupo, `{ ok: false, error }` si no. Un `{ ok: false }` **no es un error**, es el caso válido de usuario sin grupo (ver HU-002 Escenario 6).
-- `login()` de AuthContext probablemente retorna `void` — guarda la sesión en estado interno. Pendiente confirmar con Camila.
+- `GroupContext` depende de datos de autenticación, pero la carga del grupo se hace invocando `cargarGrupo(usuarioId, token)` con esos valores.
+- `cargarGrupo(usuarioId, token)` recibe ambos argumentos. Retorna `{ ok: true }` si el usuario tiene grupo, `{ ok: false, error }` si no. Un `{ ok: false }` **no es un error**, es el caso válido de usuario sin grupo (ver HU-002 Escenario 6).
+- `login()` de `AuthContext` ya no retorna `void`: además de persistir la sesión, retorna al menos `idUsuario` y `token`, que luego se usan en el flujo de `LoginPage` para cargar el grupo.
 
 ---
 
@@ -140,7 +140,7 @@
 | `authService.js` | `cerrarSesion(token)` | POST | `/usuarios/logout` |
 | `groupService.js` | `obtenerGrupoDeUsuario(usuarioId, token)` | GET | `/miembros-grupo/` |
 | `groupService.js` | `crearGrupo(data, token, usuarioId)` | POST | `/grupos` |
-| `groupService.js` | `unirseConCodigo(codigoInvitacion, token, usuarioId)` | POST | `/grupos/unirse` |
+| `groupService.js` | `unirseConCodigo(codigoInvitacion, token, usuarioId)` | POST | `/miembros-grupo` |
 | `groupService.js` | `obtenerGrupo(grupoId, token)` | GET | `/grupos/{id}` |
 
 ---
