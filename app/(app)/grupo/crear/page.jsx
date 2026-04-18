@@ -100,13 +100,8 @@ export default function CrearGrupoPage() {
   ) : null;
 
   const handleNombreChange = (event) => {
-    const value = event.target.value.slice(0, MAX_NAME_LENGTH);
-    setNombre(value);
-    if (value.length === MAX_NAME_LENGTH) {
-      setError("El nombre es demasiado largo");
-    } else {
-      setError("");
-    }
+    setNombre(event.target.value);
+    setError("");
   };
 
   const handleSubmit = async (event) => {
@@ -219,6 +214,7 @@ export default function CrearGrupoPage() {
                   onChange={handleNombreChange}
                   error={error}
                   disabled={loading || membershipLoading || hasGroup}
+                  maxLength={MAX_NAME_LENGTH}
                 />
                 <p className="text-xs text-secondary">
                   Máximo {MAX_NAME_LENGTH} caracteres.

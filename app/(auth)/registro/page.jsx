@@ -8,46 +8,14 @@ import CenteredLayout from "@/components/layout/CenteredLayout";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 import PasswordInput from "@/components/ui/PasswordInput";
+import {
+  validarNombre,
+  validarCorreo,
+  validarContrasenaRegistro as validarContrasena,
+  validarConfirmarContrasena,
+  validarPin,
+} from "@/lib/validators";
 import authService from "@/services/authService";
-
-// ─── VALIDACIONES ────────────────────────────────────────────────────────────
-
-function validarNombre(valor) {
-  if (!valor.trim()) return "El nombre es obligatorio.";
-  if (valor.length > 50) return "El nombre no puede superar los 50 caracteres.";
-  return "";
-}
-
-function validarCorreo(valor) {
-  if (!valor.trim()) return "El correo electrónico es obligatorio.";
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!emailRegex.test(valor)) return "Ingresa un correo electrónico válido.";
-  return "";
-}
-
-function validarContrasena(valor) {
-  if (!valor) return "La contraseña es obligatoria.";
-  const errores = [];
-  if (valor.length < 8) errores.push("mínimo 8 caracteres");
-  if (!/[A-Z]/.test(valor)) errores.push("al menos una mayúscula");
-  if (!/[0-9]/.test(valor)) errores.push("al menos un número");
-  if (!/[^A-Za-z0-9]/.test(valor)) errores.push("al menos un carácter especial");
-  if (errores.length > 0) return `La contraseña requiere: ${errores.join(", ")}.`;
-  return "";
-}
-
-function validarConfirmarContrasena(contrasena, confirmar) {
-  if (!confirmar) return "Confirmar la contraseña es obligatorio.";
-  if (contrasena !== confirmar) return "Las contraseñas no coinciden.";
-  return "";
-}
-
-function validarPin(valor) {
-  if (!valor) return "El pin de seguridad es obligatorio.";
-  if (!/^\d{5}$/.test(valor))
-    return "El pin de seguridad debe ser numérico y tener exactamente 5 cifras.";
-  return "";
-}
 
 // ─── PÁGINA ──────────────────────────────────────────────────────────────────
 
@@ -82,19 +50,15 @@ export default function RegistroPage() {
   const handleChange = (campo) => (e) => {
     const valor = e.target.value;
 
-    // Bloquear nombre si supera 50 caracteres (escenario 6)
-    if (campo === "nombre" && valor.length > 50) {
-      setErrores((prev) => ({
-        ...prev,
-        nombre: "Has alcanzado el límite de 50 caracteres.",
-      }));
-      return;
-    }
-
     setForm((prev) => ({ ...prev, [campo]: valor }));
 
-    // Limpiar error del campo al editar
-    setErrores((prev) => ({ ...prev, [campo]: "" }));
+    // Validar nombre en tiempo real usando la función centralizada
+    if (campo === "nombre") {
+      const error = validarNombre(valor);
+      setErrores((prev) => ({ ...prev, nombre: error }));
+    } else {
+      setErrores((prev) => ({ ...prev, [campo]: "" }));
+    }
     setErrorGlobal("");
   };
 
@@ -211,6 +175,7 @@ export default function RegistroPage() {
             error={errores.nombre}
             icon={<UserCheck size={16} className="text-secondary" />}
             disabled={loading || exito}
+            maxLength={50}
           />
 
           {/* Correo electrónico */}

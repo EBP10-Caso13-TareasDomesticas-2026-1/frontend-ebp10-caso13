@@ -8,6 +8,7 @@ import CenteredLayout from "@/components/layout/CenteredLayout";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 import PasswordInput from "@/components/ui/PasswordInput";
+import { validarCorreo, validarContrasenaLogin as validarContrasena } from "@/lib/validators";
 import { useAuth } from "@/hooks/useAuth";
 import { useGroup } from "@/hooks/useGroup";
 
@@ -17,20 +18,6 @@ const MAX_INTENTOS = 5;
 const BLOQUEO_MS = 15 * 60 * 1000; // 15 minutos en ms
 const STORAGE_KEY_INTENTOS = "hs_login_intentos";
 const STORAGE_KEY_BLOQUEO = "hs_login_bloqueo_hasta";
-
-// ─── VALIDACIONES ────────────────────────────────────────────────────────────
-
-function validarCorreo(valor) {
-  if (!valor.trim()) return "El correo electrónico es obligatorio.";
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!emailRegex.test(valor)) return "Ingresa un correo electrónico válido.";
-  return "";
-}
-
-function validarContrasena(valor) {
-  if (!valor) return "La contraseña es obligatoria.";
-  return "";
-}
 
 // ─── HELPERS DE BLOQUEO (localStorage) ──────────────────────────────────────
 // El bloqueo se maneja en frontend con mocks. Cuando se conecte al backend,
