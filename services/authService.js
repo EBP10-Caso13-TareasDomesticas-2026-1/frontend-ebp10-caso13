@@ -41,7 +41,9 @@ const api = {
       "/usuarios/login",
       {
         method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: data,
+        cache: "no-store",
       }
     );
 

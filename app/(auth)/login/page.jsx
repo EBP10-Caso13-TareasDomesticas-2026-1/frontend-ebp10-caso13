@@ -38,8 +38,14 @@ function validarContrasena(valor) {
 
 function obtenerEstadoBloqueo() {
   try {
-    const bloqueoHasta = parseInt(localStorage.getItem(STORAGE_KEY_BLOQUEO) || "0", 10);
-    const intentos = parseInt(localStorage.getItem(STORAGE_KEY_INTENTOS) || "0", 10);
+    const bloqueoHasta = parseInt(
+      localStorage.getItem(STORAGE_KEY_BLOQUEO) || "0",
+      10,
+    );
+    const intentos = parseInt(
+      localStorage.getItem(STORAGE_KEY_INTENTOS) || "0",
+      10,
+    );
     const ahora = Date.now();
     if (bloqueoHasta && ahora < bloqueoHasta) {
       return { bloqueado: true, hasta: bloqueoHasta, intentos };
@@ -56,7 +62,8 @@ function obtenerEstadoBloqueo() {
 
 function registrarIntentoFallido() {
   try {
-    const intentos = parseInt(localStorage.getItem(STORAGE_KEY_INTENTOS) || "0", 10) + 1;
+    const intentos =
+      parseInt(localStorage.getItem(STORAGE_KEY_INTENTOS) || "0", 10) + 1;
     localStorage.setItem(STORAGE_KEY_INTENTOS, String(intentos));
     if (intentos >= MAX_INTENTOS) {
       const hasta = Date.now() + BLOQUEO_MS;
@@ -185,13 +192,12 @@ export default function LoginPage() {
           setBloqueado(true);
           setBloqueoHasta(estado.hasta);
           setErrorGlobal(
-            "Tu cuenta ha sido bloqueada temporalmente por múltiples intentos fallidos. Intenta de nuevo más tarde."
+            "Tu cuenta ha sido bloqueada temporalmente por múltiples intentos fallidos. Intenta de nuevo más tarde.",
           );
         } else {
           // Escenario 2 y 3: mensaje genérico (nunca revelar cuál campo falló)
           setErrorGlobal("El correo o la contraseña son incorrectos.");
         }
-        setLoading(false);
         return;
       }
 
@@ -200,7 +206,10 @@ export default function LoginPage() {
 
       // Escenario 1 vs 6: verificar membresía en grupo.
       // cargarGrupo() lee usuario y token del AuthContext (ya actualizados).
-      const resultado = await cargarGrupo(resultadoLogin.idUsuario, resultadoLogin.token);
+      const resultado = await cargarGrupo(
+        resultadoLogin.idUsuario,
+        resultadoLogin.token,
+      );
 
       if (resultado.ok) {
         // Escenario 1: tiene grupo → tablero principal
@@ -210,8 +219,9 @@ export default function LoginPage() {
         router.push("/bienvenida");
       } else {
         // Error inesperado al consultar grupo
-        setErrorGlobal(resultado.error || "No se pudo cargar la información del grupo.");
-        setLoading(false);
+        setErrorGlobal(
+          resultado.error || "No se pudo cargar la información del grupo.",
+        );
         return;
       }
     } catch (error) {
@@ -223,7 +233,7 @@ export default function LoginPage() {
         setBloqueado(true);
         setBloqueoHasta(estado.hasta);
         setErrorGlobal(
-          "Tu cuenta ha sido bloqueada temporalmente por múltiples intentos fallidos. Intenta de nuevo más tarde."
+          "Tu cuenta ha sido bloqueada temporalmente por múltiples intentos fallidos. Intenta de nuevo más tarde.",
         );
       } else {
         // Escenario 2 y 3: mensaje genérico (nunca revelar cuál campo falló)
@@ -251,7 +261,6 @@ export default function LoginPage() {
   return (
     <CenteredLayout navbarContent={navbarContent}>
       <div className="flex flex-col items-center gap-6 w-full">
-
         {/* ── Encabezado ── */}
         <div className="flex flex-col items-center gap-1 mt-2">
           <h1 className="text-2xl font-bold text-foreground">Iniciar sesión</h1>
@@ -273,8 +282,13 @@ export default function LoginPage() {
         )}
 
         {/* ── Formulario ── */}
-        <div className="flex flex-col gap-4 w-full">
-
+        <form
+          className="flex flex-col gap-4 w-full"
+          onSubmit={(e) => {
+            e.preventDefault();
+            handleSubmit();
+          }}
+        >
           {/* Correo electrónico */}
           <Input
             label="Correo electrónico"
@@ -310,17 +324,16 @@ export default function LoginPage() {
               </button>
             </div>
           </div>
-        </div>
-
-        {/* ── Botón de login ── */}
-        <Button
-          variant="primary"
-          onClick={handleSubmit}
-          disabled={loading || bloqueado}
-          className="w-full"
-        >
-          {loading ? "Iniciando sesión..." : "Iniciar sesión"}
-        </Button>
+          {/* ── Botón de login ── */}
+          <Button
+            type="submit"
+            variant="primary"
+            disabled={loading || bloqueado}
+            className="w-full"
+          >
+            {loading ? "Iniciando sesión..." : "Iniciar sesión"}
+          </Button>
+        </form>
 
         {/* ── Separador ── */}
         <div className="flex items-center gap-3 w-full">
@@ -341,7 +354,6 @@ export default function LoginPage() {
             Regístrate
           </a>
         </p>
-
       </div>
     </CenteredLayout>
   );
