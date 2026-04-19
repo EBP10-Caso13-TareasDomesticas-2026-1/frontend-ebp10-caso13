@@ -24,7 +24,7 @@ export default function ProtectedRoute({ children }) {
     if (!isInitialized) return;
 
     if (!isAuthenticated) {
-      router.push("/login?sesion_expirada=true");
+      router.push("/login");
     }
   }, [isAuthenticated, isInitialized, router]);
 
