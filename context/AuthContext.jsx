@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useCallback, useEffect } from "react";
+import { createContext, useContext, useCallback, useEffect, useState } from "react";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
 import authService from "@/services/authService";
 import { isTokenExpired, getTimeUntilExpiry } from "@/lib/jwt";
@@ -25,6 +25,7 @@ export function AuthProvider({ children }) {
     "homesync_sesion",
     null,
   );
+  const [isInitialized, setIsInitialized] = useState(false);
 
   // ─── Derivados ────────────────────────────────────────────────
   // Incluye validación de expiración
@@ -37,6 +38,12 @@ export function AuthProvider({ children }) {
       }
     : null;
   const token = sesion?.token ?? null;
+
+  // ─── Effect: Inicialización del contexto ──────────────────────
+  useEffect(() => {
+    // Marca que el contexto está listo después de que React renderice
+    setIsInitialized(true);
+  }, []);
 
   // ─── Effect: Logout si token expirado ──────────────────────────
   useEffect(() => {
@@ -135,6 +142,7 @@ export function AuthProvider({ children }) {
     usuario, // { idUsuario, nombre, correo } | null
     token, // string | null
     isAuthenticated,
+    isInitialized, // Indica si el contexto ya cargó desde localStorage
     login,
     logout,
     register,
