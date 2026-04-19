@@ -10,6 +10,7 @@
   - error       (string)    Mensaje de error debajo del input. Si está vacío, no se muestra
   - icon        (JSX)       Ícono a la izquierda. Ej: icon={<Mail size={16} />}
   - disabled    (boolean)   Si es true, el input no se puede editar. Default: false
+  - maxLength   (number)    Límite máximo de caracteres. Optional.
   - className   (string)    Clases CSS extra opcionales desde afuera
 */
 "use client";
@@ -22,6 +23,7 @@ export default function Input({
   error = "",
   icon,
   disabled = false,
+  maxLength,
   className = "",
 }) {
   const handleChange = (e) => {
@@ -58,6 +60,7 @@ export default function Input({
           onChange={handleChange}
           placeholder={placeholder}
           disabled={disabled}
+          maxLength={maxLength}
           className={`${inputClass} ${icon ? "pl-9" : ""}`}
         />
         {/* Agrega padding izquierdo si hay ícono, para que no se solapen */}
