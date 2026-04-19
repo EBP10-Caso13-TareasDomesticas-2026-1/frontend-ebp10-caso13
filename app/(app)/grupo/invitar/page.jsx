@@ -4,6 +4,7 @@ import dynamic from "next/dynamic";
 import { Suspense, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
+import ProtectedRoute from "@/components/ProtectedRoute";
 import AppLayout from "@/components/layout/AppLayout";
 import Button from "@/components/ui/Button";
 import InviteCodeCard from "@/components/ui/InviteCodeCard";
@@ -193,8 +194,10 @@ function InvitarFallback() {
 
 export default function InvitarGrupoPage() {
   return (
-    <Suspense fallback={<InvitarFallback />}>
-      <InvitarGrupoContent />
-    </Suspense>
+    <ProtectedRoute>
+      <Suspense fallback={<InvitarFallback />}>
+        <InvitarGrupoContent />
+      </Suspense>
+    </ProtectedRoute>
   );
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useCallback, useEffect } from "react";
+import { createContext, useContext, useCallback, useEffect, useState } from "react";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
 import authService from "@/services/authService";
 import { isTokenExpired, getTimeUntilExpiry } from "@/lib/jwt";
@@ -25,6 +25,7 @@ export function AuthProvider({ children }) {
     "homesync_sesion",
     null,
   );
+  const [isHydrated, setIsHydrated] = useState(false);
 
   // ─── Derivados ────────────────────────────────────────────────
   // Incluye validación de expiración
@@ -37,6 +38,13 @@ export function AuthProvider({ children }) {
       }
     : null;
   const token = sesion?.token ?? null;
+
+  // ─── Effect: Hidratación del cliente ──────────────────────────
+  // useLocalStorage lee desde localStorage en su initializer, así que sesion
+  // ya tiene valor. Este flag indica que el componente se montó en el cliente.
+  useEffect(() => {
+    setIsHydrated(true);
+  }, []);
 
   // ─── Effect: Logout si token expirado ──────────────────────────
   useEffect(() => {
@@ -135,6 +143,7 @@ export function AuthProvider({ children }) {
     usuario, // { idUsuario, nombre, correo } | null
     token, // string | null
     isAuthenticated,
+    isHydrated, // Indica que el cliente se hidratró (sesión cargada desde localStorage)
     login,
     logout,
     register,

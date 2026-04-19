@@ -3,6 +3,7 @@ import dynamic from "next/dynamic";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
+import ProtectedRoute from "@/components/ProtectedRoute";
 import AppLayout from "@/components/layout/AppLayout";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
@@ -12,7 +13,7 @@ import groupService from "@/services/groupService";
 const MAX_NAME_LENGTH = 50;
 const LogOut = dynamic(() => import("@/components/ui/LogOut"), { ssr: false });
 
-export default function CrearGrupoPage() {
+function CrearGrupoContent() {
   const router = useRouter();
   const { isAuthenticated, usuario, token, logout } = useAuth();
   const [showLogoutModal, setShowLogoutModal] = useState(false);
@@ -266,5 +267,13 @@ export default function CrearGrupoPage() {
   onConfirm={handleLogout}
   onCancel={() => setShowLogoutModal(false)}
 /> </>
+  );
+}
+
+export default function CrearGrupoPage() {
+  return (
+    <ProtectedRoute>
+      <CrearGrupoContent />
+    </ProtectedRoute>
   );
 }
