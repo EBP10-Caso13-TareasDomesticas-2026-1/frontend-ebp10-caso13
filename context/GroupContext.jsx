@@ -56,16 +56,16 @@ export function GroupProvider({ children }) {
   const cargarGrupo = useCallback(
     async (usuarioIdParam, tokenParam) => {
       const usuarioId = usuarioIdParam ?? usuario?.idUsuario;
-      const tokenUsar = tokenParam ?? token;
-      if (!usuarioId || !tokenUsar)
+      const tokenUser = tokenParam ?? token;
+      if (!usuarioId || !tokenUser)
         return { ok: false, error: "Sin sesión activa" };
       _resetError();
       setLoading(true);
       try {
         // Devuelve el MiembroGrupo si el usuario pertenece a un grupo
         const miembroData = await groupService.obtenerGrupoDeUsuario(
-          usuario.idUsuario,
-          token,
+          usuarioId,
+          tokenUser,
         );
 
         if (!miembroData) {
@@ -79,7 +79,7 @@ export function GroupProvider({ children }) {
         // Con el grupoId obtenemos el detalle completo del grupo
         const grupoData = await groupService.obtenerGrupo(
           miembroData.grupoId,
-          token,
+          tokenUser,
         );
 
         setGrupo(grupoData);

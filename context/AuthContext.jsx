@@ -1,8 +1,9 @@
 "use client";
 
-import { createContext, useContext, useCallback } from "react";
+import { createContext, useContext, useCallback, useEffect } from "react";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
 import authService from "@/services/authService";
+import { isTokenExpired, getTimeUntilExpiry } from "@/lib/jwt";
 
 /**
  * AuthContext
@@ -20,14 +21,46 @@ import authService from "@/services/authService";
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
-  const [sesion, setSesion, removeSesion] = useLocalStorage("homesync_sesion", null);
+  const [sesion, setSesion, removeSesion] = useLocalStorage(
+    "homesync_sesion",
+    null,
+  );
 
   // ─── Derivados ────────────────────────────────────────────────
-  const isAuthenticated = !!sesion?.token;
+  // Incluye validación de expiración
+  const isAuthenticated = !!sesion?.token && !isTokenExpired(sesion.token);
   const usuario = sesion
-    ? { idUsuario: sesion.idUsuario, nombre: sesion.nombre, correo: sesion.correo }
+    ? {
+        idUsuario: sesion.idUsuario,
+        nombre: sesion.nombre,
+        correo: sesion.correo,
+      }
     : null;
   const token = sesion?.token ?? null;
+
+  // ─── Effect: Logout si token expirado ──────────────────────────
+  useEffect(() => {
+    if (!token) return;
+
+    // Si token ya expiró, limpiar inmediatamente
+    if (isTokenExpired(token)) {
+      removeSesion();
+      return;
+    }
+
+    // Obtener tiempo hasta expiración
+    const msUntilExpiry = getTimeUntilExpiry(token);
+
+    // Si token no tiene expiration, no hacer nada
+    if (msUntilExpiry === Infinity) return;
+
+    // Setup timeout para cuando expire
+    const timeoutId = setTimeout(() => {
+      removeSesion();
+    }, msUntilExpiry);
+
+    return () => clearTimeout(timeoutId);
+  }, [token, removeSesion]);
 
   // ─── Acciones ─────────────────────────────────────────────────
 
@@ -48,23 +81,33 @@ export function AuthProvider({ children }) {
   /**
    * Inicia sesión y persiste la sesión en localStorage.
    * @param {{ correo, contrasena }} data
-   * @returns {{ ok: boolean, error?: string }}
+   * @returns {{ ok: true, idUsuario: number, token: string } | { ok: false, error: string }}
    */
-  const login = useCallback(async (data) => {
-    try {
-      const respuesta = await authService.iniciarSesion(data);
-      // respuesta esperada: { idUsuario, nombre, correo, token, mensaje }
-      setSesion({
-        token: respuesta.token,
-        idUsuario: respuesta.idUsuario,
-        nombre: respuesta.nombre,
-        correo: respuesta.correo,
-      });
-      return { ok: true };
-    } catch (error) {
-      return { ok: false, error: error.message ?? "Credenciales incorrectas" };
-    }
-  }, [setSesion]);
+  const login = useCallback(
+    async (data) => {
+      try {
+        const respuesta = await authService.iniciarSesion(data);
+        setSesion({
+          token: respuesta.token,
+          idUsuario: respuesta.idUsuario,
+          nombre: respuesta.nombre,
+          correo: respuesta.correo,
+        });
+        // Devuelve la data para que el LoginPage la use
+        return {
+          ok: true,
+          idUsuario: respuesta.idUsuario,
+          token: respuesta.token,
+        };
+      } catch (error) {
+        return {
+          ok: false,
+          error: error.message ?? "Credenciales incorrectas",
+        };
+      }
+    },
+    [setSesion],
+  );
 
   /**
    * Cierra sesión: invalida el token en el backend y limpia localStorage.
@@ -77,7 +120,10 @@ export function AuthProvider({ children }) {
       }
     } catch (error) {
       // Aunque falle el backend, limpiamos la sesión local igual
-      console.warn("[AuthContext] Error al cerrar sesión en el servidor:", error);
+      console.warn(
+        "[AuthContext] Error al cerrar sesión en el servidor:",
+        error,
+      );
     } finally {
       removeSesion();
     }
@@ -86,8 +132,8 @@ export function AuthProvider({ children }) {
 
   // ─── Valor del contexto ───────────────────────────────────────
   const value = {
-    usuario,       // { idUsuario, nombre, correo } | null
-    token,         // string | null
+    usuario, // { idUsuario, nombre, correo } | null
+    token, // string | null
     isAuthenticated,
     login,
     logout,
