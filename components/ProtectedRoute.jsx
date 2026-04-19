@@ -7,8 +7,8 @@ import { useEffect } from "react";
 /**
  * ProtectedRoute
  * Componente que protege rutas autenticadas.
- * - Espera a que AuthContext esté inicializado
- * - Si el usuario NO tiene token, redirige a /login
+ * - Espera a que el cliente se hidrate (AuthContext cargó desde localStorage)
+ * - Si el usuario NO tiene token, usa router.replace() para redirigir sin ensuciar el historial
  *
  * Uso:
  * <ProtectedRoute>
@@ -16,20 +16,21 @@ import { useEffect } from "react";
  * </ProtectedRoute>
  */
 export default function ProtectedRoute({ children }) {
-  const { isAuthenticated, isInitialized } = useAuth();
+  const { isAuthenticated, isHydrated } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
-    // Solo redirigir después de que el contexto esté listo
-    if (!isInitialized) return;
+    // Solo redirigir después de que el cliente esté hidratado
+    if (!isHydrated) return;
 
     if (!isAuthenticated) {
-      router.push("/login");
+      // router.replace() no deja la ruta protegida en el historial
+      router.replace("/login");
     }
-  }, [isAuthenticated, isInitialized, router]);
+  }, [isAuthenticated, isHydrated, router]);
 
-  // Mientras se inicializa, no renderizar nada
-  if (!isInitialized) {
+  // Mientras se hidrata, no renderizar nada
+  if (!isHydrated) {
     return null;
   }
 

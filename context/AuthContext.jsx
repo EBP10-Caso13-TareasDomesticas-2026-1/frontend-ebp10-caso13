@@ -25,7 +25,7 @@ export function AuthProvider({ children }) {
     "homesync_sesion",
     null,
   );
-  const [isInitialized, setIsInitialized] = useState(false);
+  const [isHydrated, setIsHydrated] = useState(false);
 
   // ─── Derivados ────────────────────────────────────────────────
   // Incluye validación de expiración
@@ -39,10 +39,11 @@ export function AuthProvider({ children }) {
     : null;
   const token = sesion?.token ?? null;
 
-  // ─── Effect: Inicialización del contexto ──────────────────────
+  // ─── Effect: Hidratación del cliente ──────────────────────────
+  // useLocalStorage lee desde localStorage en su initializer, así que sesion
+  // ya tiene valor. Este flag indica que el componente se montó en el cliente.
   useEffect(() => {
-    // Marca que el contexto está listo después de que React renderice
-    setIsInitialized(true);
+    setIsHydrated(true);
   }, []);
 
   // ─── Effect: Logout si token expirado ──────────────────────────
@@ -142,7 +143,7 @@ export function AuthProvider({ children }) {
     usuario, // { idUsuario, nombre, correo } | null
     token, // string | null
     isAuthenticated,
-    isInitialized, // Indica si el contexto ya cargó desde localStorage
+    isHydrated, // Indica que el cliente se hidratró (sesión cargada desde localStorage)
     login,
     logout,
     register,
