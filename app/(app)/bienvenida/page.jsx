@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 
+import ProtectedRoute from "@/components/ProtectedRoute";
 import AppLayout from "@/components/layout/AppLayout";
 import Button from "@/components/ui/Button";
 import { useAuth } from "@/hooks/useAuth";
@@ -11,7 +12,7 @@ import { useAuth } from "@/hooks/useAuth";
 // Carga dinámica para evitar el error de "use client" mal ubicado en LogOut.jsx
 const LogOut = dynamic(() => import("@/components/ui/LogOut"), { ssr: false });
 
-export default function BienvenidaPage() {
+function BienvenidaContent() {
   const router = useRouter();
   const { logout } = useAuth();
   const [showLogoutModal, setShowLogoutModal] = useState(false);
@@ -122,5 +123,13 @@ export default function BienvenidaPage() {
         onCancel={() => setShowLogoutModal(false)}
       />
     </>
+  );
+}
+
+export default function BienvenidaPage() {
+  return (
+    <ProtectedRoute>
+      <BienvenidaContent />
+    </ProtectedRoute>
   );
 }
