@@ -4,13 +4,13 @@
   - placeholder (string)    Texto gris dentro del input vacío. Ej: "ejemplo@correo.com"
   - type        (string)    Tipo HTML del input. Default: "text"
                             Opciones: "text" | "email" | "password" | "tel"
-                            Usar "tel" para el PIN — filtra solo números, máx 5 dígitos
+                            Usar "tel" para el PIN — filtra solo números, respeta maxLength (default: 5)
   - value       (string)    Valor actual del input. Viene desde la pantalla padre
   - onChange    (function)  Se ejecuta cada vez que el usuario escribe
   - error       (string)    Mensaje de error debajo del input. Si está vacío, no se muestra
   - icon        (JSX)       Ícono a la izquierda. Ej: icon={<Mail size={16} />}
   - disabled    (boolean)   Si es true, el input no se puede editar. Default: false
-  - maxLength   (number)    Límite máximo de caracteres. Optional.
+  - maxLength   (number)    Límite máximo de caracteres. Para type="tel", default: 5. Aplicado en handleChange.
   - className   (string)    Clases CSS extra opcionales desde afuera
 */
 "use client";
@@ -30,7 +30,8 @@ export default function Input({
     if (!onChange) {
       return;
     } else if (type === "tel") {
-      const onlyNumbers = e.target.value.replace(/\D/g, "").slice(0, 5);
+      const limit = maxLength || 5;
+      const onlyNumbers = e.target.value.replace(/\D/g, "").slice(0, limit);
       onChange({ target: { value: onlyNumbers } });
     } else {
       onChange(e);
