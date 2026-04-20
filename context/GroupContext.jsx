@@ -30,13 +30,13 @@ export function GroupProvider({ children }) {
 
   // ─── Helpers internos ─────────────────────────────────────────
 
-  const _resetError = () => setError(null);
+  const clearGroupError = () => setError(null);
 
   /**
    * Determina el rol del usuario en el grupo a partir de la lista de miembros.
    * rolId === 1 → "admin", rolId === 2 → "miembro" (según seed de BD)
    */
-  const _resolverRol = useCallback(
+  const determineUserRole = useCallback(
     (listaMiembros) => {
       if (!usuario || !listaMiembros.length) return null;
       const yo = listaMiembros.find((m) => m.usuarioId === usuario.idUsuario);
@@ -59,7 +59,7 @@ export function GroupProvider({ children }) {
       const tokenUser = tokenParam ?? token;
       if (!usuarioId || !tokenUser)
         return { ok: false, error: "Sin sesión activa" };
-      _resetError();
+      clearGroupError();
       setLoading(true);
       try {
         // Devuelve el MiembroGrupo si el usuario pertenece a un grupo
@@ -84,7 +84,7 @@ export function GroupProvider({ children }) {
 
         setGrupo(grupoData);
         setMiembros([miembroData]);
-        setRolActual(_resolverRol([miembroData]));
+        setRolActual(determineUserRole([miembroData]));
         return { ok: true };
       } catch (err) {
         const mensaje = err.message ?? "Error al cargar el grupo";
@@ -94,7 +94,7 @@ export function GroupProvider({ children }) {
         setLoading(false);
       }
     },
-    [usuario, token, _resolverRol]
+    [usuario, token, determineUserRole]
   );
 
   /**
@@ -105,7 +105,7 @@ export function GroupProvider({ children }) {
   const crearNuevoGrupo = useCallback(
     async (data) => {
       if (!usuario || !token) return { ok: false, error: "Sin sesión activa" };
-      _resetError();
+      clearGroupError();
       setLoading(true);
       try {
         const grupoCreado = await groupService.crearGrupo(
@@ -136,7 +136,7 @@ export function GroupProvider({ children }) {
   const unirseAlGrupo = useCallback(
     async (codigoInvitacion) => {
       if (!usuario || !token) return { ok: false, error: "Sin sesión activa" };
-      _resetError();
+      clearGroupError();
       setLoading(true);
       try {
         const miembroData = await groupService.unirseConCodigo(
