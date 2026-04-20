@@ -134,6 +134,7 @@ function CrearGrupoContent() {
       const grupoCreado = await groupService.crearGrupo(
         { nombre: trimmed },
         token,
+        usuario.idUsuario,
       );
       router.push(
         `/grupo/invitar?codigo=${encodeURIComponent(grupoCreado.codigoInvitacion)}`,
