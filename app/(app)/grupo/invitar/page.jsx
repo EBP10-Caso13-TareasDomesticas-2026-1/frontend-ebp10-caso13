@@ -1,7 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { Suspense, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
 import ProtectedRoute from "@/components/ProtectedRoute";
@@ -171,26 +171,10 @@ function InvitarGrupoContent() {
   );
 }
 
-function InvitarFallback() {
-  return (
-    <AppLayout navbarContent={null}>
-      <div className="min-h-[70vh] flex items-center justify-center px-4 py-8">
-        <div className="w-full max-w-2xl">
-          <div className="card-outlined p-6 text-center">
-            <p className="text-sm text-secondary">Cargando…</p>
-          </div>
-        </div>
-      </div>
-    </AppLayout>
-  );
-}
-
 export default function InvitarGrupoPage() {
   return (
     <ProtectedRoute>
-      <Suspense fallback={<InvitarFallback />}>
-        <InvitarGrupoContent />
-      </Suspense>
+      <InvitarGrupoContent />
     </ProtectedRoute>
   );
 }

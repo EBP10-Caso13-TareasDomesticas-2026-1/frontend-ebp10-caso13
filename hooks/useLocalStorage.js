@@ -2,11 +2,15 @@ import { useState } from "react";
 
 /**
  * useLocalStorage
- * Persiste estado en localStorage de forma reactiva.
- * Usado internamente por AuthContext para mantener sesión entre recargas.
+ * Persists state to localStorage reactively, syncing React state with disk.
+ * Used internally by AuthContext to persist sessions across page reloads.
+ * 
+ * Why check typeof window? Next.js does SSR. On the server, localStorage doesn't exist.
+ * Without this check, we'd crash. The server-side render will use initialValue,
+ * then the client will hydrate and load from localStorage.
  *
- * @param {string} key - Clave en localStorage
- * @param {*} initialValue - Valor inicial si no existe la clave
+ * @param {string} key - localStorage key
+ * @param {*} initialValue - Default value if key doesn't exist
  */
 export function useLocalStorage(key, initialValue) {
   const [storedValue, setStoredValue] = useState(() => {
