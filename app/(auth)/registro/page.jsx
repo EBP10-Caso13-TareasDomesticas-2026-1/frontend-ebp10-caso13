@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { UserCheck, Mail, Lock, Shield } from "lucide-react";
+import { UserCheck, Mail, Shield } from "lucide-react";
 
 import CenteredLayout from "@/components/layout/CenteredLayout";
 import Button from "@/components/ui/Button";

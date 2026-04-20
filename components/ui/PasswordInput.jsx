@@ -1,7 +1,6 @@
 "use client";
 import { useState } from "react";
 import Input from "@/components/ui/Input";
-import Image from "next/image"
 import { Eye, EyeOff } from "lucide-react";
 /*
   PROPS:

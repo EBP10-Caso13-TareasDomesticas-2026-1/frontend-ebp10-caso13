@@ -173,22 +173,15 @@ function InvitarGrupoContent() {
 
 function InvitarFallback() {
   return (
-    <>
-      <AppLayout navbarContent={null}>
-        <div className="min-h-[70vh] flex items-center justify-center px-4 py-8">
-          <div className="w-full max-w-2xl">
-            <div className="card-outlined p-6 text-center">
-              <p className="text-sm text-secondary">Cargando…</p>
-            </div>
+    <AppLayout navbarContent={null}>
+      <div className="min-h-[70vh] flex items-center justify-center px-4 py-8">
+        <div className="w-full max-w-2xl">
+          <div className="card-outlined p-6 text-center">
+            <p className="text-sm text-secondary">Cargando…</p>
           </div>
         </div>
-      </AppLayout>
-      <LogOut
-        isOpen={showLogoutModal}
-        onConfirm={handleLogout}
-        onCancel={() => setShowLogoutModal(false)}
-      />
-    </>
+      </div>
+    </AppLayout>
   );
 }
 

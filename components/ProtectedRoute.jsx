@@ -34,7 +34,8 @@ export default function ProtectedRoute({ children }) {
     return null;
   }
 
-  // Si está autenticado, renderizar el contenido
+  // Defensive check: if not authenticated, don't render
+  // (redirect should have already happened in the effect)
   if (!isAuthenticated) {
     return null;
   }

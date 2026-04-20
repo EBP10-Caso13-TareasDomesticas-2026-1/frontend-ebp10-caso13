@@ -2,8 +2,7 @@
 
 // Importamos Button para reutilizarlo en las acciones del modal
 import Button from "@/components/ui/Button";
-import Image from "next/image"
-// "use client";
+import Image from "next/image";
 /*
   PROPS:
   - isOpen        (boolean)   Si es true el modal se muestra, si es false se oculta
@@ -110,22 +109,3 @@ export default function LogOut({
     </div>
   );
 }
-
-
-// ─── EJEMPLO DE USO ─────────────────────────────────────────────
-//
-// En la pantalla que use el modal necesitas un estado para controlarlo:
-//
-// const [showModal, setShowModal] = useState(false);
-//
-// <Modal
-//   isOpen={showModal}
-//   icon={<img src="/logout.png" width={24} height={24} />}
-//   title="¿Cerrar sesión?"
-//   description="Tendrás que volver a ingresar tus credenciales para acceder."
-//   confirmText="Sí, cerrar sesión"
-//   cancelText="Cancelar"
-//   variant="danger"
-//   onConfirm={() => handleLogout()}
-//   onCancel={() => setShowModal(false)}
-// />
