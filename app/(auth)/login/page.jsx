@@ -12,16 +12,14 @@ import { validarCorreo, validarContrasenaLogin as validarContrasena } from "@/li
 import { useAuth } from "@/hooks/useAuth";
 import { useGroup } from "@/hooks/useGroup";
 
-// ─── CONSTANTES ──────────────────────────────────────────────────────────────
-
 const MAX_INTENTOS = 5;
 const BLOQUEO_MS = 15 * 60 * 1000; // 15 minutos en ms
 const STORAGE_KEY_INTENTOS = "hs_login_intentos";
 const STORAGE_KEY_BLOQUEO = "hs_login_bloqueo_hasta";
 
-// ─── HELPERS DE BLOQUEO (localStorage) ──────────────────────────────────────
-// El bloqueo se maneja en frontend con mocks. Cuando se conecte al backend,
-// este puede retornar HTTP 429/423 y este bloqueo local quedaría como respaldo.
+// Why implement lockout on frontend? Prevent brute-force attacks on weak credentials
+// while mocks are used. When backend is live, it may return HTTP 429 (rate limit).
+// This client-side lockout serves as first defense and UX feedback.
 
 function obtenerEstadoBloqueo() {
   try {
@@ -68,7 +66,7 @@ function limpiarIntentos() {
     localStorage.removeItem(STORAGE_KEY_INTENTOS);
     localStorage.removeItem(STORAGE_KEY_BLOQUEO);
   } catch {
-    // silencioso
+    // Silently fail if localStorage is blocked (e.g., private browsing mode)
   }
 }
 
@@ -84,31 +82,25 @@ function formatearTiempoRestante(hasta) {
 export default function LoginPage() {
   const router = useRouter();
 
-  // ACOPLAMIENTO: login() viene de AuthContext vía useAuth.
-  // Guarda { usuario, token } en el estado del contexto internamente.
-  // ⚠️ PENDIENTE: confirmar con Camila si login() retorna la sesión o void.
-  // Si retorna void, el flujo es correcto: cargarGrupo() lee del AuthContext.
+  // Why destructure from useAuth instead of calling useContext directly?
+  // AuthContext is an implementation detail. useAuth provides the stable interface.
+  // If we swap context libraries later, only useAuth needs updating, not this page.
   const { login } = useAuth();
 
-  // ACOPLAMIENTO: cargarGrupo() viene de GroupContext vía useGroup.
-  // NO recibe parámetros — toma usuario y token del AuthContext internamente.
-  // Retorna { ok: true } si encontró grupo, { ok: false, error } si no.
+  // Why read login result then call cargarGrupo separately?
+  // cargarGrupo needs the token immediately to decide routing (group exists vs no group).
+  // We return idUsuario + token from login() so LoginPage can orchestrate the flow.
   const { cargarGrupo } = useGroup();
 
-  // ── Estado del formulario ──
   const [form, setForm] = useState({ correo: "", contrasena: "" });
   const [errores, setErrores] = useState({ correo: "", contrasena: "" });
-
-  // ── Estado general ──
   const [loading, setLoading] = useState(false);
   const [errorGlobal, setErrorGlobal] = useState("");
-
-  // ── Estado de bloqueo ──
   const [bloqueado, setBloqueado] = useState(false);
   const [bloqueoHasta, setBloqueoHasta] = useState(null);
   const [tiempoRestante, setTiempoRestante] = useState("");
 
-  // ── Verificar bloqueo persistido al montar (sobrevive recarga) ──
+  // ── Restore lockout from localStorage on mount (survives page reloads) ──
   useEffect(() => {
     const estado = obtenerEstadoBloqueo();
     if (estado.bloqueado) {
@@ -117,7 +109,8 @@ export default function LoginPage() {
     }
   }, []);
 
-  // ── Countdown visible del bloqueo ──
+  // Why countdown timer on interval? User needs to see time passing.
+  // Without this, lockout message would be static and confusing (bad UX).
   useEffect(() => {
     if (!bloqueado || !bloqueoHasta) return;
     const tick = () => {
@@ -137,8 +130,6 @@ export default function LoginPage() {
     return () => clearInterval(intervalo);
   }, [bloqueado, bloqueoHasta]);
 
-  // ─── HANDLERS ──────────────────────────────────────────────────────────────
-
   const handleChange = (campo) => (e) => {
     setForm((prev) => ({ ...prev, [campo]: e.target.value }));
     setErrores((prev) => ({ ...prev, [campo]: "" }));
@@ -155,18 +146,16 @@ export default function LoginPage() {
   };
 
   const handleSubmit = async () => {
-    // Escenario 4: bloqueo activo → no intentar
+    // Prevent multiple simultaneous submissions or attempts while locked
     if (loading || bloqueado) return;
-    // Escenario 5: campos vacíos → mostrar errores por campo
+    // Validate all fields and show per-field errors (Scenario 5)
     if (!validarTodo()) return;
 
     setLoading(true);
     setErrorGlobal("");
 
     try {
-      // Escenario 1/2/3: login via AuthContext.
-      // Internamente llama a authService.iniciarSesion y guarda
-      // { usuario, token } en el estado del contexto.
+      // Attempt login. AuthContext persists token to localStorage internally.
       const resultadoLogin = await login({
         correo: form.correo.trim(),
         contrasena: form.contrasena,
@@ -175,34 +164,31 @@ export default function LoginPage() {
       if (!resultadoLogin.ok) {
         const estado = registrarIntentoFallido();
         if (estado.bloqueado) {
-          // Escenario 4: 5 intentos alcanzados → bloquear cuenta
+          // User has exceeded max attempts (Scenario 4)
           setBloqueado(true);
           setBloqueoHasta(estado.hasta);
           setErrorGlobal(
             "Tu cuenta ha sido bloqueada temporalmente por múltiples intentos fallidos. Intenta de nuevo más tarde.",
           );
         } else {
-          // Escenario 2 y 3: mensaje genérico (nunca revelar cuál campo falló)
+          // Generic message for failed login (Scenarios 2 & 3 - never reveal which field failed)
           setErrorGlobal("El correo o la contraseña son incorrectos.");
         }
         return;
       }
 
-      // Login exitoso → limpiar intentos fallidos acumulados
+      // Successful login: clear failed attempts
       limpiarIntentos();
 
-      // Escenario 1 vs 6: verificar membresía en grupo.
-      // cargarGrupo() lee usuario y token del AuthContext (ya actualizados).
+      // Route based on group membership: user with group → dashboard, no group → welcome
       const resultado = await cargarGrupo(
         resultadoLogin.idUsuario,
         resultadoLogin.token,
       );
 
       if (resultado.ok) {
-        // Escenario 1: tiene grupo → tablero principal
         router.push("/bienvenida"); // TODO:en el siguiente Sprint se cambia por dashboard
       } else if (resultado.noGrupo) {
-        // Escenario 6: sin grupo → pantalla de bienvenida
         router.push("/bienvenida");
       } else {
         // Error inesperado al consultar grupo
@@ -212,26 +198,23 @@ export default function LoginPage() {
         return;
       }
     } catch (error) {
-      // Solo llega aquí si login() lanzó excepción (credenciales incorrectas)
+      // Lockout check: only reached if login() throws exception
       const estado = registrarIntentoFallido();
 
       if (estado.bloqueado) {
-        // Escenario 4: 5 intentos alcanzados → bloquear cuenta
         setBloqueado(true);
         setBloqueoHasta(estado.hasta);
         setErrorGlobal(
           "Tu cuenta ha sido bloqueada temporalmente por múltiples intentos fallidos. Intenta de nuevo más tarde.",
         );
       } else {
-        // Escenario 2 y 3: mensaje genérico (nunca revelar cuál campo falló)
+        // Generic message for failed login (never reveal which field failed)
         setErrorGlobal("El correo o la contraseña son incorrectos.");
       }
     } finally {
       setLoading(false);
     }
   };
-
-  // ─── NAVBAR CONTENT ────────────────────────────────────────────────────────
 
   const navbarContent = (
     <Button
@@ -243,12 +226,9 @@ export default function LoginPage() {
     </Button>
   );
 
-  // ─── RENDER ────────────────────────────────────────────────────────────────
-
   return (
     <CenteredLayout navbarContent={navbarContent}>
       <div className="flex flex-col items-center gap-6 w-full">
-        {/* ── Encabezado ── */}
         <div className="flex flex-col items-center gap-1 mt-2">
           <h1 className="text-2xl font-bold text-foreground">Iniciar sesión</h1>
           <p className="text-sm text-secondary text-center">
@@ -256,7 +236,7 @@ export default function LoginPage() {
           </p>
         </div>
 
-        {/* ── Error global / Bloqueo ── */}
+        {/* Error message and lockout countdown */}
         {errorGlobal && (
           <div className="w-full rounded-md bg-error-light border border-error px-4 py-3 text-sm text-error text-center">
             {errorGlobal}
@@ -268,7 +248,7 @@ export default function LoginPage() {
           </div>
         )}
 
-        {/* ── Formulario ── */}
+        {/* Login form */}
         <form
           className="flex flex-col gap-4 w-full"
           onSubmit={(e) => {
@@ -276,7 +256,6 @@ export default function LoginPage() {
             handleSubmit();
           }}
         >
-          {/* Correo electrónico */}
           <Input
             label="Correo electrónico"
             placeholder="ejemplo@correo.com"
@@ -288,7 +267,7 @@ export default function LoginPage() {
             disabled={loading || bloqueado}
           />
 
-          {/* Contraseña */}
+  {/* Contraseña con opción de recuperación */}
           <div className="flex flex-col gap-1">
             <PasswordInput
               label="Contraseña"
@@ -298,20 +277,18 @@ export default function LoginPage() {
               error={errores.contrasena}
               disabled={loading || bloqueado}
             />
-            {/* ¿Olvidaste tu contraseña? — Placeholder para futura HU */}
             <div className="flex justify-end">
               <button
                 type="button"
                 className="text-xs text-secondary hover:text-primary hover:underline transition-colors"
                 onClick={() => {
-                  /* TODO: HU de recuperación de contraseña */
+                  /* TODO: Future HU for password recovery */
                 }}
               >
                 ¿Olvidaste tu contraseña?
               </button>
             </div>
           </div>
-          {/* ── Botón de login ── */}
           <Button
             type="submit"
             variant="primary"
@@ -322,7 +299,6 @@ export default function LoginPage() {
           </Button>
         </form>
 
-        {/* ── Separador ── */}
         <div className="flex items-center gap-3 w-full">
           <div className="flex-1 h-px bg-border" />
           <span className="text-xs text-secondary uppercase tracking-wide">
@@ -331,7 +307,6 @@ export default function LoginPage() {
           <div className="flex-1 h-px bg-border" />
         </div>
 
-        {/* ── Link a registro ── */}
         <p className="text-sm text-secondary">
           ¿No tienes cuenta?{" "}
           <a

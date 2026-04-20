@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { UserCheck, Mail, Lock, Shield } from "lucide-react";
+import { UserCheck, Mail, Shield } from "lucide-react";
 
 import CenteredLayout from "@/components/layout/CenteredLayout";
 import Button from "@/components/ui/Button";
@@ -17,12 +17,10 @@ import {
 } from "@/lib/validators";
 import authService from "@/services/authService";
 
-// ─── PÁGINA ──────────────────────────────────────────────────────────────────
 
 export default function RegistroPage() {
   const router = useRouter();
 
-  // ── Estado del formulario ──
   const [form, setForm] = useState({
     nombre: "",
     correo: "",
@@ -31,7 +29,6 @@ export default function RegistroPage() {
     pin: "",
   });
 
-  // ── Errores por campo ──
   const [errores, setErrores] = useState({
     nombre: "",
     correo: "",
@@ -40,12 +37,10 @@ export default function RegistroPage() {
     pin: "",
   });
 
-  // ── Estado general ──
   const [loading, setLoading] = useState(false);
   const [errorGlobal, setErrorGlobal] = useState("");
   const [exito, setExito] = useState(false);
 
-  // ─── HANDLERS ──────────────────────────────────────────────────────────────
 
   const handleChange = (campo) => (e) => {
     const valor = e.target.value;
@@ -94,13 +89,13 @@ export default function RegistroPage() {
         pinSeguridad: form.pin,
       });
 
-      // Registro exitoso (escenario 1)
+      // Successful registration redirects to login after 1.8s
       setExito(true);
       setTimeout(() => {
         router.push("/login");
       }, 1800);
     } catch (error) {
-      // Correo ya registrado (escenario 2)
+      // Email already registered or other error
       if (
         error?.status === 409 ||
         error?.message?.toLowerCase().includes("correo") ||
@@ -121,7 +116,6 @@ export default function RegistroPage() {
     }
   };
 
-  // ─── NAVBAR CONTENT ────────────────────────────────────────────────────────
 
   const navbarContent = (
     <a
@@ -131,8 +125,6 @@ export default function RegistroPage() {
       Iniciar sesión
     </a>
   );
-
-  // ─── RENDER ────────────────────────────────────────────────────────────────
 
   return (
     <CenteredLayout navbarContent={navbarContent}>

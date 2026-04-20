@@ -19,7 +19,7 @@ function BienvenidaContent() {
 
   const handleLogout = async () => {
     await logout();
-    router.push("/login"); // TODO: ajustar si la ruta de login cambia
+    router.push("/login"); 
   };
 
   // ─── CONTENIDO DE LA NAVBAR ───────────────────────────────────
@@ -93,7 +93,6 @@ function BienvenidaContent() {
           {/* Tarjeta con acciones */}
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 w-full max-w-sm p-2 flex flex-col gap-1">
 
-            {/* TODO: actualizar ruta cuando Alejandro Toro defina la pantalla de HU-004 */}
             <Button
               variant="primary"
               className="w-full"
@@ -102,7 +101,6 @@ function BienvenidaContent() {
               ⊕ Crear grupo
             </Button>
 
-            {/* TODO: actualizar ruta cuando Daniel Salas defina la pantalla de HU-005 */}
             <Button
               variant="secondary"
               className="w-full"

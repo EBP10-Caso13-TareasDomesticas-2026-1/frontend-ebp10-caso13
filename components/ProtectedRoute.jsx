@@ -6,13 +6,16 @@ import { useEffect } from "react";
 
 /**
  * ProtectedRoute
- * Componente que protege rutas autenticadas.
- * - Espera a que el cliente se hidrate (AuthContext cargó desde localStorage)
- * - Si el usuario NO tiene token, usa router.replace() para redirigir sin ensuciar el historial
+ * 
+ * Wraps a component and only renders it if user is authenticated.
+ * Why wait for hydration? Next.js renders on server where localStorage is empty.
+ * Without isHydrated, we'd redirect to /login during SSR, causing hydration mismatch.
+ * Why use router.replace()? It removes the protected route from browser history,
+ * preventing users from navigating back to it after logging in.
  *
- * Uso:
+ * Usage:
  * <ProtectedRoute>
- *   <MiComponente />
+ *   <Dashboard />
  * </ProtectedRoute>
  */
 export default function ProtectedRoute({ children }) {
@@ -34,7 +37,8 @@ export default function ProtectedRoute({ children }) {
     return null;
   }
 
-  // Si está autenticado, renderizar el contenido
+  // Defensive check: if not authenticated, don't render
+  // (redirect should have already happened in the effect)
   if (!isAuthenticated) {
     return null;
   }
