@@ -21,12 +21,12 @@
 
 | Nombre | Rol | Responsabilidad |
 | -------- | ----- | ----------------- |
-| Camila Torres | Arquitecto | Setup, services, hooks, context, integración con backend |
-| Daniel Sanchez | Componentes | Todos los componentes reutilizables de /components/ |
-| Salome Toro | Pantallas | HU-001, Pantalla de Bienvenida |
-| David Sanchez | Pantallas | HU-002 |
-| Alejandro Toro | Pantallas | HU-004 |
-| Daniel Salas | Pantallas | HU-005 |
+| Camila Torres | Arquitecto | Setup, services, integración con backend, Tablero de Tareas (HU-009, HU-015, HUS-016) |
+| Daniel Sanchez | Componentes | Todos los componentes reutilizables de /components/. Sprint 2: Apoyo |
+| Salome Toro | Pantallas | Crear Tarea (HUS-006) |
+| David Sanchez | Pantallas | Unirse a Grupo (HUS-022) |
+| Alejandro Toro | Pantallas | Sprint 2: Apoyo  |
+| Daniel Salas | Pantallas | Sprint 2: Apoyo |
 
 ---
 
@@ -34,12 +34,13 @@
 
 - **Componentes genéricos:** `/components/ui/NombreComponente.jsx`
 - **Componentes de layout:** `/components/layout/NombreComponente.jsx`
+- **Componentes protegidos:** `/components/ProtectedRoute.jsx` — envuelve páginas que requieren autenticación
 - **Páginas:** `/app/(Route Group)/nombre-ruta/page.jsx`
 - **Servicios:** `/services/entidadService.js`
 - **Mocks:** `/mocks/entidad.js` — un archivo por entidad, exporta un array o un objeto
 - **Contextos:** `/context/NombreContext.jsx`
 - **Hooks personalizados:** `/hooks/useNombre.js`
-- **Utilidades:** `/lib/utils.js` o `/lib/nombreUtil.js`
+- **Utilidades:** `/lib/validators.js`, `/lib/jwt.js`, `/lib/api.js`
 - **Estilos:** solo Tailwind. Sin CSS inline. Sin archivos `.css` nuevos salvo `globals.css`
 - **Colores:** solo los definidos en `tailwind.config.js`
 - **Llamadas al API:** siempre desde `/services/`. Nunca `fetch()` directo en una página
@@ -94,6 +95,12 @@
 | `CenteredLayout.jsx` | Layout para formularios: navbar + main centrado + footer | `children` (contenido centrado), `navbarContent` (elementos de navbar) |
 | `Footer.jsx` | Pie de página simple con copyright | - |
 
+### /components/ (Protección)
+
+| Archivo | Qué hace | Props |
+| --------- | ---------- | ------- |
+| `ProtectedRoute.jsx` | Envuelve componentes que requieren autenticación, redirige a login si no hay sesión | `children` (componente a proteger) |
+
 ---
 
 ## HOOKS Y CONTEXTOS DISPONIBLES
@@ -145,19 +152,35 @@
 
 ---
 
-## HISTORIAS DE USUARIO — SPRINT ACTUAL
+## HISTORIAS DE USUARIO — SPRINTS
 
-### **Sprint 1**
+### **Sprint 1**  COMPLETADO
 
 | ID | Descripción | Estado | Responsable |
 | ---- | ------------- | -------- | ------------- |
 | HU-001 | Como usuario, quiero registrarme en la plataforma con nombre, correo, contraseña y pin de seguridad, para crear mi cuenta y acceder a las funcionalidades del sistema. | completada | Salome Toro |
 | HU-002 | Como usuario registrado, quiero iniciar sesión con mi correo y contraseña, para acceder a mi cuenta. | completada | David Sanchez |
 | HU-003 | Como usuario registrado, quiero cerrar sesión en la plataforma, para proteger mi cuenta cuando termine de usarla. | completada | Daniel Sanchez |
-| HU-004 | Como usuario registrado, quiero crear un grupo familiar, para organizar las tareas del hogar con los integrantes de mi grupo familiar, convirtiéndome en administrador del mismo. | pantalla lista | Alejandro Toro |
-| HU-005 | Como administrador del grupo familiar, quiero invitar usuarios al grupo familiar mediante un código de invitación, para integrarlos en la organización de tareas del hogar. | pantalla lista | Daniel Salas |
+| HU-004 | Como usuario registrado, quiero crear un grupo familiar, para organizar las tareas del hogar con los integrantes de mi grupo familiar, convirtiéndome en administrador del mismo. | completada | Alejandro Toro |
+| HU-005 | Como administrador del grupo familiar, quiero invitar usuarios al grupo familiar mediante un código de invitación, para integrarlos en la organización de tareas del hogar. | completada | Daniel Salas |
+
+### **Sprint 2**  EN PROGRESO
+
+| ID | Descripción | Estado | Responsable | Pantalla |
+| ---- | ------------- | -------- | ------------- | -------- |
+| HUS-022 | Como usuario registrado, quiero unirme a un grupo familiar mediante un código de invitación válido, para asegurar que el acceso a los grupos esté controlado mediante mecanismos de autorización basados en invitación. | pendiente | David Sanchez | Unirse a grupo |
+| HUS-006 | Como administrador del grupo familiar, quiero crear una tarea doméstica asignándole un miembro responsable, fecha límite, prioridad (Alta / Media / Baja), título y opcionalmente una descripción, para organizar las tareas del hogar de forma consistente. | pendiente | Salome Toro | Crear tarea |
+| HU-009 | Como miembro del grupo familiar, quiero visualizar el tablero completo de tareas del hogar, para conocer todas las tareas del grupo. | pendiente | Camila Torres | Tablero de tareas |
+| HU-015 | Como miembro del grupo familiar, quiero cambiar el estado de una de mis tareas asignadas a "EN PROGRESO" o como "COMPLETADA", para registrar el avance con esa responsabilidad. | pendiente | Camila Torres | Tablero de tareas |
+| HUS-016 | Como administrador del grupo familiar, quiero poder modificar el estado de cualquier tarea del sistema, para gestionar y mantener actualizado el progreso de las tareas del hogar. | pendiente | Camila Torres | Tablero de tareas |
 
 **Estados:** `pendiente` · `en progreso` · `pantalla lista` · `integrada` · `completada`
+
+**Nota:** Sprint 2 comprende **3 pantallas principales**:
+
+1. **Unirse a grupo** — HUS-022
+2. **Crear tarea** — HUS-006 (solo admin)
+3. **Tablero de tareas** — HU-009, HU-015, HUS-016 (gestión de estados)
 
 ---
 
@@ -208,8 +231,10 @@
 ### CONFIGURACIÓN
 
 | Archivo | Propósito |
-|---------|-----------|
+| --------- | ----------- |
 | `lib/api.js` | Config central de API. Cambiar `USE_MOCK = false` para conectar al backend real. Requiere `NEXT_PUBLIC_API_URL` en `.env.local` |
+| `lib/jwt.js` | Utilidades para manejo de JWT: validar expiración, calcular tiempo restante, decodificar payload |
+| `lib/validators.js` | Validaciones centralizadas para formularios: email, contraseña, nombre, PIN, etc. |
 
 ### DECISIONES HU-002
 
@@ -232,3 +257,5 @@
 | 02/04/26 | David Sanchez | HU-002: pantalla de login con mocks. Notas de acoplamiento GroupContext/AuthContext |
 | 03/04/26 | Camila Torres | Ajustes de consistencia y realización de pruebas |
 | 13/04/26 | Camila Torres | Ajustes de consistencia y arreglo de bug en relación al login |
+| 20/04/26 | Camila Torres | Arreglo y revisión del sprint 1 completado: Todas las HU (001-005) implementadas y revisada. Documentación de ProtectedRoute, lib/jwt.js y lib/validators.js |
+| 20/04/26 | Camila Torres | Creación de Sprint 2: Definición de 5 HUs (HU-022, HU-006, HU-009, HU-015, HU-016) agrupadas en 3 pantallas principales |

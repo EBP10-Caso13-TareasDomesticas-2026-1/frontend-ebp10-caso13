@@ -90,7 +90,7 @@ function InvitarGrupoContent() {
       <div className="flex flex-col items-center gap-6">
         <InviteCodeCard code={codigo} className="w-full max-w-md" />
         <p className="text-center text-sm text-secondary max-w-md">
-          Comparte este código con los miembros de tu hogar para que puedan
+          Guarda bien y comparte este código con los miembros de tu hogar para que puedan
           unirse.
         </p>
         <Button
