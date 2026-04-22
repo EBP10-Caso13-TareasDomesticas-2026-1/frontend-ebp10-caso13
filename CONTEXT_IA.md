@@ -40,7 +40,7 @@
 - **Mocks:** `/mocks/entidad.js` — un archivo por entidad, exporta un array o un objeto
 - **Contextos:** `/context/NombreContext.jsx`
 - **Hooks personalizados:** `/hooks/useNombre.js`
-- **Utilidades:** `/lib/validators.js`, `/lib/jwt.js`, `/lib/api.js`
+- **Utilidades:** `/lib/validators.js`, `/lib/jwt.js`, `/lib/api.js`, `/lib/taskHelpers.js`
 - **Estilos:** solo Tailwind. Sin CSS inline. Sin archivos `.css` nuevos salvo `globals.css`
 - **Colores:** solo los definidos en `tailwind.config.js`
 - **Llamadas al API:** siempre desde `/services/`. Nunca `fetch()` directo en una página
@@ -133,6 +133,9 @@
 | `grupos.js` | Grupo | id, nombre, descripcion, codigoInvitacion, creadoEn |
 | `roles.js` | Rol | id, nombre |
 | `miembrosGrupo.js` | MiembroGrupo | id, usuarioId, grupoId, rolId, puntaje, racha, fechaUnion |
+| `tareas.js` | Tarea | idTarea, idGrupo, idUsuarioAsignado, nombre, descripcion, prioridad, estado, fechaLimite, fechaCreacion |
+| `prioridades.js` | Prioridad | id, nombre (ALTA, MEDIA, BAJA), label |
+| `estados.js` | Estado | id, nombre (PENDIENTE, EN_PROGRESO, COMPLETADA, VENCIDA), label, color (hex) |
 
 ---
 
@@ -149,6 +152,18 @@
 | `groupService.js` | `crearGrupo(data, token, usuarioId)` | POST | `/grupos` |
 | `groupService.js` | `unirseConCodigo(codigoInvitacion, token, usuarioId)` | POST | `/miembros-grupo` |
 | `groupService.js` | `obtenerGrupo(grupoId, token)` | GET | `/grupos/{id}` |
+| `taskService.js` | `crearTarea(data, token, usuarioId)` | POST | `/tareas` |
+| `taskService.js` | `obtenerTareasGrupo(idGrupo, token)` | GET | `/tareas/grupo/{idGrupo}` |
+| `taskService.js` | `actualizarTarea(idTarea, data, token)` | PUT | `/tareas/{idTarea}` |
+
+### /lib
+
+| Archivo | Función | Qué devuelve |
+| --------- | --------- | -------------- |
+| `taskHelpers.js` | `getEstadoInfo(estado)` | `{ label, color }` para UI |
+| `taskHelpers.js` | `getPrioridadInfo(prioridad)` | `{ label }` para UI |
+| `taskHelpers.js` | `getEstados()` | Array de estados (para combos/filtros) |
+| `taskHelpers.js` | `getPrioridades()` | Array de prioridades (para combos) |
 
 ---
 

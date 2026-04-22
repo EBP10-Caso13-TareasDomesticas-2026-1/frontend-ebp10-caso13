@@ -1,0 +1,103 @@
+// services/taskService.js
+// Sprint 2 — Tareas
+// SPRINT 2 (este sprint):
+//   HU-006 — Crear tarea
+//   HU-007 — Listar tareas del grupo (tablero)
+//   HU-008 — Actualizar estado de tarea
+
+import { USE_MOCK, apiRequest, delay } from "@/lib/api";
+import { tareas } from "@/mocks/tareas";
+
+const mock = {
+  // HU-006 — Crear tarea
+  async crearTarea(data, _token, usuarioId) {
+    await delay(600);
+    if (!usuarioId) throw new Error("Usuario no identificado.");
+
+    const { nombre, descripcion, idUsuarioAsignado, prioridad, fechaLimite, idGrupo } = data;
+
+    const nuevaTarea = {
+      idTarea: Math.max(...tareas.map((t) => t.idTarea), 0) + 1,
+      idGrupo,
+      idUsuarioAsignado,
+      nombre,
+      descripcion: descripcion || null,
+      prioridad,
+      estado: "PENDIENTE",
+      fechaLimite,
+      fechaCreacion: new Date().toISOString(),
+    };
+
+    tareas.push(nuevaTarea);
+    return nuevaTarea;
+  },
+
+  // HU-007 — Obtener tareas del grupo (para tablero)
+  async obtenerTareasGrupo(idGrupo, _token) {
+    await delay(400);
+    return tareas.filter((t) => t.idGrupo === Number(idGrupo));
+  },
+
+  // HU-008 — Actualizar estado de tarea
+  async actualizarTarea(idTarea, data, _token) {
+    await delay(600);
+    const tarea = tareas.find((t) => t.idTarea === Number(idTarea));
+    if (!tarea) throw new Error("Tarea no encontrada.");
+
+    // Solo actualizar estado en este sprint
+    if (data.estado) {
+      tarea.estado = data.estado;
+    }
+
+    return tarea;
+  },
+
+
+};
+
+const api = {
+  async crearTarea(data, token, usuarioId) {
+    if (!usuarioId) throw new Error("Usuario no identificado.");
+
+    return apiRequest(
+      "/tareas",
+      {
+        method: "POST",
+        body: {
+          nombre: data.nombre,
+          descripcion: data.descripcion,
+          idUsuarioAsignado: data.idUsuarioAsignado,
+          prioridad: data.prioridad,
+          fechaLimite: data.fechaLimite,
+        },
+      },
+      token
+    );
+  },
+
+  async obtenerTareasGrupo(idGrupo, token) {
+    return apiRequest(
+      `/tareas/grupo/${idGrupo}`,
+      { method: "GET" },
+      token
+    );
+  },
+
+  async actualizarTarea(idTarea, data, token) {
+    return apiRequest(
+      `/tareas/${idTarea}`,
+      {
+        method: "PUT",
+        body: {
+          estado: data.estado,
+        },
+      },
+      token
+    );
+  },
+
+
+};
+
+const taskService = USE_MOCK ? mock : api;
+export default taskService;
