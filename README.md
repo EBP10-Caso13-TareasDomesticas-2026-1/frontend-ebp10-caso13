@@ -31,9 +31,9 @@ frontend/
 │   └── layout/                 → Componentes de estructura (Navbar, Footer, Layouts...)
 ├── context/                    → Contextos globales (AuthContext, GroupContext)
 ├── hooks/                      → Hooks personalizados (useAuth, useGroup, useFetch...)
-├── lib/                        → Utilidades y configuración de API
-├── mocks/                      → Datos simulados por entidad
-├── services/                   → Llamadas al backend (authService, groupService...)
+├── lib/                        → Utilidades: api.js, jwt.js, validators.js, taskHelpers.js
+├── mocks/                      → Datos simulados por entidad (usuarios, grupos, tareas, estados, prioridades...)
+├── services/                   → Llamadas al backend (authService, groupService, taskService...)
 ├── public/                     → Archivos estáticos
 ├── CONTEXTO_IA.md              → Contexto compartido del equipo para IA
 └── tailwind.config.js
@@ -41,7 +41,9 @@ frontend/
 
 ---
 
-## Estado actual — Sprint 1
+## Estado actual
+
+### ✅ Sprint 1 — COMPLETADO
 
 - [x] Estructura del proyecto y convenciones definidas
 - [x] Configuración de Tailwind CSS con colores personalizados
@@ -51,11 +53,76 @@ frontend/
 - [x] Mocks por entidad: usuarios, sesiones, grupos, roles, miembrosGrupo
 - [x] Servicios: `authService` y `groupService`
 - [x] Configuración central de API (`lib/api.js`) con soporte mock/backend real
+- [x] HU-001: Registro de usuario
+- [x] HU-002: Inicio de sesión
 - [x] HU-003: Cierre de sesión (modal como componente)
-- [] HU-001: Registro de usuario
-- [] HU-002: Inicio de sesión
-- [] HU-004: Crear grupo familiar
-- [] HU-005: Invitar usuarios con código de invitación
+- [x] HU-004: Crear grupo familiar
+- [x] HU-005: Invitar usuarios con código de invitación
+
+### 🔄 Sprint 2 — EN PROGRESO
+
+#### Infraestructura (Tareas)
+
+- [x] Mocks: `tareas.js`, `prioridades.js`, `estados.js` (datos internos, sin API)
+- [x] Service: `taskService.js` con 3 métodos:
+  - `crearTarea(data, token, usuarioId)` → POST /tareas
+  - `obtenerTareasGrupo(idGrupo, token)` → GET /tareas/grupo/{idGrupo}
+  - `actualizarTarea(idTarea, data, token)` → PUT /tareas/{idTarea}
+- [x] Utilidad: `lib/taskHelpers.js` para mapeos estado/prioridad → label/color
+
+#### Pantallas Sprint 2
+
+- [ ] HUS-006: Crear tarea
+- [ ] HU-009, HU-015, HUS-016: Tablero de tareas
+- [ ] HUS-022: Unirse a grupo
+
+#### Notas Sprint 2
+
+- Estados: PENDIENTE, EN_PROGRESO, COMPLETADA, VENCIDA
+- Prioridades: ALTA, MEDIA, BAJA
+- Datos de estados y prioridades se manejan internamente en el frontend (sin API endpoints)
+- El rol del usuario se obtiene de `AuthContext` y `GroupContext`
+
+---
+
+## Mocks y Services — Referencia rápida
+
+### Mocks (datos internos, sin API)
+
+| Archivo | Propósito | Campos principales |
+| --- | --- | --- |
+| `usuarios.js` | Usuarios de demo | idUsuario, nombre, correo, fotoPerfil |
+| `grupos.js` | Grupos de demo | id, nombre, codigoInvitacion |
+| `miembrosGrupo.js` | Pertenencia usuario-grupo | usuarioId, grupoId, rolId, puntaje, racha |
+| `sesiones.js` | Sesiones mock con JWT | idUsuario, token, + mockSesionActiva |
+| `tareas.js` | Tareas para tablero | idTarea, nombre, estado, prioridad, fechaLimite |
+| `prioridades.js` | Catálogo: ALTA, MEDIA, BAJA | nombre, label |
+| `estados.js` | Catálogo: PENDIENTE, EN_PROGRESO, COMPLETADA, VENCIDA | nombre, label, color (hex) |
+| `roles.js` | Catálogo: admin, miembro | id, nombre |
+
+### Services (mock + API real)
+
+| Archivo | Método | Endpoint | Mock | API |
+| --- | --- | --- | --- | --- |
+| `authService.js` | registrarUsuario | POST /usuarios/registro | ✓ | ✓ |
+| `authService.js` | iniciarSesion | POST /usuarios/login | ✓ | ✓ |
+| `authService.js` | cerrarSesion | POST /usuarios/logout | ✓ | ✓ |
+| `groupService.js` | crearGrupo | POST /grupos | ✓ | ✓ |
+| `groupService.js` | unirseConCodigo | POST /miembros-grupo | ✓ | ✓ |
+| `groupService.js` | obtenerGrupoDeUsuario | GET /miembros-grupo | ✓ | ✓ |
+| `groupService.js` | obtenerGrupo | GET /grupos/{id} | ✓ | ✓ |
+| `taskService.js` | crearTarea | POST /tareas | ✓ | ✓ |
+| `taskService.js` | obtenerTareasGrupo | GET /tareas/grupo/{idGrupo} | ✓ | ✓ |
+| `taskService.js` | actualizarTarea | PUT /tareas/{idTarea} | ✓ | ✓ |
+
+### Utilidades (lib/)
+
+| Archivo | Funciones | Propósito |
+| --- | --- | --- |
+| `api.js` | apiRequest, delay | Centraliza llamadas HTTP, simula latencia |
+| `jwt.js` | isTokenExpired, getTimeUntilExpiry | Valida y gestiona tokens JWT |
+| `validators.js` | validateEmail, validatePassword... | Validaciones de formularios |
+| `taskHelpers.js` | getEstadoInfo, getPrioridadInfo, getEstados, getPrioridades | Mapeos estado/prioridad → label/color para UI |
 
 ---
 
