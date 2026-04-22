@@ -7,8 +7,6 @@
 
 import { USE_MOCK, apiRequest, delay } from "@/lib/api";
 import { tareas } from "@/mocks/tareas";
-import { prioridades } from "@/mocks/prioridades";
-import { estados } from "@/mocks/estados";
 
 const mock = {
   // HU-006 — Crear tarea
