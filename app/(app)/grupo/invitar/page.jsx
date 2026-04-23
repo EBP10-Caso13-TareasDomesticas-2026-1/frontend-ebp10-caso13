@@ -1,6 +1,5 @@
 "use client";
 
-import dynamic from "next/dynamic";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
@@ -8,11 +7,8 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import AppLayout from "@/components/layout/AppLayout";
 import Button from "@/components/ui/Button";
 import InviteCodeCard from "@/components/ui/InviteCodeCard";
+import LogOut from "@/components/ui/LogOut";
 import { useAuth } from "@/hooks/useAuth";
-
-const LogOut = dynamic(() => import("@/components/ui/LogOut"), {
-  ssr: false,
-});
 
 function InvitarGrupoContent() {
   const router = useRouter();

@@ -1,5 +1,4 @@
 "use client";
-import dynamic from "next/dynamic";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
@@ -7,11 +6,11 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import AppLayout from "@/components/layout/AppLayout";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
+import LogOut from "@/components/ui/LogOut";
 import { useAuth } from "@/hooks/useAuth";
 import groupService from "@/services/groupService";
 
 const MAX_NAME_LENGTH = 50;
-const LogOut = dynamic(() => import("@/components/ui/LogOut"), { ssr: false });
 
 function CrearGrupoContent() {
   const router = useRouter();
