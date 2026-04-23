@@ -104,7 +104,6 @@ function BienvenidaContent() {
             <Button
               variant="secondary"
               className="w-full"
-              disabled
               onClick={() => router.push("/grupo/unirse")}
             >
               Unirse a un Grupo

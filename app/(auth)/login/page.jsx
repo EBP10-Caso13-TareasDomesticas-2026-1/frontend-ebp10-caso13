@@ -11,76 +11,25 @@ import PasswordInput from "@/components/ui/PasswordInput";
 import { validarCorreo, validarContrasenaLogin as validarContrasena } from "@/lib/validators";
 import { useAuth } from "@/hooks/useAuth";
 import { useGroup } from "@/hooks/useGroup";
-
-const MAX_INTENTOS = 5;
-const BLOQUEO_MS = 15 * 60 * 1000; // 15 minutos en ms
-const STORAGE_KEY_INTENTOS = "hs_login_intentos";
-const STORAGE_KEY_BLOQUEO = "hs_login_bloqueo_hasta";
+import { useRateLimit } from "@/hooks/useRateLimit";
 
 // Why implement lockout on frontend? Prevent brute-force attacks on weak credentials
 // while mocks are used. When backend is live, it may return HTTP 429 (rate limit).
 // This client-side lockout serves as first defense and UX feedback.
 
-function obtenerEstadoBloqueo() {
-  try {
-    const bloqueoHasta = parseInt(
-      localStorage.getItem(STORAGE_KEY_BLOQUEO) || "0",
-      10,
-    );
-    const intentos = parseInt(
-      localStorage.getItem(STORAGE_KEY_INTENTOS) || "0",
-      10,
-    );
-    const ahora = Date.now();
-    if (bloqueoHasta && ahora < bloqueoHasta) {
-      return { bloqueado: true, hasta: bloqueoHasta, intentos };
-    }
-    if (bloqueoHasta && ahora >= bloqueoHasta) {
-      localStorage.removeItem(STORAGE_KEY_BLOQUEO);
-      localStorage.removeItem(STORAGE_KEY_INTENTOS);
-    }
-    return { bloqueado: false, hasta: null, intentos };
-  } catch {
-    return { bloqueado: false, hasta: null, intentos: 0 };
-  }
-}
-
-function registrarIntentoFallido() {
-  try {
-    const intentos =
-      parseInt(localStorage.getItem(STORAGE_KEY_INTENTOS) || "0", 10) + 1;
-    localStorage.setItem(STORAGE_KEY_INTENTOS, String(intentos));
-    if (intentos >= MAX_INTENTOS) {
-      const hasta = Date.now() + BLOQUEO_MS;
-      localStorage.setItem(STORAGE_KEY_BLOQUEO, String(hasta));
-      return { bloqueado: true, hasta, intentos };
-    }
-    return { bloqueado: false, hasta: null, intentos };
-  } catch {
-    return { bloqueado: false, hasta: null, intentos: 0 };
-  }
-}
-
-function limpiarIntentos() {
-  try {
-    localStorage.removeItem(STORAGE_KEY_INTENTOS);
-    localStorage.removeItem(STORAGE_KEY_BLOQUEO);
-  } catch {
-    // Silently fail if localStorage is blocked (e.g., private browsing mode)
-  }
-}
-
-function formatearTiempoRestante(hasta) {
-  const diff = Math.max(0, hasta - Date.now());
-  const minutos = Math.floor(diff / 60000);
-  const segundos = Math.floor((diff % 60000) / 1000);
-  return `${minutos}:${String(segundos).padStart(2, "0")}`;
-}
-
 // ─── PÁGINA ──────────────────────────────────────────────────────────────────
 
 export default function LoginPage() {
   const router = useRouter();
+
+  // Rate limiting: 5 intentos en 5 minutos, bloqueo de 15 minutos
+  const { bloqueado, bloqueoHasta, registrarIntento, limpiarIntentos, formatearTiempo, tick } = useRateLimit(
+    5, // maxIntentos
+    5, // ventanaMinutos
+    15, // bloqueoMinutos
+    "hs_login_intentos",
+    "hs_login_bloqueo_hasta"
+  );
 
   // Why destructure from useAuth instead of calling useContext directly?
   // AuthContext is an implementation detail. useAuth provides the stable interface.
@@ -96,39 +45,22 @@ export default function LoginPage() {
   const [errores, setErrores] = useState({ correo: "", contrasena: "" });
   const [loading, setLoading] = useState(false);
   const [errorGlobal, setErrorGlobal] = useState("");
-  const [bloqueado, setBloqueado] = useState(false);
-  const [bloqueoHasta, setBloqueoHasta] = useState(null);
-  const [tiempoRestante, setTiempoRestante] = useState("");
 
-  // ── Restore lockout from localStorage on mount (survives page reloads) ──
+  // Actualizar mensaje de bloqueo cada segundo para mostrar countdown
   useEffect(() => {
-    const estado = obtenerEstadoBloqueo();
-    if (estado.bloqueado) {
-      setBloqueado(true);
-      setBloqueoHasta(estado.hasta);
+    if (bloqueado && bloqueoHasta) {
+      const mensaje = "Tu cuenta ha sido bloqueada temporalmente por múltiples intentos fallidos. Intenta de nuevo en " + 
+        formatearTiempo(bloqueoHasta) + ".";
+      setErrorGlobal(mensaje);
     }
-  }, []);
+  }, [bloqueado, bloqueoHasta, formatearTiempo, tick]);
 
-  // Why countdown timer on interval? User needs to see time passing.
-  // Without this, lockout message would be static and confusing (bad UX).
+  // Limpiar error global cuando el bloqueo expire
   useEffect(() => {
-    if (!bloqueado || !bloqueoHasta) return;
-    const tick = () => {
-      const diff = bloqueoHasta - Date.now();
-      if (diff <= 0) {
-        setBloqueado(false);
-        setBloqueoHasta(null);
-        setTiempoRestante("");
-        limpiarIntentos();
-        setErrorGlobal("");
-      } else {
-        setTiempoRestante(formatearTiempoRestante(bloqueoHasta));
-      }
-    };
-    tick();
-    const intervalo = setInterval(tick, 1000);
-    return () => clearInterval(intervalo);
-  }, [bloqueado, bloqueoHasta]);
+    if (!bloqueado && errorGlobal.includes("bloqueada temporalmente")) {
+      setErrorGlobal("");
+    }
+  }, [bloqueado, errorGlobal]);
 
   const handleChange = (campo) => (e) => {
     setForm((prev) => ({ ...prev, [campo]: e.target.value }));
@@ -162,18 +94,12 @@ export default function LoginPage() {
       });
 
       if (!resultadoLogin.ok) {
-        const estado = registrarIntentoFallido();
-        if (estado.bloqueado) {
-          // User has exceeded max attempts (Scenario 4)
-          setBloqueado(true);
-          setBloqueoHasta(estado.hasta);
-          setErrorGlobal(
-            "Tu cuenta ha sido bloqueada temporalmente por múltiples intentos fallidos. Intenta de nuevo más tarde.",
-          );
-        } else {
+        registrarIntento();
+        if (!bloqueado) {
           // Generic message for failed login (Scenarios 2 & 3 - never reveal which field failed)
           setErrorGlobal("El correo o la contraseña son incorrectos.");
         }
+        // Si está bloqueado, el useEffect ya mostrará el mensaje con countdown
         return;
       }
 
@@ -199,18 +125,13 @@ export default function LoginPage() {
       }
     } catch (error) {
       // Lockout check: only reached if login() throws exception
-      const estado = registrarIntentoFallido();
+      registrarIntento();
 
-      if (estado.bloqueado) {
-        setBloqueado(true);
-        setBloqueoHasta(estado.hasta);
-        setErrorGlobal(
-          "Tu cuenta ha sido bloqueada temporalmente por múltiples intentos fallidos. Intenta de nuevo más tarde.",
-        );
-      } else {
+      if (!bloqueado) {
         // Generic message for failed login (never reveal which field failed)
         setErrorGlobal("El correo o la contraseña son incorrectos.");
       }
+      // Si está bloqueado, el useEffect ya mostrará el mensaje con countdown
     } finally {
       setLoading(false);
     }
@@ -240,11 +161,6 @@ export default function LoginPage() {
         {errorGlobal && (
           <div className="w-full rounded-md bg-error-light border border-error px-4 py-3 text-sm text-error text-center">
             {errorGlobal}
-            {bloqueado && tiempoRestante && (
-              <span className="block mt-1 font-semibold">
-                Tiempo restante: {tiempoRestante}
-              </span>
-            )}
           </div>
         )}
 
