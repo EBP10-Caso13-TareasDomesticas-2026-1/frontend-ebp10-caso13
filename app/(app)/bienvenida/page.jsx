@@ -2,15 +2,12 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import dynamic from "next/dynamic";
 
 import ProtectedRoute from "@/components/ProtectedRoute";
 import AppLayout from "@/components/layout/AppLayout";
 import Button from "@/components/ui/Button";
+import LogOut from "@/components/ui/LogOut";
 import { useAuth } from "@/hooks/useAuth";
-
-// Carga dinámica para evitar el error de "use client" mal ubicado en LogOut.jsx
-const LogOut = dynamic(() => import("@/components/ui/LogOut"), { ssr: false });
 
 function BienvenidaContent() {
   const router = useRouter();

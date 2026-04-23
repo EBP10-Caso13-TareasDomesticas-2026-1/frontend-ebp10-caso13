@@ -45,22 +45,20 @@ export default function LoginPage() {
   const [errores, setErrores] = useState({ correo: "", contrasena: "" });
   const [loading, setLoading] = useState(false);
   const [errorGlobal, setErrorGlobal] = useState("");
+  const [lockoutMessage, setLockoutMessage] = useState("");
 
   // Actualizar mensaje de bloqueo cada segundo para mostrar countdown
   useEffect(() => {
     if (bloqueado && bloqueoHasta) {
-      const mensaje = "Tu cuenta ha sido bloqueada temporalmente por múltiples intentos fallidos. Intenta de nuevo en " + 
-        formatearTiempo(bloqueoHasta) + ".";
-      setErrorGlobal(mensaje);
+      setLockoutMessage(
+        "Tu cuenta ha sido bloqueada temporalmente por múltiples intentos fallidos. Intenta de nuevo en " +
+          formatearTiempo(bloqueoHasta) +
+          ".",
+      );
+    } else {
+      setLockoutMessage("");
     }
   }, [bloqueado, bloqueoHasta, formatearTiempo, tick]);
-
-  // Limpiar error global cuando el bloqueo expire
-  useEffect(() => {
-    if (!bloqueado && errorGlobal.includes("bloqueada temporalmente")) {
-      setErrorGlobal("");
-    }
-  }, [bloqueado, errorGlobal]);
 
   const handleChange = (campo) => (e) => {
     setForm((prev) => ({ ...prev, [campo]: e.target.value }));
@@ -94,12 +92,13 @@ export default function LoginPage() {
       });
 
       if (!resultadoLogin.ok) {
-        registrarIntento();
-        if (!bloqueado) {
+        const quedoBloqueado = registrarIntento();
+        if (quedoBloqueado) {
+          setErrorGlobal("");
+        } else {
           // Generic message for failed login (Scenarios 2 & 3 - never reveal which field failed)
           setErrorGlobal("El correo o la contraseña son incorrectos.");
         }
-        // Si está bloqueado, el useEffect ya mostrará el mensaje con countdown
         return;
       }
 
@@ -125,13 +124,14 @@ export default function LoginPage() {
       }
     } catch (error) {
       // Lockout check: only reached if login() throws exception
-      registrarIntento();
+      const quedoBloqueado = registrarIntento();
 
-      if (!bloqueado) {
+      if (quedoBloqueado) {
+        setErrorGlobal("");
+      } else {
         // Generic message for failed login (never reveal which field failed)
         setErrorGlobal("El correo o la contraseña son incorrectos.");
       }
-      // Si está bloqueado, el useEffect ya mostrará el mensaje con countdown
     } finally {
       setLoading(false);
     }
@@ -158,11 +158,15 @@ export default function LoginPage() {
         </div>
 
         {/* Error message and lockout countdown */}
-        {errorGlobal && (
+        {lockoutMessage ? (
+          <div className="w-full rounded-md bg-error-light border border-error px-4 py-3 text-sm text-error text-center">
+            {lockoutMessage}
+          </div>
+        ) : errorGlobal ? (
           <div className="w-full rounded-md bg-error-light border border-error px-4 py-3 text-sm text-error text-center">
             {errorGlobal}
           </div>
-        )}
+        ) : null}
 
         {/* Login form */}
         <form

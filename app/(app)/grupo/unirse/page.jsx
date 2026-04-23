@@ -1,6 +1,5 @@
 "use client";
 
-import dynamic from "next/dynamic";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
@@ -8,18 +7,17 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import AppLayout from "@/components/layout/AppLayout";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
+import LogOut from "@/components/ui/LogOut";
 import { useAuth } from "@/hooks/useAuth";
 import { useGroup } from "@/hooks/useGroup";
 import { useRateLimit } from "@/hooks/useRateLimit";
 import groupService from "@/services/groupService";
 
-const LogOut = dynamic(() => import("@/components/ui/LogOut"), { ssr: false });
-
 /**
  * HUS-022: Unirse a un grupo familiar
  * 
  * Permite que un usuario registrado se una a un grupo existente
- * ingresando un código de invitación válido de 6 dígitos.
+ * ingresando un código de invitación válido de 6 caracteres.
  */
 function UnirseAlGrupoContent() {
   const router = useRouter();
@@ -35,7 +33,6 @@ function UnirseAlGrupoContent() {
 
   const [codigo, setCodigo] = useState("");
   const [error, setError] = useState("");
-  const [info, setInfo] = useState("");
   const [loading, setLoading] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [mounted, setMounted] = useState(false);
@@ -122,7 +119,6 @@ function UnirseAlGrupoContent() {
   const handleUnirse = async (e) => {
     e.preventDefault();
     setError("");
-    setInfo("");
 
     // Verificar bloqueo
     if (bloqueado) {
@@ -170,7 +166,7 @@ function UnirseAlGrupoContent() {
    * Maneja el clic en "Cancelar"
    */
   const handleCancelar = () => {
-    router.back();
+    router.push("/bienvenida");
   };
 
   if (!mounted) {
@@ -216,7 +212,7 @@ function UnirseAlGrupoContent() {
               </div>
               <h1>Unirse a un grupo familiar</h1>
               <p className="text-sm text-primary font-medium">
-                Ingresa el código de 6 dígitos de la invitación
+                Ingresa el código de 6 caracteres de la invitación
               </p>
             </div>
 
@@ -283,7 +279,7 @@ function UnirseAlGrupoContent() {
                   type="button"
                   variant="secondary"
                   disabled={loading || loadingGrupo || membershipLoading}
-                  onClick={() => router.push("/bienvenida")}
+                  onClick={handleCancelar}
                   className="w-full"
                 >
                   Cancelar

@@ -62,9 +62,24 @@ export function useRateLimit(
     try {
       const ahora = Date.now();
       const intentosStr = localStorage.getItem(storageKeyIntentos);
-      const intentosData = intentosStr
-        ? JSON.parse(intentosStr)
-        : { count: 0, desde: ahora };
+      let intentosData = { count: 0, desde: ahora };
+
+      if (intentosStr) {
+        try {
+          intentosData = JSON.parse(intentosStr);
+        } catch {
+          localStorage.removeItem(storageKeyIntentos);
+          intentosData = { count: 0, desde: ahora };
+        }
+      }
+
+      if (
+        !intentosData ||
+        typeof intentosData.count !== "number" ||
+        typeof intentosData.desde !== "number"
+      ) {
+        intentosData = { count: 0, desde: ahora };
+      }
 
       // Limpiar si la ventana de tiempo ya pasó
       if (ahora - intentosData.desde > TIEMPO_VENTANA_MS) {
@@ -73,6 +88,7 @@ export function useRateLimit(
       }
 
       intentosData.count++;
+      localStorage.setItem(storageKeyIntentos, JSON.stringify(intentosData));
 
       if (intentosData.count >= maxIntentos) {
         const bloqueoHastaTime = ahora + TIEMPO_BLOQUEO_MS;
@@ -80,8 +96,6 @@ export function useRateLimit(
         setBloqueado(true);
         setBloqueoHasta(bloqueoHastaTime);
         return true;
-      } else {
-        localStorage.setItem(storageKeyIntentos, JSON.stringify(intentosData));
       }
       return false;
     } catch {
