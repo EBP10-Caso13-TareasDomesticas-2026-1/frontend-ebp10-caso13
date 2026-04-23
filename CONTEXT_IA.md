@@ -25,7 +25,7 @@
 | Daniel Sanchez | Componentes | Todos los componentes reutilizables de /components/. Sprint 2: Apoyo |
 | Salome Toro | Pantallas | Crear Tarea (HUS-006) |
 | David Sanchez | Pantallas | Unirse a Grupo (HUS-022) |
-| Alejandro Toro | Pantallas | Sprint 2: Apoyo  |
+| Alejandro Toro | Pantallas | Sprint 2: Apoyo |
 | Daniel Salas | Pantallas | Sprint 2: Apoyo |
 
 ---
@@ -113,6 +113,7 @@
 | `hooks/useGroup.js` | Consume GroupContext | `const { grupo, rolActual, crearGrupo, cargarGrupo } = useGroup()` |
 | `hooks/useLocalStorage.js` | Persistencia reactiva en localStorage | Usado internamente por AuthContext |
 | `hooks/useFetch.js` | Estado loading/error/data para llamadas a servicios puntuales | `const { data, loading, execute } = useFetch(servicio)` |
+| `hooks/useRateLimit.js` | Maneja intentos fallidos, ventana de tiempo, bloqueo temporal y countdown persistente | const { bloqueado, bloqueoHasta, registrarIntento, limpiarIntentos, formatearTiempo } = useRateLimit(...) |
 
 ### Notas de acoplamiento entre contextos
 
@@ -145,7 +146,7 @@
 | `authService.js` | `registrarUsuario(data)` | POST | `/usuarios/registro` |
 | `authService.js` | `iniciarSesion(data)` | POST | `/usuarios/login` |
 | `authService.js` | `cerrarSesion(token)` | POST | `/usuarios/logout` |
-| `groupService.js` | `obtenerGrupoDeUsuario(usuarioId, token)` | GET | `/miembros-grupo/` |
+| `groupService.js` | `obtenerGrupoDeUsuario(usuarioId, token)` | GET | `/miembros-grupo` |
 | `groupService.js` | `crearGrupo(data, token, usuarioId)` | POST | `/grupos` |
 | `groupService.js` | `unirseConCodigo(codigoInvitacion, token, usuarioId)` | POST | `/miembros-grupo` |
 | `groupService.js` | `obtenerGrupo(grupoId, token)` | GET | `/grupos/{id}` |
@@ -168,7 +169,7 @@
 
 | ID | Descripción | Estado | Responsable | Pantalla |
 | ---- | ------------- | -------- | ------------- | -------- |
-| HUS-022 | Como usuario registrado, quiero unirme a un grupo familiar mediante un código de invitación válido, para asegurar que el acceso a los grupos esté controlado mediante mecanismos de autorización basados en invitación. | pendiente | David Sanchez | Unirse a grupo |
+| HUS-022 | Como usuario registrado, quiero unirme a un grupo familiar mediante un código de invitación válido, para asegurar que el acceso a los grupos esté controlado mediante mecanismos de autorización basados en invitación. | pantalla lista | David Sanchez | Unirse a grupo |
 | HUS-006 | Como administrador del grupo familiar, quiero crear una tarea doméstica asignándole un miembro responsable, fecha límite, prioridad (Alta / Media / Baja), título y opcionalmente una descripción, para organizar las tareas del hogar de forma consistente. | pendiente | Salome Toro | Crear tarea |
 | HU-009 | Como miembro del grupo familiar, quiero visualizar el tablero completo de tareas del hogar, para conocer todas las tareas del grupo. | pendiente | Camila Torres | Tablero de tareas |
 | HU-015 | Como miembro del grupo familiar, quiero cambiar el estado de una de mis tareas asignadas a "EN PROGRESO" o como "COMPLETADA", para registrar el avance con esa responsabilidad. | pendiente | Camila Torres | Tablero de tareas |
@@ -227,6 +228,10 @@
 ## NOTAS Y DECISIONES TÉCNICAS
 
 - Por ahora se usa mock data para simular llamadas a la api y se definió una estructura base para llamada a la api con endpoints propuestos
+- Se estandarizó un hook reusable de rate limiting para autenticación y flujos sensibles.
+- Login usa 5 intentos en 5 minutos con bloqueo de 15 minutos (hs_login_intentos, hs_login_bloqueo_hasta).
+- Unirse a grupo usa 10 intentos en 5 minutos con bloqueo de 15 minutos (hs_unirse_intentos, hs_unirse_bloqueo_hasta).
+- El bloqueo persiste por localStorage y el countdown se rehidrata tras recargar.
 
 ### CONFIGURACIÓN
 
@@ -241,6 +246,7 @@
 - El bloqueo por 5 intentos fallidos se maneja en **frontend** con `localStorage` (claves: `hs_login_intentos`, `hs_login_bloqueo_hasta`). Cuando el backend esté listo, puede retornar HTTP 429/423 y el bloqueo frontend queda como respaldo.
 - `cargarGrupo()` puede retornar `{ ok: false }` después de un login exitoso — eso **no es un error**, es el Escenario 6 (usuario sin grupo). No tratar como excepción.
 - El Escenario 7 (redirigir al dashboard si usuario con grupo entra a `/bienvenida`) debe implementarse en `app/(auth)/bienvenida/page.jsx` — responsabilidad de Salome Toro.
+- El countdown del bloqueo se actualiza en tiempo real y persiste después de recargar, mediante useRateLimit.js compartido entre login y unirse a grupo.
 
 ---
 
@@ -259,3 +265,5 @@
 | 13/04/26 | Camila Torres | Ajustes de consistencia y arreglo de bug en relación al login |
 | 20/04/26 | Camila Torres | Arreglo y revisión del sprint 1 completado: Todas las HU (001-005) implementadas y revisada. Documentación de ProtectedRoute, lib/jwt.js y lib/validators.js |
 | 20/04/26 | Camila Torres | Creación de Sprint 2: Definición de 5 HUs (HU-022, HU-006, HU-009, HU-015, HU-016) agrupadas en 3 pantallas principales |
+| 22/04/26 | Camila Torres | HUS-022 implementada: pantalla Unirse a Grupo con validación de código, verificación de membresía y rate limiting |
+| 22/04/26 | Camila Torres | Refactor de login para usar useRateLimit compartido y countdown en tiempo real |
