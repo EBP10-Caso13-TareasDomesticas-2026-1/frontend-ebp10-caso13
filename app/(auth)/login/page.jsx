@@ -112,7 +112,7 @@ export default function LoginPage() {
       );
 
       if (resultado.ok) {
-        router.push("/bienvenida"); // TODO:en el siguiente Sprint se cambia por dashboard
+        router.push("/tablero"); // TODO:en el siguiente Sprint se cambia por dashboard
       } else if (resultado.noGrupo) {
         router.push("/bienvenida");
       } else {
