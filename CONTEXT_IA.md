@@ -260,7 +260,7 @@
 
 - El bloqueo por 5 intentos fallidos se maneja en **frontend** con `localStorage` (claves: `hs_login_intentos`, `hs_login_bloqueo_hasta`). Cuando el backend esté listo, puede retornar HTTP 429/423 y el bloqueo frontend queda como respaldo.
 - `cargarGrupo()` puede retornar `{ ok: false }` después de un login exitoso — eso **no es un error**, es el Escenario 6 (usuario sin grupo). No tratar como excepción.
-- El Escenario 7 (redirigir al dashboard si usuario con grupo entra a `/bienvenida`) debe implementarse en `app/(auth)/bienvenida/page.jsx` — responsabilidad de Salome Toro.
+- El Escenario 7 (redirigir al dashboard si usuario con grupo entra a `/bienvenida`) debe implementarse en `app/(app)/bienvenida/page.jsx/bienvenida/page.jsx`
 - El countdown del bloqueo se actualiza en tiempo real y persiste después de recargar, mediante useRateLimit.js compartido entre login y unirse a grupo.
 
 ---
