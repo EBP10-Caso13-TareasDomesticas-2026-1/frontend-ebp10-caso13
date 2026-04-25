@@ -1,5 +1,8 @@
 "use client";
 
+import { useState } from "react";
+import DateLimitModal from "@/components/ui/DateLimitModal";
+
 /**
  * TaskCard — Tarjeta de tarea individual
  *
@@ -18,7 +21,7 @@
  *   }
  * - esAdmin: boolean
  * - esMiaTarea: boolean
- * - onCambiarEstado: (idTarea, nuevoEstado) => void
+ * - onCambiarEstado: (idTarea, nuevoEstado, fechaLimite?) => void
  * - loading: boolean (deshabilita botones durante cambios)
  */
 export default function TaskCard({
@@ -28,6 +31,11 @@ export default function TaskCard({
   onCambiarEstado,
   loading,
 }) {
+  const [modalReaperturaAbierto, setModalReaperturaAbierto] = useState(false);
+  const [nuevaFechaLimite, setNuevaFechaLimite] = useState("");
+  const [estadoDestinoReapertura, setEstadoDestinoReapertura] = useState(null);
+  const [errorFechaReapertura, setErrorFechaReapertura] = useState("");
+
   // ─── Helpers para UI ───────────────────────────────────────────
 
   const formatFechaLimite = (fecha) => {
@@ -93,19 +101,67 @@ export default function TaskCard({
   const prioridadStyle = getPrioridadBadge(tarea.prioridad);
   const estadoStyle = getEstadoStyle(tarea.estado);
 
+  const abrirModalReapertura = (estadoDestino) => {
+    setEstadoDestinoReapertura(estadoDestino);
+    setNuevaFechaLimite("");
+    setErrorFechaReapertura("");
+    setModalReaperturaAbierto(true);
+  };
+
+  const cerrarModalReapertura = () => {
+    setModalReaperturaAbierto(false);
+    setNuevaFechaLimite("");
+    setEstadoDestinoReapertura(null);
+    setErrorFechaReapertura("");
+  };
+
+  const getMinDateTimeLocal = () => {
+    const ahora = new Date();
+    const pad = (n) => String(n).padStart(2, "0");
+    return `${ahora.getFullYear()}-${pad(ahora.getMonth() + 1)}-${pad(
+      ahora.getDate(),
+    )}T${pad(ahora.getHours())}:${pad(ahora.getMinutes())}`;
+  };
+
+  const confirmarReapertura = async () => {
+    if (!nuevaFechaLimite || !estadoDestinoReapertura) {
+      setErrorFechaReapertura("Debes seleccionar una fecha límite.");
+      return;
+    }
+
+    const fecha = new Date(nuevaFechaLimite);
+    if (Number.isNaN(fecha.getTime())) {
+      setErrorFechaReapertura("La fecha ingresada no es válida.");
+      return;
+    }
+
+    if (fecha <= new Date()) {
+      setErrorFechaReapertura("La fecha límite debe ser posterior a la fecha actual.");
+      return;
+    }
+
+    setErrorFechaReapertura("");
+
+    await onCambiarEstado(
+      tarea.idTarea,
+      estadoDestinoReapertura,
+      fecha.toISOString(),
+    );
+
+    cerrarModalReapertura();
+  };
+
   // ─── Renderizar botones según estado y permisos ───────────────
 
   const renderBotones = () => {
     if (!puedeCambiarEstado) {
       // No tiene permisos — mostrar solo etiqueta
       return (
-        <button
-          type="button"
-          disabled
+        <div
           className="w-full mt-2 px-2 py-1 rounded text-xs font-medium border bg-gray-100 border-gray-200 text-gray-600 opacity-90 cursor-not-allowed"
         >
           Asignada a {tarea.asignadoA?.nombre || "usuario"}
-        </button>
+        </div>
       );
     }
 
@@ -160,7 +216,7 @@ export default function TaskCard({
           <button
             key="reabrir"
             type="button"
-            onClick={() => onCambiarEstado(tarea.idTarea, "PENDIENTE")}
+            onClick={() => abrirModalReapertura("PENDIENTE")}
             disabled={loading}
             className="w-full px-2 py-1 bg-gray-100 hover:bg-gray-200 disabled:bg-gray-100 text-gray-700 disabled:text-gray-400 text-xs font-medium rounded transition"
           >
@@ -169,7 +225,7 @@ export default function TaskCard({
           <button
             key="mover-en-progreso"
             type="button"
-            onClick={() => onCambiarEstado(tarea.idTarea, "EN_PROGRESO")}
+            onClick={() => abrirModalReapertura("EN_PROGRESO")}
             disabled={loading}
             className="w-full px-2 py-1 bg-yellow-100 hover:bg-yellow-200 disabled:bg-gray-100 text-yellow-700 disabled:text-gray-400 text-xs font-medium rounded transition"
           >
@@ -183,7 +239,7 @@ export default function TaskCard({
           <button
             key="reabrir"
             type="button"
-            onClick={() => onCambiarEstado(tarea.idTarea, "PENDIENTE")}
+            onClick={() => abrirModalReapertura("PENDIENTE")}
             disabled={loading}
             className="w-full px-2 py-1 bg-gray-100 hover:bg-gray-200 disabled:bg-gray-100 text-gray-700 disabled:text-gray-400 text-xs font-medium rounded transition"
           >
@@ -243,6 +299,8 @@ export default function TaskCard({
             fill="none"
             stroke="currentColor"
             strokeWidth={2}
+            aria-hidden="true"
+            focusable="false"
           >
             <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
             <line x1="16" y1="2" x2="16" y2="6" />
@@ -264,9 +322,8 @@ export default function TaskCard({
 
       {/* Estado visual COMPLETADA */}
       {tarea.estado === "COMPLETADA" && (
-        <button
-          type="button"
-          disabled
+        <div
+          role="status"
           className="w-full mb-2 px-2 py-1 rounded text-xs font-medium border bg-green-100 border-green-200 text-green-700 opacity-90 cursor-not-allowed flex items-center justify-center gap-1"
         >
           <svg
@@ -274,26 +331,41 @@ export default function TaskCard({
             className="w-3 h-3"
             viewBox="0 0 24 24"
             fill="currentColor"
+            aria-hidden="true"
+            focusable="false"
           >
             <path d="M10 15.172l9.192-9.193a1 1 0 1 1 1.415 1.415l-10.606 10.606a1 1 0 0 1-1.415 0l-4.24-4.243a1 1 0 1 1 1.415-1.415L10 15.172z" />
           </svg>
           Tarea completada
-        </button>
+        </div>
       )}
 
       {/* Estado visual VENCIDA */}
       {tarea.estado === "VENCIDA" && (
-        <button
-          type="button"
-          disabled
+        <div
+          role="status"
           className="w-full mb-2 px-2 py-1 rounded text-xs font-medium border bg-red-100 border-red-200 text-red-700 opacity-90 cursor-not-allowed"
         >
           Esta tarea está vencida.
-        </button>
+        </div>
       )}
 
       {/* Botones */}
       {renderBotones()}
+
+      <DateLimitModal
+        isOpen={modalReaperturaAbierto}
+        value={nuevaFechaLimite}
+        error={errorFechaReapertura}
+        loading={loading}
+        minDateTime={getMinDateTimeLocal()}
+        onChange={(value) => {
+          setNuevaFechaLimite(value);
+          setErrorFechaReapertura("");
+        }}
+        onConfirm={confirmarReapertura}
+        onCancel={cerrarModalReapertura}
+      />
     </div>
   );
 }

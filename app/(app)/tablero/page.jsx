@@ -134,7 +134,7 @@ function TableroContent() {
 
   // ─── Manejar cambio de estado (optimistic UI) ─────────────────
 
-  const onCambiarEstado = async (idTarea, nuevoEstado) => {
+  const onCambiarEstado = async (idTarea, nuevoEstado, fechaLimite = null) => {
     const prevTareas = tareas;
 
     try {
@@ -142,16 +142,25 @@ function TableroContent() {
       setError(null);
 
       // 1. Optimistic update
-      setTareas((prevTareas) =>
-        prevTareas.map((t) =>
-          t.idTarea === idTarea ? { ...t, estado: nuevoEstado } : t
+      setTareas((prev) =>
+        prev.map((t) =>
+          t.idTarea === idTarea
+            ? {
+                ...t,
+                estado: nuevoEstado,
+                ...(fechaLimite ? { fechaLimite } : {}),
+              }
+            : t
         )
       );
 
       // 2. Llamar al backend
       await taskService.actualizarTarea(
         idTarea,
-        { estado: nuevoEstado },
+        {
+          estado: nuevoEstado,
+          ...(fechaLimite ? { fechaLimite } : {}),
+        },
         token
       );
     } catch (err) {

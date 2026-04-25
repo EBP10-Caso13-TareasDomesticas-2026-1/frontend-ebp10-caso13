@@ -44,9 +44,13 @@ const mock = {
     const tarea = tareas.find((t) => t.idTarea === Number(idTarea));
     if (!tarea) throw new Error("Tarea no encontrada.");
 
-    // Solo actualizar estado en este sprint
+    // Actualizar estado y fecha límite cuando aplique
     if (data.estado) {
       tarea.estado = data.estado;
+    }
+
+    if (data.fechaLimite) {
+      tarea.fechaLimite = data.fechaLimite;
     }
 
     return tarea;
@@ -90,6 +94,7 @@ const api = {
         method: "PUT",
         body: {
           estado: data.estado,
+          ...(data.fechaLimite ? { fechaLimite: data.fechaLimite } : {}),
         },
       },
       token
