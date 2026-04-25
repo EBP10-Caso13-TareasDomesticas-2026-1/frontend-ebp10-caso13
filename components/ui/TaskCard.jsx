@@ -101,9 +101,27 @@ export default function TaskCard({
   const prioridadStyle = getPrioridadBadge(tarea.prioridad);
   const estadoStyle = getEstadoStyle(tarea.estado);
 
+  const toDateTimeLocalValue = (fecha) => {
+    const date = new Date(fecha);
+    if (Number.isNaN(date.getTime())) return "";
+
+    const pad = (n) => String(n).padStart(2, "0");
+    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(
+      date.getDate(),
+    )}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+  };
+
+  const getFechaLimiteInicialReapertura = () => {
+    if (!tarea?.fechaLimite) return "";
+    const fechaOriginal = new Date(tarea.fechaLimite);
+    if (Number.isNaN(fechaOriginal.getTime())) return "";
+    if (fechaOriginal <= new Date()) return "";
+    return toDateTimeLocalValue(fechaOriginal);
+  };
+
   const abrirModalReapertura = (estadoDestino) => {
     setEstadoDestinoReapertura(estadoDestino);
-    setNuevaFechaLimite("");
+    setNuevaFechaLimite(getFechaLimiteInicialReapertura());
     setErrorFechaReapertura("");
     setModalReaperturaAbierto(true);
   };
