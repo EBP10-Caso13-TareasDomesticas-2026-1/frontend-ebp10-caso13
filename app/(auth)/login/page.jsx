@@ -112,7 +112,7 @@ export default function LoginPage() {
       );
 
       if (resultado.ok) {
-        router.push("/tablero"); // TODO:en el siguiente Sprint se cambia por dashboard
+        router.push("/tablero"); // /tablero es el dashboard actual del Sprint 2
       } else if (resultado.noGrupo) {
         router.push("/bienvenida");
       } else {

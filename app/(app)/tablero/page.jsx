@@ -9,7 +9,6 @@ import Button from "@/components/ui/Button";
 import { useAuth } from "@/hooks/useAuth";
 import { useGroup } from "@/hooks/useGroup";
 import taskService from "@/services/taskService";
-import groupService from "@/services/groupService";
 
 function TableroContent() {
   const router = useRouter();
@@ -28,12 +27,38 @@ function TableroContent() {
         miembro.usuarioId === usuario?.idUsuario && Number(miembro.rolId) === 1,
     );
 
+  const enriquecerTareasConMiembros = (tareasData, miembros = []) => {
+    return tareasData.map((tarea) => {
+      const usuarioAsignado = miembros.find(
+        (m) => m.usuarioId === tarea.idUsuarioAsignado,
+      );
+
+      return {
+        ...tarea,
+        asignadoA: usuarioAsignado
+          ? {
+              id: usuarioAsignado.usuarioId,
+              nombre: usuarioAsignado.nombre,
+              correo: usuarioAsignado.correo,
+              fotoPerfil: usuarioAsignado.fotoPerfil,
+            }
+          : null,
+      };
+    });
+  };
+
   // ─── Cargar tareas y enriquecerlas ───────────────────────────
 
   useEffect(() => {
     const cargarTareas = async () => {
-      if (!grupo?.id || !token) {
+      if (!token) {
         setLoading(false);
+        return;
+      }
+
+      if (!grupo?.id) {
+        setLoading(false);
+        router.replace("/bienvenida");
         return;
       }
 
@@ -44,26 +69,11 @@ function TableroContent() {
         // Obtener tareas del grupo
         const tareasData = await taskService.obtenerTareasGrupo(grupo.id, token);
 
-        // Obtener grupo con miembros enriquecidos
-        const grupoConMiembros = await groupService.obtenerGrupo(grupo.id, token);
-
-        // Enriquecer tareas con datos del usuario asignado
-        const tareasEnriquecidas = tareasData.map((tarea) => {
-          const usuarioAsignado = grupoConMiembros.miembros?.find(
-            (m) => m.usuarioId === tarea.idUsuarioAsignado
-          );
-          return {
-            ...tarea,
-            asignadoA: usuarioAsignado
-              ? {
-                  id: usuarioAsignado.usuarioId,
-                  nombre: usuarioAsignado.nombre,
-                  correo: usuarioAsignado.correo,
-                  fotoPerfil: usuarioAsignado.fotoPerfil,
-                }
-              : null,
-          };
-        });
+        // Enriquecer tareas con miembros ya disponibles en GroupContext
+        const tareasEnriquecidas = enriquecerTareasConMiembros(
+          tareasData,
+          grupo.miembros || [],
+        );
 
         setTareas(tareasEnriquecidas);
       } catch (err) {
@@ -75,7 +85,7 @@ function TableroContent() {
     };
 
     cargarTareas();
-  }, [grupo?.id, token]);
+  }, [grupo?.id, grupo?.miembros, token, router]);
 
   // ─── Lógica de ordenamiento y clasificación ──────────────────
 
@@ -125,8 +135,11 @@ function TableroContent() {
   // ─── Manejar cambio de estado (optimistic UI) ─────────────────
 
   const onCambiarEstado = async (idTarea, nuevoEstado) => {
+    const prevTareas = tareas;
+
     try {
       setLoadingEstado(true);
+      setError(null);
 
       // 1. Optimistic update
       setTareas((prevTareas) =>
@@ -145,26 +158,18 @@ function TableroContent() {
       console.error("Error cambiando estado:", err);
       setError("No se pudo actualizar la tarea. Intenta nuevamente.");
 
-      // Recargar tareas en caso de error
-      const tareasData = await taskService.obtenerTareasGrupo(grupo.id, token);
-      const grupoConMiembros = await groupService.obtenerGrupo(grupo.id, token);
-      const tareasEnriquecidas = tareasData.map((tarea) => {
-        const usuarioAsignado = grupoConMiembros.miembros?.find(
-          (m) => m.usuarioId === tarea.idUsuarioAsignado
+      // Intentar sincronizar con datos reales; si falla, hacer rollback estable
+      try {
+        const tareasData = await taskService.obtenerTareasGrupo(grupo.id, token);
+        const tareasEnriquecidas = enriquecerTareasConMiembros(
+          tareasData,
+          grupo?.miembros || [],
         );
-        return {
-          ...tarea,
-          asignadoA: usuarioAsignado
-            ? {
-                id: usuarioAsignado.usuarioId,
-                nombre: usuarioAsignado.nombre,
-                correo: usuarioAsignado.correo,
-                fotoPerfil: usuarioAsignado.fotoPerfil,
-              }
-            : null,
-        };
-      });
-      setTareas(tareasEnriquecidas);
+        setTareas(tareasEnriquecidas);
+      } catch (reloadError) {
+        console.error("Error recargando tareas tras fallo:", reloadError);
+        setTareas(prevTareas);
+      }
     } finally {
       setLoadingEstado(false);
     }

@@ -4,7 +4,18 @@
  * TaskCard — Tarjeta de tarea individual
  *
  * Props:
- * - tarea: objeto con id, nombre, descripcion, prioridad, estado, fechaLimite, asignadoA, etc.
+ * - tarea: {
+ *     idTarea: number,
+ *     idGrupo: number,
+ *     idUsuarioAsignado: number,
+ *     nombre: string,
+ *     descripcion: string | null,
+ *     prioridad: "ALTA" | "MEDIA" | "BAJA",
+ *     estado: "PENDIENTE" | "EN_PROGRESO" | "COMPLETADA" | "VENCIDA",
+ *     fechaLimite: string,
+ *     fechaCreacion?: string,
+ *     asignadoA?: { id: number, nombre: string, correo?: string, fotoPerfil?: string | null } | null,
+ *   }
  * - esAdmin: boolean
  * - esMiaTarea: boolean
  * - onCambiarEstado: (idTarea, nuevoEstado) => void
@@ -78,14 +89,14 @@ export default function TaskCard({
       .slice(0, 2);
   };
 
-  const puede_cambiar_estado = esAdmin || esMiaTarea;
+  const puedeCambiarEstado = esAdmin || esMiaTarea;
   const prioridadStyle = getPrioridadBadge(tarea.prioridad);
   const estadoStyle = getEstadoStyle(tarea.estado);
 
   // ─── Renderizar botones según estado y permisos ───────────────
 
   const renderBotones = () => {
-    if (!puede_cambiar_estado) {
+    if (!puedeCambiarEstado) {
       // No tiene permisos — mostrar solo etiqueta
       return (
         <button
@@ -105,6 +116,7 @@ export default function TaskCard({
       botones.push(
         <button
           key="en-progreso"
+          type="button"
           onClick={() => onCambiarEstado(tarea.idTarea, "EN_PROGRESO")}
           disabled={loading}
           className="w-full px-2 py-1 bg-yellow-100 hover:bg-yellow-200 disabled:bg-gray-100 text-yellow-700 disabled:text-gray-400 text-xs font-medium rounded transition"
@@ -113,6 +125,7 @@ export default function TaskCard({
         </button>,
         <button
           key="completar"
+          type="button"
           onClick={() => onCambiarEstado(tarea.idTarea, "COMPLETADA")}
           disabled={loading}
           className="w-full px-2 py-1 bg-green-100 hover:bg-green-200 disabled:bg-gray-100 text-green-700 disabled:text-gray-400 text-xs font-medium rounded transition"
@@ -124,6 +137,7 @@ export default function TaskCard({
       botones.push(
         <button
           key="volver-pendiente"
+          type="button"
           onClick={() => onCambiarEstado(tarea.idTarea, "PENDIENTE")}
           disabled={loading}
           className="w-full px-2 py-1 bg-gray-100 hover:bg-gray-200 disabled:bg-gray-100 text-gray-700 disabled:text-gray-400 text-xs font-medium rounded transition"
@@ -132,6 +146,7 @@ export default function TaskCard({
         </button>,
         <button
           key="completar"
+          type="button"
           onClick={() => onCambiarEstado(tarea.idTarea, "COMPLETADA")}
           disabled={loading}
           className="w-full px-2 py-1 bg-green-100 hover:bg-green-200 disabled:bg-gray-100 text-green-700 disabled:text-gray-400 text-xs font-medium rounded transition"
@@ -144,6 +159,7 @@ export default function TaskCard({
         botones.push(
           <button
             key="reabrir"
+            type="button"
             onClick={() => onCambiarEstado(tarea.idTarea, "PENDIENTE")}
             disabled={loading}
             className="w-full px-2 py-1 bg-gray-100 hover:bg-gray-200 disabled:bg-gray-100 text-gray-700 disabled:text-gray-400 text-xs font-medium rounded transition"
@@ -152,6 +168,7 @@ export default function TaskCard({
           </button>,
           <button
             key="mover-en-progreso"
+            type="button"
             onClick={() => onCambiarEstado(tarea.idTarea, "EN_PROGRESO")}
             disabled={loading}
             className="w-full px-2 py-1 bg-yellow-100 hover:bg-yellow-200 disabled:bg-gray-100 text-yellow-700 disabled:text-gray-400 text-xs font-medium rounded transition"
@@ -165,6 +182,7 @@ export default function TaskCard({
         botones.push(
           <button
             key="reabrir"
+            type="button"
             onClick={() => onCambiarEstado(tarea.idTarea, "PENDIENTE")}
             disabled={loading}
             className="w-full px-2 py-1 bg-gray-100 hover:bg-gray-200 disabled:bg-gray-100 text-gray-700 disabled:text-gray-400 text-xs font-medium rounded transition"
@@ -173,6 +191,7 @@ export default function TaskCard({
           </button>,
           <button
             key="completar"
+            type="button"
             onClick={() => onCambiarEstado(tarea.idTarea, "COMPLETADA")}
             disabled={loading}
             className="w-full px-2 py-1 bg-green-100 hover:bg-green-200 disabled:bg-gray-100 text-green-700 disabled:text-gray-400 text-xs font-medium rounded transition"
