@@ -1,4 +1,4 @@
-# CONTEXTO_IA.md
+# CONTEXT_IA.md
 
 > Archivo de contexto compartido del equipo.  
 > **Regla de oro:** Antes de hacer `git push` → actualiza este archivo.  
@@ -53,9 +53,12 @@
 ```cmd
 [nombre-proyecto]/
 ├── app/                        ← pages
-│   └── (Route group)/          ← (app): rutas protegidas por autenticación, (auth): rutas de autenticación
-│       └── nombre-ruta/
-│           └── page.jsx
+│   ├── page.jsx                ← redirige a /login
+│   ├── (Route group)/          ← (app): rutas protegidas por autenticación, (auth): rutas de autenticación
+│   │   └── nombre-ruta/
+│   │       └── page.jsx
+│   └── test/
+│       └── page.jsx
 ├── components/
 │   ├── ui/                     ← Button, Input, Table, Card, Badge, Modal...
 │   └── layout/                 ← Navbar, Sidebar, Footer, Layout...
@@ -85,13 +88,15 @@
 | `Logo.jsx` | Logo de HomeSync con soporte para 3 tamaños (sm, md, lg) | `size` (default: "md"), `className` |
 | `InviteCodeCard.jsx` | Tarjeta que muestra código de invitación con botón para copiar al portapapeles | `code`, `className` |
 | `LogOut.jsx` | Modal de confirmación para cerrar sesión | `isOpen`, `icon`, `title`, `description`, `confirmText`, `cancelText`, `onConfirm`, `onCancel`, `variant` |
+| `TaskCard.jsx` | Tarjeta individual de tarea con estado, prioridad y acciones de cambio de estado | `tarea`, `esAdmin`, `esMiaTarea`, `onCambiarEstado`, `loading` |
+| `TaskColumn.jsx` | Columna tipo kanban que agrupa tareas y renderiza `TaskCard` | `titulo`, `tareas`, `esAdmin`, `usuarioId`, `onCambiarEstado`, `loading` |
 
 ### /components/layout/
 
 | Archivo | Qué hace | Props |
 | --------- | ---------- | ------- |
 | `Navbar.jsx` | Barra de navegación con logo a la izquierda y contenido dinámico a la derecha | `children` (contenido dinámico en navbar) |
-| `AppLayout.jsx` | Layout principal: navbar + main + footer. Main ocupa todo el ancho disponible | `children` (contenido principal), `navbarContent` (elementos de navbar) |
+| `AppLayout.jsx` | Layout principal: navbar + main + footer. Main ocupa todo el ancho disponible o respeta contenedor normal | `children` (contenido principal), `navbarContent` (elementos de navbar), `fullWidth` (default: `false`) |
 | `CenteredLayout.jsx` | Layout para formularios: navbar + main centrado + footer | `children` (contenido centrado), `navbarContent` (elementos de navbar) |
 | `Footer.jsx` | Pie de página simple con copyright | - |
 
@@ -148,7 +153,7 @@
 | --------- | --------- | -------- | ---------- |
 | `authService.js` | `registrarUsuario(data)` | POST | `/usuarios/registro` |
 | `authService.js` | `iniciarSesion(data)` | POST | `/usuarios/login` |
-| `authService.js` | `cerrarSesion(token)` | POST | `/usuarios/logout` |
+| `authService.js` | `cerrarSesion(token)` | POST | `/sesiones/logout` |
 | `groupService.js` | `obtenerGrupoDeUsuario(usuarioId, token)` | GET | `/miembros-grupo` |
 | `groupService.js` | `crearGrupo(data, token, usuarioId)` | POST | `/grupos` |
 | `groupService.js` | `unirseConCodigo(codigoInvitacion, token, usuarioId)` | POST | `/miembros-grupo` |
@@ -260,7 +265,7 @@
 
 - El bloqueo por 5 intentos fallidos se maneja en **frontend** con `localStorage` (claves: `hs_login_intentos`, `hs_login_bloqueo_hasta`). Cuando el backend esté listo, puede retornar HTTP 429/423 y el bloqueo frontend queda como respaldo.
 - `cargarGrupo()` puede retornar `{ ok: false }` después de un login exitoso — eso **no es un error**, es el Escenario 6 (usuario sin grupo). No tratar como excepción.
-- El Escenario 7 (redirigir al dashboard si usuario con grupo entra a `/bienvenida`) debe implementarse en `app/(app)/bienvenida/page.jsx/bienvenida/page.jsx`
+- El Escenario 7 (redirigir al dashboard si usuario con grupo entra a `/bienvenida`) debe implementarse en `app/(app)/bienvenida/page.jsx`.
 - El countdown del bloqueo se actualiza en tiempo real y persiste después de recargar, mediante useRateLimit.js compartido entre login y unirse a grupo.
 
 ---
@@ -282,3 +287,4 @@
 | 20/04/26 | Camila Torres | Creación de Sprint 2: Definición de 5 HUs (HU-022, HU-006, HU-009, HU-015, HU-016) agrupadas en 3 pantallas principales |
 | 22/04/26 | Camila Torres | HUS-022 implementada: pantalla Unirse a Grupo con validación de código, verificación de membresía y rate limiting |
 | 22/04/26 | Camila Torres | Refactor de login para usar useRateLimit compartido y countdown en tiempo real |
+| 24/04/26 | Camila Torres | HUS-016, HU-009 y HU-015 implementadas: pantalla de tablero con tarjetas de tareas y botones de cambio de estado, verificando membresía |
