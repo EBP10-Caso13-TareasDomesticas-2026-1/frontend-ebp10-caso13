@@ -189,8 +189,8 @@
 
 | ID | Descripción | Estado | Responsable | Pantalla |
 | ---- | ------------- | -------- | ------------- | -------- |
-| HUS-022 | Como usuario registrado, quiero unirme a un grupo familiar mediante un código de invitación válido, para asegurar que el acceso a los grupos esté controlado mediante mecanismos de autorización basados en invitación. | pantalla lista | David Sanchez | Unirse a grupo |
-| HUS-006 | Como administrador del grupo familiar, quiero crear una tarea doméstica asignándole un miembro responsable, fecha límite, prioridad (Alta / Media / Baja), título y opcionalmente una descripción, para organizar las tareas del hogar de forma consistente. | pendiente | Salome Toro | Crear tarea |
+| HUS-022 | Como usuario registrado, quiero unirme a un grupo familiar mediante un código de invitación válido, para asegurar que el acceso a los grupos esté controlado mediante mecanismos de autorización basados en invitación. | completada | David Sanchez | Unirse a grupo |
+| HUS-006 | Como administrador del grupo familiar, quiero crear una tarea doméstica asignándole un miembro responsable, fecha límite, prioridad (Alta / Media / Baja), título y opcionalmente una descripción, para organizar las tareas del hogar de forma consistente. | completada | Camila Torres | Crear tarea |
 | HU-009 | Como miembro del grupo familiar, quiero visualizar el tablero completo de tareas del hogar, para conocer todas las tareas del grupo. | pendiente | Camila Torres | Tablero de tareas |
 | HU-015 | Como miembro del grupo familiar, quiero cambiar el estado de una de mis tareas asignadas a "EN PROGRESO" o como "COMPLETADA", para registrar el avance con esa responsabilidad. | pendiente | Camila Torres | Tablero de tareas |
 | HUS-016 | Como administrador del grupo familiar, quiero poder modificar el estado de cualquier tarea del sistema, para gestionar y mantener actualizado el progreso de las tareas del hogar. | pendiente | Camila Torres | Tablero de tareas |
@@ -199,9 +199,9 @@
 
 **Nota:** Sprint 2 comprende **3 pantallas principales**:
 
-1. **Unirse a grupo** — HUS-022
-2. **Crear tarea** — HUS-006 (solo admin)
-3. **Tablero de tareas** — HU-009, HU-015, HUS-016 (gestión de estados)
+1. **Unirse a grupo** — HUS-022 ✅ COMPLETADA
+2. **Crear tarea** — HUS-006 ✅ COMPLETADA
+3. **Tablero de tareas** — HU-009, HU-015, HUS-016 (gestión de estados) ✅ COMPLETADA
 
 ---
 
@@ -288,3 +288,4 @@
 | 22/04/26 | Camila Torres | HUS-022 implementada: pantalla Unirse a Grupo con validación de código, verificación de membresía y rate limiting |
 | 22/04/26 | Camila Torres | Refactor de login para usar useRateLimit compartido y countdown en tiempo real |
 | 24/04/26 | Camila Torres | HUS-016, HU-009 y HU-015 implementadas: pantalla de tablero con tarjetas de tareas y botones de cambio de estado, verificando membresía |
+| 27/04/26 | Camila Torres | HUS-006 completada: pantalla Crear Tarea con validaciones frontend, límites de caracteres, modal de logout, protección de admin y redireccionamiento a tablero |
