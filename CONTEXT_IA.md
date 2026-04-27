@@ -191,9 +191,9 @@
 | ---- | ------------- | -------- | ------------- | -------- |
 | HUS-022 | Como usuario registrado, quiero unirme a un grupo familiar mediante un código de invitación válido, para asegurar que el acceso a los grupos esté controlado mediante mecanismos de autorización basados en invitación. | completada | David Sanchez | Unirse a grupo |
 | HUS-006 | Como administrador del grupo familiar, quiero crear una tarea doméstica asignándole un miembro responsable, fecha límite, prioridad (Alta / Media / Baja), título y opcionalmente una descripción, para organizar las tareas del hogar de forma consistente. | completada | Camila Torres | Crear tarea |
-| HU-009 | Como miembro del grupo familiar, quiero visualizar el tablero completo de tareas del hogar, para conocer todas las tareas del grupo. | pendiente | Camila Torres | Tablero de tareas |
-| HU-015 | Como miembro del grupo familiar, quiero cambiar el estado de una de mis tareas asignadas a "EN PROGRESO" o como "COMPLETADA", para registrar el avance con esa responsabilidad. | pendiente | Camila Torres | Tablero de tareas |
-| HUS-016 | Como administrador del grupo familiar, quiero poder modificar el estado de cualquier tarea del sistema, para gestionar y mantener actualizado el progreso de las tareas del hogar. | pendiente | Camila Torres | Tablero de tareas |
+| HU-009 | Como miembro del grupo familiar, quiero visualizar el tablero completo de tareas del hogar, para conocer todas las tareas del grupo. | completada | Camila Torres | Tablero de tareas |
+| HU-015 | Como miembro del grupo familiar, quiero cambiar el estado de una de mis tareas asignadas a "EN PROGRESO" o como "COMPLETADA", para registrar el avance con esa responsabilidad. | completada | Camila Torres | Tablero de tareas |
+| HUS-016 | Como administrador del grupo familiar, quiero poder modificar el estado de cualquier tarea del sistema, para gestionar y mantener actualizado el progreso de las tareas del hogar. | completada | Camila Torres | Tablero de tareas |
 
 **Estados:** `pendiente` · `en progreso` · `pantalla lista` · `integrada` · `completada`
 

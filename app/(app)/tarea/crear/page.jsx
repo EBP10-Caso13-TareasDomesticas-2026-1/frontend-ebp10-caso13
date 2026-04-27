@@ -48,7 +48,7 @@ function CrearTareaContent() {
   // Si no es admin, redirigir al tablero
   useEffect(() => {
     if (mounted && !groupLoading && !esAdmin) {
-      router.push("/tablero");
+      router.replace("/tablero");
     }
   }, [esAdmin, mounted, groupLoading, router]);
 
@@ -105,13 +105,15 @@ function CrearTareaContent() {
     setLoading(true);
 
     try {
+      // Convertir fechaLimite a ISO (normalizar zona horaria)
+      const fechaISO = new Date(fechaLimite).toISOString();
+
       const dataTarea = {
         nombre: titulo.trim(),
         descripcion: descripcion.trim() || null,
         idUsuarioAsignado: Number(asignadoA),
         prioridad,
-        fechaLimite,
-        idGrupo: grupo.id,
+        fechaLimite: fechaISO,
       };
 
       await taskService.crearTarea(dataTarea, token, usuario.idUsuario);
