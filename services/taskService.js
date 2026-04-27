@@ -7,6 +7,7 @@
 
 import { USE_MOCK, apiRequest, delay } from "@/lib/api";
 import { tareas } from "@/mocks/tareas";
+import { miembrosGrupo } from "@/mocks/miembrosGrupo";
 
 const mock = {
   // HU-006 — Crear tarea
@@ -14,11 +15,15 @@ const mock = {
     await delay(600);
     if (!usuarioId) throw new Error("Usuario no identificado.");
 
-    const { nombre, descripcion, idUsuarioAsignado, prioridad, fechaLimite, idGrupo } = data;
+    const { nombre, descripcion, idUsuarioAsignado, prioridad, fechaLimite } = data;
+
+    // Inferir el grupo del usuario (el backend lo haría por token)
+    const miembro = miembrosGrupo.find((m) => m.usuarioId === usuarioId);
+    if (!miembro) throw new Error("Usuario no pertenece a ningún grupo.");
 
     const nuevaTarea = {
       idTarea: Math.max(...tareas.map((t) => t.idTarea), 0) + 1,
-      idGrupo,
+      idGrupo: miembro.grupoId,
       idUsuarioAsignado,
       nombre,
       descripcion: descripcion || null,

@@ -72,9 +72,9 @@ frontend/
 
 #### Pantallas Sprint 2
 
-- [ ] HUS-006: Crear tarea
-- [ ] HU-009, HU-015, HUS-016: Tablero de tareas
-- [ ] HUS-022: Unirse a grupo
+- [x] HUS-006: Crear tarea
+- [x] HU-009, HU-015, HUS-016: Tablero de tareas
+- [x] HUS-022: Unirse a grupo
 
 #### Notas Sprint 2
 
