@@ -6,6 +6,7 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import AppLayout from "@/components/layout/AppLayout";
 import TaskColumn from "@/components/ui/TaskColumn";
 import Button from "@/components/ui/Button";
+import LogOut from "@/components/ui/LogOut";
 import { useAuth } from "@/hooks/useAuth";
 import { useGroup } from "@/hooks/useGroup";
 import taskService from "@/services/taskService";
@@ -19,6 +20,7 @@ function TableroContent() {
   const [loading, setLoading] = useState(true);
   const [loadingEstado, setLoadingEstado] = useState(false);
   const [error, setError] = useState(null);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   const esAdmin =
     rolActual === "admin" ||
@@ -194,7 +196,7 @@ function TableroContent() {
       <Button variant="secondary" disabled onClick={() => {}}>
         Perfil
       </Button>
-      <Button variant="primary" onClick={handleLogout}>
+      <Button variant="primary" onClick={() => setShowLogoutModal(true)}>
         Cerrar sesión
       </Button>
     </div>
@@ -221,7 +223,7 @@ function TableroContent() {
           {esAdmin && (
             <Button
               variant="primary"
-              onClick={() => {}} // TODO: Ir a crear tarea
+              onClick={() => router.push("/tarea/crear")}
               className="w-full sm:w-auto"
             >
               + Nueva Tarea
@@ -273,6 +275,18 @@ function TableroContent() {
           </div>
         )}
       </div>
+
+      {/* ─── MODAL LOGOUT ───────────────────────────────────────────── */}
+      <LogOut
+        isOpen={showLogoutModal}
+        title="Cerrar sesión"
+        description="¿Deseas cerrar sesión?"
+        confirmText="Cerrar sesión"
+        cancelText="Cancelar"
+        onConfirm={handleLogout}
+        onCancel={() => setShowLogoutModal(false)}
+        variant="danger"
+      />
     </AppLayout>
   );
 }
