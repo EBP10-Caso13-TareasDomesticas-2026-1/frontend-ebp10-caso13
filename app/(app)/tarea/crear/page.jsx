@@ -79,8 +79,18 @@ function CrearTareaContent() {
       newErrors.fechaLimite = "La fecha y hora límite es obligatoria.";
     } else {
       // Validar que la fecha sea posterior a la actual
+      // Parsear manualmente datetime-local para evitar problemas de zona horaria
+      const [fecha, hora] = fechaLimite.split("T");
+      const [year, month, day] = fecha.split("-").map(Number);
+      const [hours, minutes] = hora.split(":").map(Number);
+      
+      // Crear fecha en zona horaria local
+      const fechaSeleccionada = new Date(year, month - 1, day, hours, minutes, 0, 0);
+      
+      // Ahora actual truncado a minutos para consistencia
       const ahora = new Date();
-      const fechaSeleccionada = new Date(fechaLimite);
+      ahora.setSeconds(0, 0);
+      
       if (fechaSeleccionada <= ahora) {
         newErrors.fechaLimite = "La fecha y hora límite debe ser posterior a la actual.";
       }
@@ -137,8 +147,16 @@ function CrearTareaContent() {
   // ─── Obtener fecha/hora mínima permitida ───────────────────────
   const getMinDateTime = () => {
     const ahora = new Date();
-    ahora.setMinutes(ahora.getMinutes() - ahora.getTimezoneOffset());
-    return ahora.toISOString().slice(0, 16);
+    ahora.setSeconds(0, 0); // Truncar a minutos
+    
+    // Convertir a formato YYYY-MM-DDTHH:mm (datetime-local)
+    const year = ahora.getFullYear();
+    const month = String(ahora.getMonth() + 1).padStart(2, "0");
+    const day = String(ahora.getDate()).padStart(2, "0");
+    const hours = String(ahora.getHours()).padStart(2, "0");
+    const minutes = String(ahora.getMinutes()).padStart(2, "0");
+    
+    return `${year}-${month}-${day}T${hours}:${minutes}`;
   };
 
   // ─── Renderizado ──────────────────────────────────────────────────
@@ -265,7 +283,6 @@ function CrearTareaContent() {
               disabled={loading}
               min={getMinDateTime()}
               className={errors.fechaLimite ? "input-error" : "input-base"}
-              required
             />
             {errors.fechaLimite && (
               <p className="error-message">{errors.fechaLimite}</p>
