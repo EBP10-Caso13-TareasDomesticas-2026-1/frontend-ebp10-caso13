@@ -18,8 +18,7 @@ const MAX_DESCRIPCION_LENGTH = 180;
 function CrearTareaContent() {
   const router = useRouter();
   const { usuario, token, logout } = useAuth();
-  const { grupo, rolActual, loading: groupLoading } = useGroup();
-
+  const { grupo, miembros, rolActual, loading: groupLoading, cargarGrupo } = useGroup();
   // ─── Estado del formulario ───────────────────────────────────────
   const [titulo, setTitulo] = useState("");
   const [asignadoA, setAsignadoA] = useState("");
@@ -32,25 +31,45 @@ function CrearTareaContent() {
   const [loading, setLoading] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [loadingAttempted, setLoadingAttempted] = useState(false);
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  // ─── Verificar que sea administrador ───────────────────────────
-  const esAdmin =
-    rolActual === "admin" ||
-    grupo?.miembros?.some(
-      (miembro) =>
-        miembro.usuarioId === usuario?.idUsuario && Number(miembro.rolId) === 1,
-    );
-
-  // Si no es admin, redirigir al tablero
+  // ─── Cargar grupo si no está disponible ──────────────────────────
+  const needsToLoad = mounted && !grupo && usuario && token;
+  
   useEffect(() => {
-    if (mounted && !groupLoading && !esAdmin) {
+    if (needsToLoad && !loadingAttempted) {
+      setLoadingAttempted(true);
+      cargarGrupo(usuario.idUsuario, token);
+    } else if (mounted && grupo && !loadingAttempted) {
+      // Si ya existe grupo al montar, marcar intento como completado
+      setLoadingAttempted(true);
+    }
+  }, [needsToLoad, loadingAttempted, usuario, token, cargarGrupo, mounted, grupo]);
+
+  // ─── Verificar que sea administrador ───────────────────────────
+  const esAdmin = rolActual === "admin";
+
+  // Si no tiene grupo o no es admin, redirigir
+  useEffect(() => {
+    if (!mounted || !loadingAttempted) return;
+    
+    // Si estamos cargando, esperar
+    if (groupLoading) return;
+
+    // Ya intentamos cargar y terminó
+    // Si no tiene grupo, ir a bienvenida
+    if (!grupo?.id) {
+      router.replace("/bienvenida");
+    }
+    // Si tiene grupo pero no es admin, ir a tablero
+    else if (!esAdmin) {
       router.replace("/tablero");
     }
-  }, [esAdmin, mounted, groupLoading, router]);
+  }, [loadingAttempted, groupLoading, grupo, esAdmin, mounted, router]);
 
   // ─── Handlers ─────────────────────────────────────────────────────
 
@@ -166,7 +185,7 @@ function CrearTareaContent() {
   }
 
   const prioridades = getPrioridades();
-  const miembrosDisponibles = grupo?.miembros || [];
+  const miembrosDisponibles = miembros || [];
 
   return (
     <AppLayout
