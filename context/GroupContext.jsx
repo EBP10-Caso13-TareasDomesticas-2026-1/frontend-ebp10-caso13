@@ -37,13 +37,13 @@ export function GroupProvider({ children }) {
    * rolId === 1 → "admin", rolId === 2 → "miembro" (según seed de BD)
    */
   const determineUserRole = useCallback(
-    (listaMiembros) => {
-      if (!usuario || !listaMiembros.length) return null;
-      const yo = listaMiembros.find((m) => m.usuarioId === usuario.idUsuario);
+    (usuarioId, listaMiembros) => {
+      if (!usuarioId || !listaMiembros.length) return null;
+      const yo = listaMiembros.find((m) => m.usuarioId === usuarioId);
       if (!yo) return null;
       return yo.rolId === 1 ? "admin" : "miembro";
     },
-    [usuario],
+    [],
   );
 
   // ─── Acciones ─────────────────────────────────────────────────
@@ -83,8 +83,10 @@ export function GroupProvider({ children }) {
         );
 
         setGrupo(grupoData);
-        setMiembros([miembroData]);
-        setRolActual(determineUserRole([miembroData]));
+        setMiembros(grupoData.miembros);
+        const rolCalculado = determineUserRole(usuarioId, grupoData.miembros);
+        console.log("[cargarGrupo] usuarioId:", usuarioId, "miembros:", grupoData.miembros, "rolCalculado:", rolCalculado);
+        setRolActual(rolCalculado);
         return { ok: true };
       } catch (err) {
         const mensaje = err.message ?? "Error al cargar el grupo";
@@ -149,8 +151,10 @@ export function GroupProvider({ children }) {
           token,
         );
         setGrupo(grupoData);
-        setMiembros([miembroData]);
-        setRolActual("miembro");
+        setMiembros(grupoData.miembros);
+        const rolCalculado = determineUserRole(usuario.idUsuario, grupoData.miembros);
+        console.log("[unirseAlGrupo] usuarioId:", usuario.idUsuario, "miembros:", grupoData.miembros, "rolCalculado:", rolCalculado);
+        setRolActual(rolCalculado);
         return { ok: true };
       } catch (err) {
         const mensaje = err.message ?? "Código de invitación inválido";
@@ -160,7 +164,7 @@ export function GroupProvider({ children }) {
         setLoading(false);
       }
     },
-    [usuario, token],
+    [usuario, token, determineUserRole],
   );
 
   /**
