@@ -42,42 +42,31 @@ function CrearTareaContent() {
   
   useEffect(() => {
     if (needsToLoad && !loadingAttempted) {
-      console.log("[CrearTarea] Intentando cargar grupo para usuario:", usuario.idUsuario);
       setLoadingAttempted(true);
       cargarGrupo(usuario.idUsuario, token);
+    } else if (mounted && grupo && !loadingAttempted) {
+      // Si ya existe grupo al montar, marcar intento como completado
+      setLoadingAttempted(true);
     }
-  }, [needsToLoad, loadingAttempted, usuario, token, cargarGrupo]);
+  }, [needsToLoad, loadingAttempted, usuario, token, cargarGrupo, mounted, grupo]);
 
   // ─── Verificar que sea administrador ───────────────────────────
   const esAdmin = rolActual === "admin";
 
   // Si no tiene grupo o no es admin, redirigir
   useEffect(() => {
-    if (!mounted) return;
-    
-    // Si aún no hemos intentado cargar, esperar
-    if (!loadingAttempted) {
-      console.log("[CrearTarea] Esperando intento de carga...");
-      return;
-    }
+    if (!mounted || !loadingAttempted) return;
     
     // Si estamos cargando, esperar
-    if (groupLoading) {
-      console.log("[CrearTarea] Cargando el grupo...");
-      return;
-    }
+    if (groupLoading) return;
 
     // Ya intentamos cargar y terminó
-    console.log("[CrearTarea] Carga completada. Verificando: grupo?.id=", grupo?.id, "rolActual=", rolActual);
-    
     // Si no tiene grupo, ir a bienvenida
     if (!grupo?.id) {
-      console.log("[CrearTarea] Redirigiendo a bienvenida - sin grupo");
       router.replace("/bienvenida");
     }
     // Si tiene grupo pero no es admin, ir a tablero
     else if (!esAdmin) {
-      console.log("[CrearTarea] Redirigiendo a tablero - no es admin");
       router.replace("/tablero");
     }
   }, [loadingAttempted, groupLoading, grupo, esAdmin, mounted, router]);

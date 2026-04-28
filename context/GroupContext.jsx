@@ -85,7 +85,6 @@ export function GroupProvider({ children }) {
         setGrupo(grupoData);
         setMiembros(grupoData.miembros);
         const rolCalculado = determineUserRole(usuarioId, grupoData.miembros);
-        console.log("[cargarGrupo] usuarioId:", usuarioId, "miembros:", grupoData.miembros, "rolCalculado:", rolCalculado);
         setRolActual(rolCalculado);
         return { ok: true };
       } catch (err) {
@@ -153,7 +152,6 @@ export function GroupProvider({ children }) {
         setGrupo(grupoData);
         setMiembros(grupoData.miembros);
         const rolCalculado = determineUserRole(usuario.idUsuario, grupoData.miembros);
-        console.log("[unirseAlGrupo] usuarioId:", usuario.idUsuario, "miembros:", grupoData.miembros, "rolCalculado:", rolCalculado);
         setRolActual(rolCalculado);
         return { ok: true };
       } catch (err) {
