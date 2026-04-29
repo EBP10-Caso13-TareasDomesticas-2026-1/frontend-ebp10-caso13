@@ -2,23 +2,21 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import dynamic from "next/dynamic";
 
+import ProtectedRoute from "@/components/ProtectedRoute";
 import AppLayout from "@/components/layout/AppLayout";
 import Button from "@/components/ui/Button";
+import LogOut from "@/components/ui/LogOut";
 import { useAuth } from "@/hooks/useAuth";
 
-// Carga dinámica para evitar el error de "use client" mal ubicado en LogOut.jsx
-const LogOut = dynamic(() => import("@/components/ui/LogOut"), { ssr: false });
-
-export default function BienvenidaPage() {
+function BienvenidaContent() {
   const router = useRouter();
   const { logout } = useAuth();
   const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   const handleLogout = async () => {
     await logout();
-    router.push("/login"); // TODO: ajustar si la ruta de login cambia
+    router.push("/login"); 
   };
 
   // ─── CONTENIDO DE LA NAVBAR ───────────────────────────────────
@@ -92,7 +90,6 @@ export default function BienvenidaPage() {
           {/* Tarjeta con acciones */}
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 w-full max-w-sm p-2 flex flex-col gap-1">
 
-            {/* TODO: actualizar ruta cuando Alejandro Toro defina la pantalla de HU-004 */}
             <Button
               variant="primary"
               className="w-full"
@@ -101,11 +98,9 @@ export default function BienvenidaPage() {
               ⊕ Crear grupo
             </Button>
 
-            {/* TODO: actualizar ruta cuando Daniel Salas defina la pantalla de HU-005 */}
             <Button
               variant="secondary"
               className="w-full"
-              disabled
               onClick={() => router.push("/grupo/unirse")}
             >
               Unirse a un Grupo
@@ -122,5 +117,13 @@ export default function BienvenidaPage() {
         onCancel={() => setShowLogoutModal(false)}
       />
     </>
+  );
+}
+
+export default function BienvenidaPage() {
+  return (
+    <ProtectedRoute>
+      <BienvenidaContent />
+    </ProtectedRoute>
   );
 }

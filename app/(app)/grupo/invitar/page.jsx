@@ -1,17 +1,14 @@
 "use client";
 
-import dynamic from "next/dynamic";
-import { Suspense, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
+import ProtectedRoute from "@/components/ProtectedRoute";
 import AppLayout from "@/components/layout/AppLayout";
 import Button from "@/components/ui/Button";
 import InviteCodeCard from "@/components/ui/InviteCodeCard";
+import LogOut from "@/components/ui/LogOut";
 import { useAuth } from "@/hooks/useAuth";
-
-const LogOut = dynamic(() => import("@/components/ui/LogOut"), {
-  ssr: false,
-});
 
 function InvitarGrupoContent() {
   const router = useRouter();
@@ -89,7 +86,7 @@ function InvitarGrupoContent() {
       <div className="flex flex-col items-center gap-6">
         <InviteCodeCard code={codigo} className="w-full max-w-md" />
         <p className="text-center text-sm text-secondary max-w-md">
-          Comparte este código con los miembros de tu hogar para que puedan
+          Guarda bien y comparte este código con los miembros de tu hogar para que puedan
           unirse.
         </p>
         <Button
@@ -179,8 +176,8 @@ function InvitarFallback() {
 
 export default function InvitarGrupoPage() {
   return (
-    <Suspense fallback={<InvitarFallback />}>
+    <ProtectedRoute>
       <InvitarGrupoContent />
-    </Suspense>
+    </ProtectedRoute>
   );
 }

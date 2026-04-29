@@ -38,8 +38,5 @@ export const miembrosGrupo = [
     puntaje: 60,
     racha: 2,
     fechaUnion: "2026-03-10T17:00:00.000Z"
-  },
-  {
-    
   }
 ];

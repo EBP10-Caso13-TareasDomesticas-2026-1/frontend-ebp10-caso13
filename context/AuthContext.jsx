@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useCallback, useEffect } from "react";
+import { createContext, useContext, useCallback, useEffect, useState } from "react";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
 import authService from "@/services/authService";
 import { isTokenExpired, getTimeUntilExpiry } from "@/lib/jwt";
@@ -25,9 +25,11 @@ export function AuthProvider({ children }) {
     "homesync_sesion",
     null,
   );
+  const [isHydrated, setIsHydrated] = useState(false);
 
   // ─── Derivados ────────────────────────────────────────────────
-  // Incluye validación de expiración
+  // isAuthenticated includes expiration check to prevent using stale tokens.
+  // Tokens are validated on every render, so expired tokens are caught immediately.
   const isAuthenticated = !!sesion?.token && !isTokenExpired(sesion.token);
   const usuario = sesion
     ? {
@@ -38,23 +40,29 @@ export function AuthProvider({ children }) {
     : null;
   const token = sesion?.token ?? null;
 
-  // ─── Effect: Logout si token expirado ──────────────────────────
+  // ─── Effect: Hidratación del cliente ──────────────────────────
+  // Why isHydrated? Next.js renders on server and client. Without this flag,
+  // we'd redirect to /login on server (where localStorage is empty),
+  // causing flash/hydration mismatch. We only redirect AFTER client mounts.
+  useEffect(() => {
+    setIsHydrated(true);
+  }, []);
+
+  // ─── Effect: Auto-logout on token expiry ──────────────────────
+  // Why schedule a logout? Waiting until the user clicks something means
+  // they could interact with the app after the token expires.
+  // Proactive timeout logout ensures we invalidate the session at the exact moment it expires.
   useEffect(() => {
     if (!token) return;
 
-    // Si token ya expiró, limpiar inmediatamente
     if (isTokenExpired(token)) {
       removeSesion();
       return;
     }
 
-    // Obtener tiempo hasta expiración
     const msUntilExpiry = getTimeUntilExpiry(token);
+    if (msUntilExpiry === Infinity) return; // Token has no expiry
 
-    // Si token no tiene expiration, no hacer nada
-    if (msUntilExpiry === Infinity) return;
-
-    // Setup timeout para cuando expire
     const timeoutId = setTimeout(() => {
       removeSesion();
     }, msUntilExpiry);
@@ -79,7 +87,9 @@ export function AuthProvider({ children }) {
   }, []);
 
   /**
-   * Inicia sesión y persiste la sesión en localStorage.
+   * Logs in user and persists session to localStorage.
+   * Why persist? Allows users to stay logged in across page reloads.
+   * Why return token? LoginPage needs it to pass to cargarGrupo() immediately.
    * @param {{ correo, contrasena }} data
    * @returns {{ ok: true, idUsuario: number, token: string } | { ok: false, error: string }}
    */
@@ -93,7 +103,6 @@ export function AuthProvider({ children }) {
           nombre: respuesta.nombre,
           correo: respuesta.correo,
         });
-        // Devuelve la data para que el LoginPage la use
         return {
           ok: true,
           idUsuario: respuesta.idUsuario,
@@ -110,7 +119,10 @@ export function AuthProvider({ children }) {
   );
 
   /**
-   * Cierra sesión: invalida el token en el backend y limpia localStorage.
+   * Logs out user: invalidates token on backend and clears localStorage.
+   * Why try/finally? Even if backend logout fails (network error, server down),
+   * we still clear the local session. Better to kick the user out than leave
+   * a stale session in localStorage that could cause confusion.
    * @returns {{ ok: boolean, error?: string }}
    */
   const logout = useCallback(async () => {
@@ -135,6 +147,7 @@ export function AuthProvider({ children }) {
     usuario, // { idUsuario, nombre, correo } | null
     token, // string | null
     isAuthenticated,
+    isHydrated, // Indica que el cliente se hidratró (sesión cargada desde localStorage)
     login,
     logout,
     register,
