@@ -91,8 +91,7 @@ function InvitarGrupoContent() {
         </p>
         <Button
           className="w-full max-w-md"
-          disabled
-          onClick={() => router.push("/dashboard")}
+          onClick={() => router.push("/tablero")}
         >
           Ir al tablero →
         </Button>
