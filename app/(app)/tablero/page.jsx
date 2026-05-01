@@ -14,7 +14,7 @@ import taskService from "@/services/taskService";
 function TableroContent() {
   const router = useRouter();
   const { usuario, token, logout } = useAuth();
-  const { grupo, rolActual } = useGroup();
+  const { grupo, rolActual, loading: loadingGroup } = useGroup();
 
   const [tareas, setTareas] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -26,7 +26,8 @@ function TableroContent() {
     rolActual === "admin" ||
     grupo?.miembros?.some(
       (miembro) =>
-        miembro.usuarioId === usuario?.idUsuario && Number(miembro.rolId) === 1,
+        miembro.usuarioId === usuario?.idUsuario &&
+        (miembro.rol?.nombre === 'ADMINISTRADOR')
     );
 
   const enriquecerTareasConMiembros = (tareasData, miembros = []) => {
@@ -39,11 +40,11 @@ function TableroContent() {
         ...tarea,
         asignadoA: usuarioAsignado
           ? {
-              id: usuarioAsignado.usuarioId,
-              nombre: usuarioAsignado.nombre,
-              correo: usuarioAsignado.correo,
-              fotoPerfil: usuarioAsignado.fotoPerfil,
-            }
+            id: usuarioAsignado.usuarioId,
+            nombre: usuarioAsignado.nombre,
+            correo: usuarioAsignado.correo,
+            fotoPerfil: usuarioAsignado.fotoPerfil,
+          }
           : null,
       };
     });
@@ -55,6 +56,10 @@ function TableroContent() {
     const cargarTareas = async () => {
       if (!token) {
         setLoading(false);
+        return;
+      }
+
+      if (loadingGroup) {
         return;
       }
 
@@ -90,7 +95,7 @@ function TableroContent() {
     };
 
     cargarTareas();
-  }, [grupo?.id, grupo?.miembros, token, router]);
+  }, [grupo?.id, grupo?.miembros, token, router, loadingGroup]);
 
   // ─── Lógica de ordenamiento y clasificación ──────────────────
 
@@ -152,12 +157,12 @@ function TableroContent() {
         prev.map((t) =>
           t.idTarea === idTarea
             ? {
-                ...t,
-                estado: nuevoEstado,
-                ...(fechaLimite ? { fechaLimite } : {}),
-              }
-            : t,
-        ),
+              ...t,
+              estado: nuevoEstado,
+              ...(fechaLimite ? { fechaLimite } : {}),
+            }
+            : t
+        )
       );
 
       // 2. Llamar al backend
@@ -197,8 +202,10 @@ function TableroContent() {
 
   const navbarContent = (
     <div className="flex items-center gap-4">
-      <span className="text-sm text-gray-600">{grupo?.nombre}</span>
-      <Button variant="secondary" disabled onClick={() => {}}>
+      <span className="text-sm text-gray-600">
+        {grupo?.nombre}
+      </span>
+      <Button variant="secondary" disabled onClick={() => { }}>
         Perfil
       </Button>
       <Button variant="primary" onClick={() => setShowLogoutModal(true)}>
@@ -236,9 +243,11 @@ function TableroContent() {
               </Button>
               <Button
                 variant="secondary"
-                onClick={() =>
-                  router.push(`/grupo/invitar?codigo=${grupo.codigoInvitacion}`)
-                }
+                onClick={() => {
+                  console.log("Grupo:", grupo);
+                  const codigo = grupo.codigoInvitacion || grupo.miembros?.[0]?.grupo?.codigoInvitacion || grupo.grupo?.codigoInvitacion || "";
+                  router.push(`/grupo/invitar?codigo=${codigo}`);
+                }}
                 className="w-full sm:w-auto"
               >
               Invitar miembros
@@ -255,7 +264,7 @@ function TableroContent() {
         )}
 
         {/* Loading */}
-        {loading ? (
+        {(loading || loadingGroup) ? (
           <div className="flex items-center justify-center py-16">
             <div className="text-gray-500">Cargando tareas...</div>
           </div>
