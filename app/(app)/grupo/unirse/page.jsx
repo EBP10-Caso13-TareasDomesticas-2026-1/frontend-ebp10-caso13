@@ -146,7 +146,7 @@ function UnirseAlGrupoContent() {
       if (resultado.ok) {
         // Éxito: limpiar intentos y redirigir
         limpiarIntentos();
-        router.push("/bienvenida");
+        router.push("/tablero");
       } else {
         // Error del contexto: registrar intento fallido
         const mensajeError = resultado.error || "El código de invitación no es válido.";

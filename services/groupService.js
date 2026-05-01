@@ -94,8 +94,14 @@ const mock = {
 const api = {
   async obtenerGrupoDeUsuario(usuarioId, token) {
     const miembros = await apiRequest("/miembros-grupo", { method: "GET" }, token);
-    const membresia = miembros.find(m => m.usuarioId === usuarioId);
-    return membresia || null;  // Devuelve la membresía si existe
+    const membresia = miembros.find(m => m.usuario?.idUsuario === usuarioId || m.usuarioId === usuarioId || m.idUsuario === usuarioId);
+    if (!membresia) return null;
+    return {
+      ...membresia,
+      grupoId: membresia.grupo?.idGrupo || membresia.idGrupo || membresia.grupoId,
+      usuarioId: membresia.usuario?.idUsuario || membresia.idUsuario || membresia.usuarioId,
+      rolId: membresia.rol?.idRol || membresia.rolId
+    };
   },
 
   async crearGrupo(data, token, usuarioId) {
@@ -137,19 +143,25 @@ const api = {
       apiRequest("/usuarios", { method: "GET" }, token),
     ]);
 
-    const grupo = grupos.find(g => g.id === Number(grupoId));
+    const grupo = grupos.find(g => (g.id || g.idGrupo) === Number(grupoId));
     if (!grupo) throw new Error("Grupo no encontrado.");
 
     return {
       ...grupo,
+      id: grupo.id || grupo.idGrupo,
       miembros: miembros
-        .filter(m => m.grupoId === grupo.id)
+        .filter(m => (m.grupoId || m.grupo?.idGrupo || m.idGrupo) === (grupo.id || grupo.idGrupo))
         .map(m => {
-          const usuario = usuarios.find(u => u.id === m.usuarioId);
+          const uid = m.usuarioId || m.usuario?.idUsuario || m.idUsuario;
+          const usuario = usuarios.find(u => (u.id || u.idUsuario) === uid);
           return {
             ...m,
-            nombre: usuario?.nombre,
-            correo: usuario?.correo,
+            usuarioId: uid,
+            grupoId: m.grupoId || m.grupo?.idGrupo || m.idGrupo,
+            rolId: m.rolId || m.rol?.idRol,
+            rol: m.rol || { nombre: m.rolNombre },
+            nombre: m.usuario?.nombre || usuario?.nombre,
+            correo: m.usuario?.correo || usuario?.correo,
           };
         }),
     };

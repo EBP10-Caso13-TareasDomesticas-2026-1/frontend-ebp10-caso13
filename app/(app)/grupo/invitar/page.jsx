@@ -91,7 +91,9 @@ function InvitarGrupoContent() {
         </p>
         <Button
           className="w-full max-w-md"
-          onClick={() => router.push("/tablero")}
+          onClick={() => {
+            window.location.href = "/tablero";
+          }}
         >
           Ir al tablero →
         </Button>

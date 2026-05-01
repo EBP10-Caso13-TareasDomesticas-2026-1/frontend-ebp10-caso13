@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useState, useCallback } from "react";
+import { createContext, useContext, useState, useCallback, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import groupService from "@/services/groupService";
 
@@ -27,6 +27,7 @@ export function GroupProvider({ children }) {
   const [rolActual, setRolActual] = useState(null); // "admin" | "miembro"
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [hasTriedInitialLoad, setHasTriedInitialLoad] = useState(false);
 
   // ─── Helpers internos ─────────────────────────────────────────
 
@@ -41,7 +42,12 @@ export function GroupProvider({ children }) {
       if (!usuarioId || !listaMiembros.length) return null;
       const yo = listaMiembros.find((m) => m.usuarioId === usuarioId);
       if (!yo) return null;
-      return yo.rolId === 1 ? "admin" : "miembro";
+      
+      if (yo.rol?.nombre === 'ADMINISTRADOR') {
+        return "admin";
+      }
+      
+      return "miembro";
     },
     [],
   );
@@ -145,8 +151,9 @@ export function GroupProvider({ children }) {
           token,
           usuario.idUsuario,
         );
+        const grupoId = miembroData.idGrupo || miembroData.grupoId;
         const grupoData = await groupService.obtenerGrupo(
-          miembroData.grupoId,
+          grupoId,
           token,
         );
         setGrupo(grupoData);
@@ -174,6 +181,17 @@ export function GroupProvider({ children }) {
     setRolActual(null);
     setError(null);
   }, []);
+
+  // ─── Disparador automático de carga ───────────────────────────
+  // Si tenemos sesión activa pero el grupo está en null y aún no intentamos
+  // cargarlo, disparar la carga automáticamente (útil para el F5).
+  useEffect(() => {
+    if (usuario?.idUsuario && token && !grupo && !hasTriedInitialLoad && !loading) {
+      cargarGrupo(usuario.idUsuario, token).then(() => {
+        setHasTriedInitialLoad(true);
+      });
+    }
+  }, [usuario?.idUsuario, token, grupo, hasTriedInitialLoad, loading, cargarGrupo]);
 
   // ─── Valor del contexto ───────────────────────────────────────
   const value = {

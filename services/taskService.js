@@ -85,18 +85,29 @@ const api = {
   },
 
   async obtenerTareasGrupo(idGrupo, token) {
-    return apiRequest(
+    const data = await apiRequest(
       `/tareas/grupo/${idGrupo}`,
       { method: "GET" },
       token
     );
+    
+    if (Array.isArray(data)) {
+      return data;
+    }
+    if (data && typeof data === "object") {
+      if (data.tablero && typeof data.tablero === "object") {
+        return Object.values(data.tablero).flat();
+      }
+      return [];
+    }
+    return [];
   },
 
   async actualizarTarea(idTarea, data, token) {
     return apiRequest(
-      `/tareas/${idTarea}`,
+      `/tareas/${idTarea}/estado`,
       {
-        method: "PUT",
+        method: "PATCH",
         body: {
           estado: data.estado,
           ...(data.fechaLimite ? { fechaLimite: data.fechaLimite } : {}),
