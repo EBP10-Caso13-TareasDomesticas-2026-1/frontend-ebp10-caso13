@@ -69,7 +69,10 @@ function TableroContent() {
         setError(null);
 
         // Obtener tareas del grupo
-        const tareasData = await taskService.obtenerTareasGrupo(grupo.id, token);
+        const tareasData = await taskService.obtenerTareasGrupo(
+          grupo.id,
+          token,
+        );
 
         // Enriquecer tareas con miembros ya disponibles en GroupContext
         const tareasEnriquecidas = enriquecerTareasConMiembros(
@@ -99,7 +102,8 @@ function TableroContent() {
   const ordenarTareas = (listaTareas) => {
     return [...listaTareas].sort((a, b) => {
       // 1. Por prioridad (mayor urgencia primero)
-      const prioridadDiff = getPrioridadNum(a.prioridad) - getPrioridadNum(b.prioridad);
+      const prioridadDiff =
+        getPrioridadNum(a.prioridad) - getPrioridadNum(b.prioridad);
       if (prioridadDiff !== 0) return prioridadDiff;
 
       // 2. Por fecha límite (más cercana primero)
@@ -152,8 +156,8 @@ function TableroContent() {
                 estado: nuevoEstado,
                 ...(fechaLimite ? { fechaLimite } : {}),
               }
-            : t
-        )
+            : t,
+        ),
       );
 
       // 2. Llamar al backend
@@ -163,7 +167,7 @@ function TableroContent() {
           estado: nuevoEstado,
           ...(fechaLimite ? { fechaLimite } : {}),
         },
-        token
+        token,
       );
     } catch (err) {
       console.error("Error cambiando estado:", err);
@@ -171,7 +175,10 @@ function TableroContent() {
 
       // Intentar sincronizar con datos reales; si falla, hacer rollback estable
       try {
-        const tareasData = await taskService.obtenerTareasGrupo(grupo.id, token);
+        const tareasData = await taskService.obtenerTareasGrupo(
+          grupo.id,
+          token,
+        );
         const tareasEnriquecidas = enriquecerTareasConMiembros(
           tareasData,
           grupo?.miembros || [],
@@ -190,9 +197,7 @@ function TableroContent() {
 
   const navbarContent = (
     <div className="flex items-center gap-4">
-      <span className="text-sm text-gray-600">
-        {grupo?.nombre}
-      </span>
+      <span className="text-sm text-gray-600">{grupo?.nombre}</span>
       <Button variant="secondary" disabled onClick={() => {}}>
         Perfil
       </Button>
@@ -221,13 +226,24 @@ function TableroContent() {
           </div>
 
           {esAdmin && (
-            <Button
-              variant="primary"
-              onClick={() => router.push("/tarea/crear")}
-              className="w-full sm:w-auto"
-            >
-              + Nueva Tarea
-            </Button>
+            <div className="flex gap-2 w-full sm:w-auto flex-col sm:flex-row">
+              <Button
+                variant="primary"
+                onClick={() => router.push("/tarea/crear")}
+                className="w-full sm:w-auto"
+              >
+                + Nueva Tarea
+              </Button>
+              <Button
+                variant="secondary"
+                onClick={() =>
+                  router.push(`/grupo/invitar?codigo=${grupo.codigoInvitacion}`)
+                }
+                className="w-full sm:w-auto"
+              >
+              Invitar miembros
+              </Button>
+            </div>
           )}
         </div>
 
