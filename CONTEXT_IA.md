@@ -88,7 +88,8 @@
 | `Logo.jsx` | Logo de HomeSync con soporte para 3 tamaños (sm, md, lg) | `size` (default: "md"), `className` |
 | `InviteCodeCard.jsx` | Tarjeta que muestra código de invitación con botón para copiar al portapapeles | `code`, `className` |
 | `LogOut.jsx` | Modal de confirmación para cerrar sesión | `isOpen`, `icon`, `title`, `description`, `confirmText`, `cancelText`, `onConfirm`, `onCancel`, `variant` |
-| `TaskCard.jsx` | Tarjeta individual de tarea con estado, prioridad y acciones de cambio de estado | `tarea`, `esAdmin`, `esMiaTarea`, `onCambiarEstado`, `loading` |
+| `DateLimitModal.jsx` | Modal para solicitar nueva fecha límite al reabrir una tarea vencida | `isOpen`, `value`, `error`, `loading`, `onChange`, `onConfirm`, `onCancel`, `minDateTime`, `title`, `description` |
+| `TaskCard.jsx` | Tarjeta individual de tarea con estado, prioridad y acciones de cambio de estado; incluye modal para reabrir tareas vencidas | `tarea`, `esAdmin`, `esMiaTarea`, `onCambiarEstado`, `loading` |
 | `TaskColumn.jsx` | Columna tipo kanban que agrupa tareas y renderiza `TaskCard` | `titulo`, `tareas`, `esAdmin`, `usuarioId`, `onCambiarEstado`, `loading` |
 
 ### /components/layout/
@@ -185,7 +186,7 @@
 | HU-004 | Como usuario registrado, quiero crear un grupo familiar, para organizar las tareas del hogar con los integrantes de mi grupo familiar, convirtiéndome en administrador del mismo. | completada | Alejandro Toro |
 | HU-005 | Como administrador del grupo familiar, quiero invitar usuarios al grupo familiar mediante un código de invitación, para integrarlos en la organización de tareas del hogar. | completada | Daniel Salas |
 
-### **Sprint 2**  EN PROGRESO
+### **Sprint 2**  COMPLETADO
 
 | ID | Descripción | Estado | Responsable | Pantalla |
 | ---- | ------------- | -------- | ------------- | -------- |
@@ -195,13 +196,30 @@
 | HU-015 | Como miembro del grupo familiar, quiero cambiar el estado de una de mis tareas asignadas a "EN PROGRESO" o como "COMPLETADA", para registrar el avance con esa responsabilidad. | completada | Camila Torres | Tablero de tareas |
 | HUS-016 | Como administrador del grupo familiar, quiero poder modificar el estado de cualquier tarea del sistema, para gestionar y mantener actualizado el progreso de las tareas del hogar. | completada | Camila Torres | Tablero de tareas |
 
-**Estados:** `pendiente` · `en progreso` · `pantalla lista` · `integrada` · `completada`
-
 **Nota:** Sprint 2 comprende **3 pantallas principales**:
 
 1. **Unirse a grupo** — HUS-022 ✅ COMPLETADA
 2. **Crear tarea** — HUS-006 ✅ COMPLETADA
 3. **Tablero de tareas** — HU-009, HU-015, HUS-016 (gestión de estados) ✅ COMPLETADA
+
+### **Sprint 3**  EN PLANIFICACIÓN
+
+| ID | Descripción | Estado | Responsable | Pantalla |
+| ---- | ------------- | -------- | ------------- | -------- |
+| HUS-018 | Como usuario registrado, quiero restablecer mi contraseña ingresando correo y PIN de 5 dígitos, para recuperar acceso autónomamente. | pendiente | Camila Torres | Recuperar Contraseña |
+| HUS-024 | Como administrador, quiero eliminar miembros del grupo familiar, para revocar acceso a información compartida. | pendiente | David Sanchez | Detalles de Grupo |
+| HU-025 | Como miembro, quiero abandonar voluntariamente mi grupo familiar, para desvincularme de sus actividades. | pendiente | David Sanchez | Detalles de Grupo |
+| HU-032 | Como miembro, quiero visualizar ranking de desempeño de integrantes, para conocer contribuciones y comparar puntajes. | pendiente | Daniel Salas | Detalles de Grupo |
+| HU-010 | Como miembro, quiero visualizar detalles completos de una tarea en modal, para conocer información sin abandonar el tablero. | pendiente | Daniel Sanchez | Tablero (Modal) |
+| HUS-007 | Como administrador, quiero eliminar tareas del tablero, para descartar actividades innecesarias. | pendiente | Daniel Sanchez | Tablero (Modal) |
+| HU-008 | Como administrador, quiero editar información de tareas, para corregir errores y actualizar datos según necesidades. | pendiente | Salome Toro | Tablero (Modal) |
+| HU-011 | Como miembro, quiero filtrar tareas por estado/prioridad/miembro, para mejorar organización visual. | pendiente | Alejandro Toro | Tablero (FilterBar) |
+
+**Nota:** Sprint 3 comprende **3 pantallas principales** + refactorización:
+
+1. **Recuperar Contraseña** — HUS-018
+2. **Detalles de Grupo** — HUS-024, HU-025, HU-032 (miembros + ranking + invitar)
+3. **Tablero Mejorado** — HU-010, HU-011, HUS-007 (+ FilterBar, TaskDetailModal)
 
 ---
 
@@ -252,6 +270,7 @@
 - Login usa 5 intentos en 5 minutos con bloqueo de 15 minutos (hs_login_intentos, hs_login_bloqueo_hasta).
 - Unirse a grupo usa 10 intentos en 5 minutos con bloqueo de 15 minutos (hs_unirse_intentos, hs_unirse_bloqueo_hasta).
 - El bloqueo persiste por localStorage y el countdown se rehidrata tras recargar.
+- **Reapertura de tareas vencidas**: El componente `DateLimitModal` permite reabrir tareas con estado VENCIDA. Se valida que la nueva fecha límite sea mayor a la actual mediante `minDateTime` en el input datetime-local.
 
 ### CONFIGURACIÓN
 
@@ -289,3 +308,4 @@
 | 22/04/26 | Camila Torres | Refactor de login para usar useRateLimit compartido y countdown en tiempo real |
 | 24/04/26 | Camila Torres | HUS-016, HU-009 y HU-015 implementadas: pantalla de tablero con tarjetas de tareas y botones de cambio de estado, verificando membresía |
 | 27/04/26 | Camila Torres | HUS-006 completada: pantalla Crear Tarea con validaciones frontend, límites de caracteres, modal de logout, protección de admin y redireccionamiento a tablero |
+| 18/05/26 | Camila Torres | Revisión y actualización de CONTEXT_IA.md: Agregado DateLimitModal, actualización de estado del proyecto, verificación de integridad de documentación y planificación Sprint 3 |

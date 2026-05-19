@@ -59,7 +59,7 @@ frontend/
 - [x] HU-004: Crear grupo familiar
 - [x] HU-005: Invitar usuarios con código de invitación
 
-### 🔄 Sprint 2 — EN PROGRESO
+### ✅ Sprint 2 — COMPLETADO
 
 #### Infraestructura (Tareas)
 
@@ -82,6 +82,30 @@ frontend/
 - Prioridades: ALTA, MEDIA, BAJA
 - Datos de estados y prioridades se manejan internamente en el frontend (sin API endpoints)
 - El rol del usuario se obtiene de `AuthContext` y `GroupContext`
+
+---
+
+### 🔄 Sprint 3 — EN PLANIFICACIÓN
+
+#### Infraestructura
+
+- [ ] Mocks: Agregar `puntaje`, `racha` a `miembrosGrupo.js`
+- [ ] Services: Ampliar `authService`, `groupService`, `taskService`
+- [ ] Componentes: **TaskDetailModal** (lectura + edición), **ConfirmationModal** (refactor LogOut), **FilterBar**
+- [ ] Pantallas: Recuperar Contraseña, Detalles de Grupo, Tablero mejorado
+
+#### Refactorización
+
+- [ ] Botón "Invitar Miembros": Mover de Tablero → Detalles de Grupo
+- [ ] Modal de confirmación: Refactorizar LogOut.jsx → ConfirmationModal.jsx (genérico para logout, eliminar tarea, eliminar miembro, abandonar grupo)
+- [ ] Miembros + Ranking consolidados en `/grupo/detalles`
+
+#### Notas Sprint 3
+
+- MiembrosGrupo requiere campos `puntaje` (50-200) y `racha` (1-7 días)
+- TaskDetailModal soporta modo "lectura" y "edición" (HU-010, HU-008)
+- ConfirmationModal unifica todos los flujos de confirmación del sistema
+- FilterBar aplica lógica AND entre tipos (estado, prioridad, miembro) y OR dentro de cada tipo
 
 ---
 
