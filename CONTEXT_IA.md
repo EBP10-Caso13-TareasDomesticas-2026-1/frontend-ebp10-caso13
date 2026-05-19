@@ -206,14 +206,14 @@
 
 | ID | Descripción | Estado | Responsable | Pantalla |
 | ---- | ------------- | -------- | ------------- | -------- |
-| HUS-018 | Como usuario registrado, quiero restablecer mi contraseña ingresando correo y PIN de 5 dígitos, para recuperar acceso autónomamente. | pendiente | Camila Torres | Recuperar Contraseña |
-| HUS-024 | Como administrador, quiero eliminar miembros del grupo familiar, para revocar acceso a información compartida. | pendiente | David Sanchez | Detalles de Grupo |
-| HU-025 | Como miembro, quiero abandonar voluntariamente mi grupo familiar, para desvincularme de sus actividades. | pendiente | David Sanchez | Detalles de Grupo |
-| HU-032 | Como miembro, quiero visualizar ranking de desempeño de integrantes, para conocer contribuciones y comparar puntajes. | pendiente | Daniel Salas | Detalles de Grupo |
-| HU-010 | Como miembro, quiero visualizar detalles completos de una tarea en modal, para conocer información sin abandonar el tablero. | pendiente | Daniel Sanchez | Tablero (Modal) |
-| HUS-007 | Como administrador, quiero eliminar tareas del tablero, para descartar actividades innecesarias. | pendiente | Daniel Sanchez | Tablero (Modal) |
-| HU-008 | Como administrador, quiero editar información de tareas, para corregir errores y actualizar datos según necesidades. | pendiente | Salome Toro | Tablero (Modal) |
-| HU-011 | Como miembro, quiero filtrar tareas por estado/prioridad/miembro, para mejorar organización visual. | pendiente | Alejandro Toro | Tablero (FilterBar) |
+| HUS-018 | Como usuario registrado, quiero restablecer mi contraseña ingresando correo y PIN de 5 dígitos, para recuperar acceso autónomamente. | pendiente | Salome Toro | Recuperar Contraseña |
+| HUS-024 | Como administrador, quiero eliminar miembros del grupo familiar, para revocar acceso a información compartida. | pendiente | Camila Torres | Detalles de Grupo |
+| HU-025 | Como miembro, quiero abandonar voluntariamente mi grupo familiar, para desvincularme de sus actividades. | pendiente | Camila Torres | Detalles de Grupo |
+| HU-032 | Como miembro, quiero visualizar ranking de desempeño de integrantes, para conocer contribuciones y comparar puntajes. | pendiente | Camila Torres | Detalles de Grupo |
+| HU-010 | Como miembro, quiero visualizar detalles completos de una tarea en modal, para conocer información sin abandonar el tablero. | pendiente | Alejandro Toro | Tablero (Modal Detalle Vista de Miembro) |
+| HUS-007 | Como administrador, quiero eliminar tareas del tablero, para descartar actividades innecesarias. | pendiente | David Sánchez | Tablero (Modal Detalle Vista de Admin) |
+| HU-008 | Como administrador, quiero editar información de tareas, para corregir errores y actualizar datos según necesidades. | pendiente | David Sánchez | Tablero (Modal Edición Vista de Admin) |
+| HU-011 | Como miembro, quiero filtrar tareas por estado/prioridad/miembro, para mejorar organización visual. | pendiente | Daniel Salas | Tablero (Componente FilterBar) |
 
 **Nota:** Sprint 3 comprende **3 pantallas principales** + refactorización:
 
