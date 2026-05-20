@@ -29,6 +29,26 @@ const mock = {
     await delay(300); // Simulate network latency
     return { mensaje: "Sesión cerrada exitosamente." };
   },
+
+  // HUS-018 — Recuperar contraseña
+  // Nota: Rate limit se maneja en pantalla con useRateLimit(), no en servicio
+  recuperarContrasena: async ({ correo, pin, nuevaContrasena }) => {
+    await delay(600);
+    
+    // Validar que el correo existe
+    const usuario = usuarios.find((u) => u.correo === correo);
+    if (!usuario) throw new Error("Correo no registrado.");
+    
+    // Simular validación de PIN (en mock, validar que es numérico de 5 dígitos)
+    if (!pin || !/^\d{5}$/.test(pin)) {
+      throw new Error("PIN inválido.");
+    }
+    
+    // Actualizar contraseña en usuarios mock (en producción, backend lo hace)
+    usuario.contraseña = nuevaContrasena;
+    
+    return { mensaje: "Contraseña actualizada exitosamente." };
+  },
 };
 
 const api = {
@@ -69,6 +89,16 @@ const api = {
         method: "POST",
       },
       token
+    );
+  },
+
+  async recuperarContrasena(data) {
+    return apiRequest(
+      "/usuarios/recuperar-contrasena",
+      {
+        method: "PUT",
+        body: data,
+      }
     );
   },
 };
