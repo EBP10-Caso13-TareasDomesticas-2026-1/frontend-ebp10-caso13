@@ -87,7 +87,8 @@
 | `PasswordInput.jsx` | Input especializado para contraseñas con toggle para mostrar/ocultar | `label`, `placeholder`, `value`, `onChange`, `error`, `disabled`, `className` |
 | `Logo.jsx` | Logo de HomeSync con soporte para 3 tamaños (sm, md, lg) | `size` (default: "md"), `className` |
 | `InviteCodeCard.jsx` | Tarjeta que muestra código de invitación con botón para copiar al portapapeles | `code`, `className` |
-| `LogOut.jsx` | Modal de confirmación para cerrar sesión | `isOpen`, `icon`, `title`, `description`, `confirmText`, `cancelText`, `onConfirm`, `onCancel`, `variant` |
+| `ConfirmationModal.jsx` | Modal genérico de confirmación para acciones sensibles (logout, eliminar miembro/tarea, abandonar grupo, guardar cambios) | `isOpen`, `icon`, `title`, `description`, `confirmText`, `cancelText`, `onConfirm`, `onCancel`, `variant`, `showMemberSelector` (opt), `members` (opt), `selectedMemberId` (opt), `onMemberChange` (opt) |
+| `LogOut.jsx` | Alias de ConfirmationModal pre-configurado para logout. Mantiene compatibilidad con código existente | `isOpen`, `onConfirm`, `onCancel`, + cualquier prop de ConfirmationModal |
 | `DateLimitModal.jsx` | Modal para solicitar nueva fecha límite al reabrir una tarea vencida | `isOpen`, `value`, `error`, `loading`, `onChange`, `onConfirm`, `onCancel`, `minDateTime`, `title`, `description` |
 | `TaskCard.jsx` | Tarjeta individual de tarea con estado, prioridad y acciones de cambio de estado; incluye modal para reabrir tareas vencidas | `tarea`, `esAdmin`, `esMiaTarea`, `onCambiarEstado`, `loading` |
 | `TaskColumn.jsx` | Columna tipo kanban que agrupa tareas y renderiza `TaskCard` | `titulo`, `tareas`, `esAdmin`, `usuarioId`, `onCambiarEstado`, `loading` |
@@ -106,6 +107,20 @@
 | Archivo | Qué hace | Props |
 | --------- | ---------- | ------- |
 | `ProtectedRoute.jsx` | Envuelve componentes que requieren autenticación, redirige a login si no hay sesión | `children` (componente a proteger) |
+
+---
+
+## GUÍA DE ICONOS PARA CONFIRMATIONMODAL
+
+| Acción | Ícono | Archivo | Variante | Descripción |
+|--------|--------|---------|----------|-------------|
+| Cerrar sesión | 🚪 Salida | `/salida.png` | danger | Usuario sale del sistema |
+| Eliminar miembro | 👤 Usuario X | `/usuario-eliminar.svg` | danger | Revoca acceso de un miembro |
+| Eliminar tarea | 🗑️ Papelera | `/papelera.svg` | danger | Descarta una tarea innecesaria |
+| Abandonar grupo | 🚪 Salida | `/salida-grupo.svg` | danger | Miembro se desvincula del grupo |
+| Abandonar grupo (Admin) | 🚪 Salida + Selector | `/salida-grupo.svg` | danger | Admin se desvincula tras elegir nuevo admin |
+
+**Nota:** Para el caso "Abandonar grupo (Admin)", usar props `showMemberSelector={true}`, `members={...}`, `selectedMemberId`, `onMemberChange`.
 
 ---
 
