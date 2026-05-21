@@ -140,7 +140,7 @@
 | `grupos.js` | Grupo | id, nombre, descripcion, codigoInvitacion, creadoEn |
 | `roles.js` | Rol | id, nombre |
 | `miembrosGrupo.js` | MiembroGrupo | id, usuarioId, grupoId, rolId, puntaje, racha, fechaUnion |
-| `tareas.js` | Tarea | idTarea, idGrupo, idUsuarioAsignado, nombre, descripcion, prioridad, estado, fechaLimite, fechaCreacion, **eliminada** (soft delete) |
+| `tareas.js` | Tarea | idTarea, idGrupo, idUsuarioAsignado, nombre, descripcion, prioridad, estado, fechaLimite, fechaCreacion, **eliminada** (boolean, soft delete) |
 | `prioridades.js` | Prioridad | id, nombre (ALTA, MEDIA, BAJA), label |
 | `estados.js` | Estado | id, nombre (PENDIENTE, EN_PROGRESO, COMPLETADA, VENCIDA), label, color (hex) |
 
@@ -164,9 +164,9 @@
 | `groupService.js` | **`abandonarGrupo(idMiembroGrupo, idMiembroNuevoAdmin, token)`** | **DELETE/PUT** | **`/miembros-grupo/{id}`** |
 | `groupService.js` | **`obtenerRanking(idGrupo, token)`** | **GET** | **`/grupos/{idGrupo}/ranking`** |
 | `taskService.js` | `crearTarea(data, token, usuarioId)` | POST | `/tareas` |
-| `taskService.js` | `obtenerTareasGrupo(idGrupo, token)` | GET | `/tareas/grupo/{idGrupo}` |
+| `taskService.js` | `obtenerTareasGrupo(idGrupo, token)` | GET | `/tareas/grupo/{idGrupo}` *(filtra `eliminada !== true`)* |
 | `taskService.js` | `actualizarTarea(idTarea, data, token)` | PUT | `/tareas/{idTarea}` |
-| `taskService.js` | **`eliminarTarea(idTarea, token)`** | **DELETE** | **`/tareas/{idTarea}`** |
+| `taskService.js` | **`eliminarTarea(idTarea, token)`** | **DELETE** | **`/tareas/{idTarea}`** *(soft delete: marca `eliminada = true`)* |
 
 ### /lib
 
