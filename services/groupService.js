@@ -17,7 +17,15 @@ const resolverGrupo = (grupo) => ({
     .filter((m) => m.grupoId === grupo.id)
     .map((m) => {
       const usuario = usuarios.find((u) => u.idUsuario === m.usuarioId);
-      return { ...m, nombre: usuario?.nombre, correo: usuario?.correo, fotoPerfil: usuario?.fotoPerfil ?? null };
+      return {
+        ...m,
+        nombre: usuario?.nombre,
+        correo: usuario?.correo,
+        rol: {
+          id: m.rolId,
+          nombre: m.rolId === 1 ? "ADMINISTRADOR" : "MIEMBRO",
+        },
+      };
     }),
 });
 
@@ -179,7 +187,7 @@ const mock = {
   async obtenerRanking(idGrupo, _token) {
     await delay(400);
     const grupoId = Number(idGrupo);
-    
+
     // Filtrar miembros del grupo
     const miembrosDelGrupo = miembrosGrupo.filter((m) => m.grupoId === grupoId);
     if (miembrosDelGrupo.length === 0) throw new Error("Grupo no encontrado o sin miembros.");
@@ -199,9 +207,15 @@ const mock = {
         id: miembro.id,
         usuarioId: miembro.usuarioId,
         nombre: usuario?.nombre || "Usuario desconocido",
+        correo: usuario?.correo || "",
         puntaje: miembro.puntaje,
         racha: miembro.racha,
         tareasCompletadas,
+        rol: {
+          id: miembro.rolId,
+          nombre: miembro.rolId === 1 ? "ADMINISTRADOR" : "MIEMBRO",
+        },
+        rolId: miembro.rolId,
       };
     });
 
