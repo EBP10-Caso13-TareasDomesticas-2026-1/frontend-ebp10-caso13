@@ -202,7 +202,6 @@ const mock = {
         puntaje: miembro.puntaje,
         racha: miembro.racha,
         tareasCompletadas,
-        puesto: index + 1, // Se asigna después de ordenar
       };
     });
 

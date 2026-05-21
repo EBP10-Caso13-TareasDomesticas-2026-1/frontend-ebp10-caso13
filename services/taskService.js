@@ -40,7 +40,7 @@ const mock = {
   // HU-007 — Obtener tareas del grupo (para tablero)
   async obtenerTareasGrupo(idGrupo, _token) {
     await delay(400);
-    return tareas.filter((t) => t.idGrupo === Number(idGrupo));
+    return tareas.filter((t) => t.idGrupo === Number(idGrupo) && t.eliminada !== true);
   },
 
   // HU-008 — Actualizar estado de tarea
