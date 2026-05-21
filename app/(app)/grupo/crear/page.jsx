@@ -79,14 +79,6 @@ function CrearGrupoContent() {
 
   const navbarContent = mounted ? (
     <>
-      <Button
-        variant="secondary"
-        disabled
-        onClick={() => router.push("/perfil")}
-        className="hidden sm:inline-flex"
-      >
-        Perfil
-      </Button>
       {isAuthenticated ? (
         <Button variant="primary" onClick={() => setShowLogoutModal(true)}>
           Cerrar sesión

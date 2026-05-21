@@ -199,14 +199,16 @@ function TableroContent() {
   };
 
   // ─── Navbar content ───────────────────────────────────────────
-
   const navbarContent = (
     <div className="flex items-center gap-4">
       <span className="text-sm text-gray-600">
         {grupo?.nombre}
       </span>
-      <Button variant="secondary" disabled onClick={() => { }}>
-        Perfil
+      <Button
+        variant="secondary"
+        onClick={() => router.push("/grupo/detalles")}
+      >
+        Detalles del Grupo
       </Button>
       <Button variant="primary" onClick={() => setShowLogoutModal(true)}>
         Cerrar sesión
@@ -240,17 +242,6 @@ function TableroContent() {
                 className="w-full sm:w-auto"
               >
                 + Nueva Tarea
-              </Button>
-              <Button
-                variant="secondary"
-                onClick={() => {
-                  console.log("Grupo:", grupo);
-                  const codigo = grupo.codigoInvitacion || grupo.miembros?.[0]?.grupo?.codigoInvitacion || grupo.grupo?.codigoInvitacion || "";
-                  router.push(`/grupo/invitar?codigo=${codigo}`);
-                }}
-                className="w-full sm:w-auto"
-              >
-              Invitar miembros
               </Button>
             </div>
           )}
