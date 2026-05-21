@@ -138,6 +138,14 @@ const mock = {
 
     // FLUJO 1: Miembro normal abandona (sin delegación)
     if (!idMiembroNuevoAdmin) {
+      if (miembroAbandonar.rolId === 1) {
+        const otrosMiembros = miembrosGrupo.filter(
+          (m) => m.grupoId === miembroAbandonar.grupoId && m.id !== miembroAbandonar.id
+        );
+        if (otrosMiembros.length > 0) {
+          throw new Error("Debes delegar el rol de administrador antes de abandonar el grupo.");
+        }
+      }
       const index = miembrosGrupo.indexOf(miembroAbandonar);
       miembrosGrupo.splice(index, 1);
       return { mensaje: "Has abandonado el grupo exitosamente." };
