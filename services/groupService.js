@@ -97,10 +97,11 @@ const mock = {
     const miembro = miembrosGrupo.find((m) => m.id === Number(idMiembroGrupo));
     if (!miembro) throw new Error("Miembro no encontrado.");
 
-    // Validar que no tiene tareas PENDIENTE, EN_PROGRESO o VENCIDA
+    // Validar que no tiene tareas PENDIENTE, EN_PROGRESO o VENCIDA dentro del mismo grupo
     const tareasActivas = tareas.filter(
       (t) =>
         t.idUsuarioAsignado === miembro.usuarioId &&
+        t.idGrupo === miembro.grupoId &&
         (t.estado === "PENDIENTE" || t.estado === "EN_PROGRESO" || t.estado === "VENCIDA") &&
         t.eliminada !== true
     );
