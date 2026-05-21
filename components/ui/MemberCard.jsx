@@ -9,6 +9,13 @@ function getInitials(nombre) {
   return nombre[0].toUpperCase();
 }
 
+function getPodioIcon(puesto) {
+  if (puesto === 1) return "🥇";
+  if (puesto === 2) return "🥈";
+  if (puesto === 3) return "🥉";
+  return null;
+}
+
 export default function MemberCard({
   member,
   esAdmin,
@@ -19,11 +26,24 @@ export default function MemberCard({
 }) {
   const isAdminMember = member.rol?.nombre === "ADMINISTRADOR" || member.rolId === 1;
   const initials = getInitials(member.nombre);
+  const podioIcon = getPodioIcon(member.puesto);
 
   return (
     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-4 bg-white rounded-lg border border-gray-200 hover:shadow-md transition-shadow gap-4">
-      {/* Avatar + Info */}
+      {/* Posición + Avatar + Info */}
       <div className="flex items-center gap-3 flex-1 min-w-0">
+        {/* Posición o Podio */}
+        <div className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 font-semibold text-sm">
+          {podioIcon ? (
+            <span className="text-2xl">{podioIcon}</span>
+          ) : (
+            <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center text-gray-700 font-bold text-xs">
+              {member.puesto}°
+            </div>
+          )}
+        </div>
+
+        {/* Avatar con iniciales */}
         <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white font-semibold text-sm flex-shrink-0">
           {initials}
         </div>

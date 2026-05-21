@@ -227,19 +227,31 @@ function GroupDetailsContent() {
             </h2>
           </div>
 
-          <div className="space-y-3">
-            {ranking.map((member) => (
-              <MemberCard
-                key={member.id}
-                member={member}
-                esAdmin={esAdmin}
-                isCurrentUser={member.usuarioId === usuario?.idUsuario}
-                onDelete={handleDeleteMember}
-                onLeave={handleLeaveGroup}
-                loadingDelete={loadingDelete}
-              />
-            ))}
-          </div>
+          {ranking.length === 0 ? (
+            <div className="p-6 bg-gray-50 rounded-lg border border-gray-200 text-center">
+              <p className="text-gray-600">No hay miembros en este grupo.</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {ranking.map((member) => (
+                <MemberCard
+                  key={member.id}
+                  member={member}
+                  esAdmin={esAdmin}
+                  isCurrentUser={member.usuarioId === usuario?.idUsuario}
+                  onDelete={handleDeleteMember}
+                  onLeave={handleLeaveGroup}
+                  loadingDelete={loadingDelete}
+                />
+              ))}
+            </div>
+          )}
+
+          {ranking.length > 0 && ranking.every((m) => m.tareasCompletadas === 0) && (
+            <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg text-blue-700 text-sm">
+              📋 Aún no hay tareas completadas. ¡Comienza a organizar las tareas del hogar!
+            </div>
+          )}
         </div>
       </div>
 

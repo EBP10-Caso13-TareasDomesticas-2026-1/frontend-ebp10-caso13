@@ -219,15 +219,25 @@ const mock = {
       };
     });
 
-    // Ordenar por puntaje DESC, luego por tareasCompletadas DESC
+    // Ordenar por puntaje DESC, luego por tareasCompletadas DESC, luego por nombre ASC
     ranking.sort((a, b) => {
       if (b.puntaje !== a.puntaje) return b.puntaje - a.puntaje;
-      return b.tareasCompletadas - a.tareasCompletadas;
+      if (b.tareasCompletadas !== a.tareasCompletadas) return b.tareasCompletadas - a.tareasCompletadas;
+      return a.nombre.localeCompare(b.nombre);
     });
 
-    // Actualizar puestos después de ordenar
+    // Asignar puestos considerando empates (mismo puntaje + mismas tareas = mismo puesto)
     ranking.forEach((miembro, index) => {
-      miembro.puesto = index + 1;
+      if (index === 0) {
+        miembro.puesto = 1;
+      } else {
+        const anterior = ranking[index - 1];
+        if (anterior.puntaje === miembro.puntaje && anterior.tareasCompletadas === miembro.tareasCompletadas) {
+          miembro.puesto = anterior.puesto;
+        } else {
+          miembro.puesto = index + 1;
+        }
+      }
     });
 
     return ranking;
