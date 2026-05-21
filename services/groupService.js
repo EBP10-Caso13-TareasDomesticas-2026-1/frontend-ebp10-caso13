@@ -7,6 +7,7 @@ import { USE_MOCK, apiRequest, delay } from "@/lib/api";
 import { grupos } from "@/mocks/grupos";
 import { miembrosGrupo } from "@/mocks/miembrosGrupo";
 import { usuarios } from "@/mocks/usuarios";
+import { tareas } from "@/mocks/tareas";
 
 const generarCodigo = () => Math.random().toString(36).substring(2, 8).toUpperCase();
 
@@ -89,6 +90,134 @@ const mock = {
     if (!grupo) throw new Error("Grupo no encontrado.");
     return resolverGrupo(grupo);
   },
+
+  // HUS-024 — Eliminar miembro del grupo
+  async eliminarMiembro(idMiembroGrupo, _token) {
+    await delay(600);
+    const miembro = miembrosGrupo.find((m) => m.id === Number(idMiembroGrupo));
+    if (!miembro) throw new Error("Miembro no encontrado.");
+
+    // Validar que no tiene tareas PENDIENTE, EN_PROGRESO o VENCIDA dentro del mismo grupo
+    const tareasActivas = tareas.filter(
+      (t) =>
+        t.idUsuarioAsignado === miembro.usuarioId &&
+        t.idGrupo === miembro.grupoId &&
+        (t.estado === "PENDIENTE" || t.estado === "EN_PROGRESO" || t.estado === "VENCIDA") &&
+        t.eliminada !== true
+    );
+
+    if (tareasActivas.length > 0) {
+      throw new Error("El miembro tiene tareas pendientes. Completa o reasigna antes de eliminar.");
+    }
+
+    // Remover del array
+    const index = miembrosGrupo.indexOf(miembro);
+    miembrosGrupo.splice(index, 1);
+
+    return { mensaje: "Miembro eliminado exitosamente." };
+  },
+
+  // HU-025 — Abandonar grupo
+  // Flujo 1: Miembro normal (sin nuevo admin) → solo DELETE
+  // Flujo 2: Admin con delegación (con nuevo admin) → PUT (cambiar rol) + DELETE
+  async abandonarGrupo(idMiembroGrupo, idMiembroNuevoAdmin, _token) {
+    await delay(600);
+    const miembroAbandonar = miembrosGrupo.find((m) => m.id === Number(idMiembroGrupo));
+    if (!miembroAbandonar) throw new Error("Miembro no encontrado.");
+
+    // Validación común: verificar tareas activas
+    const tareasActivas = tareas.filter(
+      (t) =>
+        t.idUsuarioAsignado === miembroAbandonar.usuarioId &&
+        (t.estado === "PENDIENTE" || t.estado === "EN_PROGRESO" || t.estado === "VENCIDA") &&
+        t.eliminada !== true
+    );
+    if (tareasActivas.length > 0) {
+      throw new Error("Tienes tareas pendientes. Completa o reasigna antes de abandonar.");
+    }
+
+    // FLUJO 1: Miembro normal abandona (sin delegación)
+    if (!idMiembroNuevoAdmin) {
+      if (miembroAbandonar.rolId === 1) {
+        const otrosMiembros = miembrosGrupo.filter(
+          (m) => m.grupoId === miembroAbandonar.grupoId && m.id !== miembroAbandonar.id
+        );
+        if (otrosMiembros.length > 0) {
+          throw new Error("Debes delegar el rol de administrador antes de abandonar el grupo.");
+        }
+      }
+      const index = miembrosGrupo.indexOf(miembroAbandonar);
+      miembrosGrupo.splice(index, 1);
+      return { mensaje: "Has abandonado el grupo exitosamente." };
+    }
+
+    // FLUJO 2: Admin abandona con delegación obligatoria
+    if (miembroAbandonar.rolId !== 1) {
+      throw new Error("Solo administradores pueden delegar el rol. Usa abandonarGrupo sin nuevo admin para salir.");
+    }
+
+    const miembroNuevoAdmin = miembrosGrupo.find((m) => m.id === Number(idMiembroNuevoAdmin));
+    if (!miembroNuevoAdmin) throw new Error("Nuevo administrador no encontrado.");
+    if (miembroNuevoAdmin.grupoId !== miembroAbandonar.grupoId) {
+      throw new Error("El nuevo administrador debe estar en el mismo grupo.");
+    }
+    if (miembroNuevoAdmin.id === miembroAbandonar.id) {
+      throw new Error("No puedes designarte a ti mismo como nuevo admin.");
+    }
+
+    // Cambiar rol del nuevo admin a 1 (admin)
+    miembroNuevoAdmin.rolId = 1;
+
+    // Remover al admin antiguo
+    const index = miembrosGrupo.indexOf(miembroAbandonar);
+    miembrosGrupo.splice(index, 1);
+
+    return { mensaje: "Has designado nuevo administrador y abandonado el grupo exitosamente." };
+  },
+
+  // HU-032 — Obtener ranking del grupo
+  async obtenerRanking(idGrupo, _token) {
+    await delay(400);
+    const grupoId = Number(idGrupo);
+    
+    // Filtrar miembros del grupo
+    const miembrosDelGrupo = miembrosGrupo.filter((m) => m.grupoId === grupoId);
+    if (miembrosDelGrupo.length === 0) throw new Error("Grupo no encontrado o sin miembros.");
+
+    // Mapear miembros con datos de usuario y tareas completadas
+    const ranking = miembrosDelGrupo.map((miembro, index) => {
+      const usuario = usuarios.find((u) => u.idUsuario === miembro.usuarioId);
+      const tareasCompletadas = tareas.filter(
+        (t) =>
+          t.idGrupo === grupoId &&
+          t.idUsuarioAsignado === miembro.usuarioId &&
+          t.estado === "COMPLETADA" &&
+          t.eliminada !== true
+      ).length;
+
+      return {
+        id: miembro.id,
+        usuarioId: miembro.usuarioId,
+        nombre: usuario?.nombre || "Usuario desconocido",
+        puntaje: miembro.puntaje,
+        racha: miembro.racha,
+        tareasCompletadas,
+      };
+    });
+
+    // Ordenar por puntaje DESC, luego por tareasCompletadas DESC
+    ranking.sort((a, b) => {
+      if (b.puntaje !== a.puntaje) return b.puntaje - a.puntaje;
+      return b.tareasCompletadas - a.tareasCompletadas;
+    });
+
+    // Actualizar puestos después de ordenar
+    ranking.forEach((miembro, index) => {
+      miembro.puesto = index + 1;
+    });
+
+    return ranking;
+  },
 };
 
 const api = {
@@ -165,6 +294,56 @@ const api = {
           };
         }),
     };
+  },
+
+  // HUS-024 — Eliminar miembro del grupo
+  async eliminarMiembro(idMiembroGrupo, token) {
+    return apiRequest(
+      `/miembros-grupo/${idMiembroGrupo}`,
+      { method: "DELETE" },
+      token
+    );
+  },
+
+  // HU-025 — Abandonar grupo
+  // Flujo 1: Miembro normal (sin nuevo admin) → solo DELETE
+  // Flujo 2: Admin con delegación (con nuevo admin) → PUT + DELETE
+  async abandonarGrupo(idMiembroGrupo, idMiembroNuevoAdmin, token) {
+    // FLUJO 1: Miembro normal abandona sin delegación
+    if (!idMiembroNuevoAdmin) {
+      return apiRequest(
+        `/miembros-grupo/${idMiembroGrupo}`,
+        { method: "DELETE" },
+        token
+      );
+    }
+
+    // FLUJO 2: Admin abandona con delegación
+    // Primero cambiar rol del nuevo admin a 1
+    await apiRequest(
+      `/miembros-grupo/${idMiembroNuevoAdmin}`,
+      {
+        method: "PUT",
+        body: { rolId: 1 },
+      },
+      token
+    );
+
+    // Luego remover el antiguo admin
+    return apiRequest(
+      `/miembros-grupo/${idMiembroGrupo}`,
+      { method: "DELETE" },
+      token
+    );
+  },
+
+  // HU-032 — Obtener ranking del grupo
+  async obtenerRanking(idGrupo, token) {
+    return apiRequest(
+      `/grupos/${idGrupo}/ranking`,
+      { method: "GET" },
+      token
+    );
   },
 };
 

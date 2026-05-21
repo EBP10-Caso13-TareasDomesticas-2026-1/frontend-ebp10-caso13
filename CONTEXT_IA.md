@@ -140,7 +140,7 @@
 | `grupos.js` | Grupo | id, nombre, descripcion, codigoInvitacion, creadoEn |
 | `roles.js` | Rol | id, nombre |
 | `miembrosGrupo.js` | MiembroGrupo | id, usuarioId, grupoId, rolId, puntaje, racha, fechaUnion |
-| `tareas.js` | Tarea | idTarea, idGrupo, idUsuarioAsignado, nombre, descripcion, prioridad, estado, fechaLimite, fechaCreacion |
+| `tareas.js` | Tarea | idTarea, idGrupo, idUsuarioAsignado, nombre, descripcion, prioridad, estado, fechaLimite, fechaCreacion, **eliminada** (boolean, soft delete) |
 | `prioridades.js` | Prioridad | id, nombre (ALTA, MEDIA, BAJA), label |
 | `estados.js` | Estado | id, nombre (PENDIENTE, EN_PROGRESO, COMPLETADA, VENCIDA), label, color (hex) |
 
@@ -155,13 +155,18 @@
 | `authService.js` | `registrarUsuario(data)` | POST | `/usuarios/registro` |
 | `authService.js` | `iniciarSesion(data)` | POST | `/usuarios/login` |
 | `authService.js` | `cerrarSesion(token)` | POST | `/sesiones/logout` |
+| `authService.js` | **`recuperarContrasena(data)`** | **PUT** | **`/usuarios/recuperar-contrasena`** |
 | `groupService.js` | `obtenerGrupoDeUsuario(usuarioId, token)` | GET | `/miembros-grupo` |
 | `groupService.js` | `crearGrupo(data, token, usuarioId)` | POST | `/grupos` |
 | `groupService.js` | `unirseConCodigo(codigoInvitacion, token, usuarioId)` | POST | `/miembros-grupo` |
 | `groupService.js` | `obtenerGrupo(grupoId, token)` | GET | `/grupos/{id}` |
+| `groupService.js` | **`eliminarMiembro(idMiembroGrupo, token)`** | **DELETE** | **`/miembros-grupo/{id}`** |
+| `groupService.js` | **`abandonarGrupo(idMiembroGrupo, idMiembroNuevoAdmin, token)`** | **DELETE/PUT** | **`/miembros-grupo/{id}`** |
+| `groupService.js` | **`obtenerRanking(idGrupo, token)`** | **GET** | **`/grupos/{idGrupo}/ranking`** |
 | `taskService.js` | `crearTarea(data, token, usuarioId)` | POST | `/tareas` |
-| `taskService.js` | `obtenerTareasGrupo(idGrupo, token)` | GET | `/tareas/grupo/{idGrupo}` |
+| `taskService.js` | `obtenerTareasGrupo(idGrupo, token)` | GET | `/tareas/grupo/{idGrupo}` *(filtra `eliminada !== true`)* |
 | `taskService.js` | `actualizarTarea(idTarea, data, token)` | PUT | `/tareas/{idTarea}` |
+| `taskService.js` | **`eliminarTarea(idTarea, token)`** | **DELETE** | **`/tareas/{idTarea}`** *(soft delete: marca `eliminada = true`)* |
 
 ### /lib
 
@@ -202,7 +207,7 @@
 2. **Crear tarea** — HUS-006 ✅ COMPLETADA
 3. **Tablero de tareas** — HU-009, HU-015, HUS-016 (gestión de estados) ✅ COMPLETADA
 
-### **Sprint 3**  EN PLANIFICACIÓN
+### **Sprint 3**  EN DESARROLLO
 
 | ID | Descripción | Estado | Responsable | Pantalla |
 | ---- | ------------- | -------- | ------------- | -------- |
@@ -272,6 +277,13 @@
 - El bloqueo persiste por localStorage y el countdown se rehidrata tras recargar.
 - **Reapertura de tareas vencidas**: El componente `DateLimitModal` permite reabrir tareas con estado VENCIDA. Se valida que la nueva fecha límite sea mayor a la actual mediante `minDateTime` en el input datetime-local.
 
+### DECISIONES SPRINT 3
+
+- **Recuperar Contraseña (HUS-018)**: Rate limit (3 intentos / 10 min, bloqueo 15 min) se maneja en **pantalla con `useRateLimit()`**
+- **Eliminar Miembro (HUS-024)**: Bloquea si el miembro tiene tareas PENDIENTE/EN_PROGRESO/VENCIDA. Solo permite eliminar si todas están COMPLETADA o sin tareas.
+- **Ranking (HU-032)**: Se calcula dinámicamente en mock. Filtra miembrosGrupo × grupoId, suma tareasCompletadas (estado COMPLETADA), ordena por puntaje DESC → tareasCompletadas DESC, asigna puesto.
+- **Importaciones agregadas**: `groupService.js` importa `tareas` desde `/mocks/tareas.js` para validar tareas activas y calcular ranking.
+
 ### CONFIGURACIÓN
 
 | Archivo | Propósito |
@@ -309,3 +321,4 @@
 | 24/04/26 | Camila Torres | HUS-016, HU-009 y HU-015 implementadas: pantalla de tablero con tarjetas de tareas y botones de cambio de estado, verificando membresía |
 | 27/04/26 | Camila Torres | HUS-006 completada: pantalla Crear Tarea con validaciones frontend, límites de caracteres, modal de logout, protección de admin y redireccionamiento a tablero |
 | 18/05/26 | Camila Torres | Revisión y actualización de CONTEXT_IA.md: Agregado DateLimitModal, actualización de estado del proyecto, verificación de integridad de documentación y planificación Sprint 3 |
+| 19/05/26 | Camila Torres | **Sprint 3 Servicios**: Implementadas todas las funciones backend mock: `recuperarContrasena()`, `eliminarMiembro()`, `abandonarGrupo()` (2 flujos), `obtenerRanking()`, `eliminarTarea()`. Actualizado mocks/tareas.js con `eliminada: false`. |

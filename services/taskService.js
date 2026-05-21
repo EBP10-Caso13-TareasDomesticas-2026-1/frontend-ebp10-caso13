@@ -40,7 +40,7 @@ const mock = {
   // HU-007 — Obtener tareas del grupo (para tablero)
   async obtenerTareasGrupo(idGrupo, _token) {
     await delay(400);
-    return tareas.filter((t) => t.idGrupo === Number(idGrupo));
+    return tareas.filter((t) => t.idGrupo === Number(idGrupo) && t.eliminada !== true);
   },
 
   // HU-008 — Actualizar estado de tarea
@@ -61,7 +61,17 @@ const mock = {
     return tarea;
   },
 
+  // HUS-007 — Eliminar tarea (soft delete)
+  async eliminarTarea(idTarea, _token) {
+    await delay(600);
+    const tarea = tareas.find((t) => t.idTarea === Number(idTarea));
+    if (!tarea) throw new Error("Tarea no encontrada.");
 
+    // Soft delete: marcar como eliminada
+    tarea.eliminada = true;
+
+    return { mensaje: "Tarea eliminada exitosamente." };
+  },
 };
 
 const api = {
@@ -113,6 +123,15 @@ const api = {
           ...(data.fechaLimite ? { fechaLimite: data.fechaLimite } : {}),
         },
       },
+      token
+    );
+  },
+
+  // HUS-007 — Eliminar tarea (soft delete)
+  async eliminarTarea(idTarea, token) {
+    return apiRequest(
+      `/tareas/${idTarea}`,
+      { method: "DELETE" },
       token
     );
   },

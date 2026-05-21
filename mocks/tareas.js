@@ -14,6 +14,7 @@ export const tareas = [
     estado: "PENDIENTE",
     fechaLimite: "2026-04-25T18:00:00.000Z",
     fechaCreacion: "2026-04-20T10:00:00.000Z",
+    eliminada: false,
   },
   {
     idTarea: 2,
@@ -25,6 +26,7 @@ export const tareas = [
     estado: "EN_PROGRESO",
     fechaLimite: "2026-04-22T19:00:00.000Z",
     fechaCreacion: "2026-04-20T09:30:00.000Z",
+    eliminada: false,
   },
   {
     idTarea: 3,
@@ -36,6 +38,7 @@ export const tareas = [
     estado: "COMPLETADA",
     fechaLimite: "2026-04-21T20:00:00.000Z",
     fechaCreacion: "2026-04-19T08:00:00.000Z",
+    eliminada: false,
   },
   {
     idTarea: 4,
@@ -47,6 +50,7 @@ export const tareas = [
     estado: "VENCIDA",
     fechaLimite: "2026-04-15T23:59:00.000Z",
     fechaCreacion: "2026-04-01T10:00:00.000Z",
+    eliminada: false,
   },
   {
     idTarea: 5,
@@ -58,6 +62,7 @@ export const tareas = [
     estado: "PENDIENTE",
     fechaLimite: "2026-04-26T17:00:00.000Z",
     fechaCreacion: "2026-04-20T11:00:00.000Z",
+    eliminada: false,
   },
   {
     idTarea: 6,
@@ -69,6 +74,7 @@ export const tareas = [
     estado: "PENDIENTE",
     fechaLimite: "2026-04-30T18:00:00.000Z",
     fechaCreacion: "2026-04-20T12:00:00.000Z",
+    eliminada: false,
   },
   {
     idTarea: 7,
@@ -80,5 +86,6 @@ export const tareas = [
     estado: "EN_PROGRESO",
     fechaLimite: "2026-04-23T10:00:00.000Z",
     fechaCreacion: "2026-04-20T07:00:00.000Z",
+    eliminada: false,
   },
 ];
