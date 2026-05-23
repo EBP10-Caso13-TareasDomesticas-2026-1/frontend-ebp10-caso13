@@ -25,7 +25,7 @@
 | Daniel Sanchez | Componentes | Todos los componentes reutilizables de /components/. Sprint 2: Apoyo |
 | Salome Toro | Pantallas | Crear Tarea (HUS-006) |
 | David Sanchez | Pantallas | Unirse a Grupo (HUS-022) |
-| Alejandro Toro | Pantallas | Sprint 2: Apoyo |
+| Alejandro Toro | Pantallas | HU-010 (Modal Detalle Tarea - Vista Miembro) |
 | Daniel Salas | Pantallas | Sprint 2: Apoyo |
 
 ---
@@ -92,6 +92,8 @@
 | `DateLimitModal.jsx` | Modal para solicitar nueva fecha límite al reabrir una tarea vencida | `isOpen`, `value`, `error`, `loading`, `onChange`, `onConfirm`, `onCancel`, `minDateTime`, `title`, `description` |
 | `TaskCard.jsx` | Tarjeta individual de tarea con estado, prioridad y acciones de cambio de estado; incluye modal para reabrir tareas vencidas | `tarea`, `esAdmin`, `esMiaTarea`, `onCambiarEstado`, `loading` |
 | `TaskColumn.jsx` | Columna tipo kanban que agrupa tareas y renderiza `TaskCard` | `titulo`, `tareas`, `esAdmin`, `usuarioId`, `onCambiarEstado`, `loading` |
+| `TaskDetailModal.jsx` | Modal de solo lectura con detalle completo de una tarea (título, estado, prioridad, asignado, fecha, descripción). Accesible para cualquier miembro. Soporta estado `loading` (skeleton) y prop `error` para fallos de red | `isOpen`, `tarea`, `onClose`, `loading` (default: false), `error` (default: "") |
+| `TaskEditModal.jsx` | Modal de edición de tarea solo para admins. Campos editables según estado: COMPLETADA→solo lectura, VENCIDA→fecha bloqueada, resto editable. Confirma guardado con `ConfirmationModal`. Detecta cambios sin guardar | `isOpen`, `tarea`, `onClose`, `onGuardar(idTarea, datos)`, `loading` (default: false) |
 
 ### /components/layout/
 
@@ -119,6 +121,7 @@
 | Eliminar tarea | 🗑️ Papelera | `/papelera.svg` | danger | Descarta una tarea innecesaria |
 | Abandonar grupo | 🚪 Salida | `/salida-grupo.svg` | danger | Miembro se desvincula del grupo |
 | Abandonar grupo (Admin) | 🚪 Salida + Selector | `/salida-grupo.svg` | danger | Admin se desvincula tras elegir nuevo admin |
+| Guardar cambios tarea | 💾 Save (lucide) | inline icon | primary | Confirmación antes de actualizar tarea |
 
 **Nota:** Para el caso "Abandonar grupo (Admin)", usar props `showMemberSelector={true}`, `members={...}`, `selectedMemberId`, `onMemberChange`.
 
@@ -134,13 +137,20 @@
 | `hooks/useGroup.js` | Consume GroupContext | `const { grupo, rolActual, crearGrupo, cargarGrupo } = useGroup()` |
 | `hooks/useLocalStorage.js` | Persistencia reactiva en localStorage | Usado internamente por AuthContext |
 | `hooks/useFetch.js` | Estado loading/error/data para llamadas a servicios puntuales | `const { data, loading, execute } = useFetch(servicio)` |
-| `hooks/useRateLimit.js` | Maneja intentos fallidos, ventana de tiempo, bloqueo temporal y countdown persistente | const { bloqueado, bloqueoHasta, registrarIntento, limpiarIntentos, formatearTiempo } = useRateLimit(...) |
+| `hooks/useRateLimit.js` | Maneja intentos fallidos, ventana de tiempo, bloqueo temporal y countdown persistente | `const { bloqueado, bloqueoHasta, registrarIntento, limpiarIntentos, formatearTiempo } = useRateLimit(...)` |
 
 ### Notas de acoplamiento entre contextos
 
 - `GroupContext` depende de datos de autenticación, pero la carga del grupo se hace invocando `cargarGrupo(usuarioId, token)` con esos valores.
 - `cargarGrupo(usuarioId, token)` recibe ambos argumentos. Retorna `{ ok: true }` si el usuario tiene grupo, `{ ok: false, error }` si no. Un `{ ok: false }` **no es un error**, es el caso válido de usuario sin grupo (ver HU-002 Escenario 6).
-- `login()` de `AuthContext` ya no retorna `void`: además de persistir la sesión, retorna al menos `idUsuario` y `token`, que luego se usan en el flujo de `LoginPage` para cargar el grupo.
+- `login()` de `AuthContext` retorna al menos `idUsuario` y `token`, que luego se usan en el flujo de `LoginPage` para cargar el grupo.
+
+### Notas de acoplamiento TaskEditModal / TaskDetailModal
+
+- Ambos modales reciben el objeto `tarea` completo desde el tablero — no hacen fetch propio.
+- `TaskEditModal` llama `onGuardar(idTarea, datos)` que debe conectar con `taskService.actualizarTarea(idTarea, datos, token)` desde el tablero padre.
+- `TaskDetailModal` acepta prop `error` (string) para mostrar banner si el padre tuvo un fallo al cargar la tarea.
+- El avatar de "Asignado a" en `TaskDetailModal` se genera con iniciales del campo `tarea.asignadoA` (texto). Cuando se conecte al backend, este campo debería ser el nombre del usuario resuelto.
 
 ---
 
@@ -170,18 +180,18 @@
 | `authService.js` | `registrarUsuario(data)` | POST | `/usuarios/registro` |
 | `authService.js` | `iniciarSesion(data)` | POST | `/usuarios/login` |
 | `authService.js` | `cerrarSesion(token)` | POST | `/sesiones/logout` |
-| `authService.js` | **`recuperarContrasena(data)`** | **PUT** | **`/usuarios/recuperar-contrasena`** |
+| `authService.js` | `recuperarContrasena(data)` | PUT | `/usuarios/recuperar-contrasena` |
 | `groupService.js` | `obtenerGrupoDeUsuario(usuarioId, token)` | GET | `/miembros-grupo` |
 | `groupService.js` | `crearGrupo(data, token, usuarioId)` | POST | `/grupos` |
 | `groupService.js` | `unirseConCodigo(codigoInvitacion, token, usuarioId)` | POST | `/miembros-grupo` |
 | `groupService.js` | `obtenerGrupo(grupoId, token)` | GET | `/grupos/{id}` |
-| `groupService.js` | **`eliminarMiembro(idMiembroGrupo, token)`** | **DELETE** | **`/miembros-grupo/{id}`** |
-| `groupService.js` | **`abandonarGrupo(idMiembroGrupo, idMiembroNuevoAdmin, token)`** | **DELETE/PUT** | **`/miembros-grupo/{id}`** |
-| `groupService.js` | **`obtenerRanking(idGrupo, token)`** | **GET** | **`/grupos/{idGrupo}/ranking`** |
+| `groupService.js` | `eliminarMiembro(idMiembroGrupo, token)` | DELETE | `/miembros-grupo/{id}` |
+| `groupService.js` | `abandonarGrupo(idMiembroGrupo, idMiembroNuevoAdmin, token)` | DELETE/PUT | `/miembros-grupo/{id}` |
+| `groupService.js` | `obtenerRanking(idGrupo, token)` | GET | `/grupos/{idGrupo}/ranking` |
 | `taskService.js` | `crearTarea(data, token, usuarioId)` | POST | `/tareas` |
 | `taskService.js` | `obtenerTareasGrupo(idGrupo, token)` | GET | `/tareas/grupo/{idGrupo}` *(filtra `eliminada !== true`)* |
 | `taskService.js` | `actualizarTarea(idTarea, data, token)` | PUT | `/tareas/{idTarea}` |
-| `taskService.js` | **`eliminarTarea(idTarea, token)`** | **DELETE** | **`/tareas/{idTarea}`** *(soft delete: marca `eliminada = true`)* |
+| `taskService.js` | `eliminarTarea(idTarea, token)` | DELETE | `/tareas/{idTarea}` *(soft delete: marca `eliminada = true`)* |
 
 ### /lib
 
@@ -189,14 +199,14 @@
 | --------- | --------- | -------------- |
 | `taskHelpers.js` | `getEstadoInfo(estado)` | `{ label, color }` para UI |
 | `taskHelpers.js` | `getPrioridadInfo(prioridad)` | `{ label }` para UI |
-| `taskHelpers.js` | `getEstados()` | Array de estados (para combos/filtros) |
-| `taskHelpers.js` | `getPrioridades()` | Array de prioridades (para combos) |
+| `taskHelpers.js` | `getEstados()` | Array de estados `{ nombre, label, color }` (para combos/filtros) |
+| `taskHelpers.js` | `getPrioridades()` | Array de prioridades `{ nombre, label }` (para combos) |
 
 ---
 
 ## HISTORIAS DE USUARIO — SPRINTS
 
-### **Sprint 1**  COMPLETADO
+### **Sprint 1** — COMPLETADO
 
 | ID | Descripción | Estado | Responsable |
 | ---- | ------------- | -------- | ------------- |
@@ -206,46 +216,32 @@
 | HU-004 | Como usuario registrado, quiero crear un grupo familiar, para organizar las tareas del hogar con los integrantes de mi grupo familiar, convirtiéndome en administrador del mismo. | completada | Alejandro Toro |
 | HU-005 | Como administrador del grupo familiar, quiero invitar usuarios al grupo familiar mediante un código de invitación, para integrarlos en la organización de tareas del hogar. | completada | Daniel Salas |
 
-### **Sprint 2**  COMPLETADO
+### **Sprint 2** — COMPLETADO
 
 | ID | Descripción | Estado | Responsable | Pantalla |
 | ---- | ------------- | -------- | ------------- | -------- |
-| HUS-022 | Como usuario registrado, quiero unirme a un grupo familiar mediante un código de invitación válido, para asegurar que el acceso a los grupos esté controlado mediante mecanismos de autorización basados en invitación. | completada | David Sanchez | Unirse a grupo |
-| HUS-006 | Como administrador del grupo familiar, quiero crear una tarea doméstica asignándole un miembro responsable, fecha límite, prioridad (Alta / Media / Baja), título y opcionalmente una descripción, para organizar las tareas del hogar de forma consistente. | completada | Camila Torres | Crear tarea |
-| HU-009 | Como miembro del grupo familiar, quiero visualizar el tablero completo de tareas del hogar, para conocer todas las tareas del grupo. | completada | Camila Torres | Tablero de tareas |
-| HU-015 | Como miembro del grupo familiar, quiero cambiar el estado de una de mis tareas asignadas a "EN PROGRESO" o como "COMPLETADA", para registrar el avance con esa responsabilidad. | completada | Camila Torres | Tablero de tareas |
-| HUS-016 | Como administrador del grupo familiar, quiero poder modificar el estado de cualquier tarea del sistema, para gestionar y mantener actualizado el progreso de las tareas del hogar. | completada | Camila Torres | Tablero de tareas |
+| HUS-022 | Como usuario registrado, quiero unirme a un grupo familiar mediante un código de invitación válido. | completada | David Sanchez | Unirse a grupo |
+| HUS-006 | Como administrador, quiero crear una tarea doméstica asignándole miembro, fecha, prioridad y título. | completada | Camila Torres | Crear tarea |
+| HU-009 | Como miembro, quiero visualizar el tablero completo de tareas del hogar. | completada | Camila Torres | Tablero de tareas |
+| HU-015 | Como miembro, quiero cambiar el estado de mis tareas asignadas. | completada | Camila Torres | Tablero de tareas |
+| HUS-016 | Como administrador, quiero poder modificar el estado de cualquier tarea del sistema. | completada | Camila Torres | Tablero de tareas |
 
-**Nota:** Sprint 2 comprende **3 pantallas principales**:
-
-1. **Unirse a grupo** — HUS-022 ✅ COMPLETADA
-2. **Crear tarea** — HUS-006 ✅ COMPLETADA
-3. **Tablero de tareas** — HU-009, HU-015, HUS-016 (gestión de estados) ✅ COMPLETADA
-
-### **Sprint 3**  EN DESARROLLO
+### **Sprint 3** — EN DESARROLLO
 
 | ID | Descripción | Estado | Responsable | Pantalla |
 | ---- | ------------- | -------- | ------------- | -------- |
-| HUS-018 | Como usuario registrado, quiero restablecer mi contraseña ingresando correo y PIN de 5 dígitos, para recuperar acceso autónomamente. | pendiente | Salome Toro | Recuperar Contraseña |
-| HUS-024 | Como administrador, quiero eliminar miembros del grupo familiar, para revocar acceso a información compartida. | pendiente | Camila Torres | Detalles de Grupo |
-| HU-025 | Como miembro, quiero abandonar voluntariamente mi grupo familiar, para desvincularme de sus actividades. | pendiente | Camila Torres | Detalles de Grupo |
-| HU-032 | Como miembro, quiero visualizar ranking de desempeño de integrantes, para conocer contribuciones y comparar puntajes. | pendiente | Camila Torres | Detalles de Grupo |
-| HU-010 | Como miembro, quiero visualizar detalles completos de una tarea en modal, para conocer información sin abandonar el tablero. | pendiente | Alejandro Toro | Tablero (Modal Detalle Vista de Miembro) |
-| HUS-007 | Como administrador, quiero eliminar tareas del tablero, para descartar actividades innecesarias. | pendiente | David Sánchez | Tablero (Modal Detalle Vista de Admin) |
-| HU-008 | Como administrador, quiero editar información de tareas, para corregir errores y actualizar datos según necesidades. | pendiente | David Sánchez | Tablero (Modal Edición Vista de Admin) |
-| HU-011 | Como miembro, quiero filtrar tareas por estado/prioridad/miembro, para mejorar organización visual. | pendiente | Daniel Salas | Tablero (Componente FilterBar) |
-
-**Nota:** Sprint 3 comprende **3 pantallas principales** + refactorización:
-
-1. **Recuperar Contraseña** — HUS-018
-2. **Detalles de Grupo** — HUS-024, HU-025, HU-032 (miembros + ranking + invitar)
-3. **Tablero Mejorado** — HU-010, HU-011, HUS-007 (+ FilterBar, TaskDetailModal)
+| HUS-018 | Como usuario registrado, quiero restablecer mi contraseña ingresando correo y PIN de 5 dígitos. | pendiente | Salome Toro | Recuperar Contraseña |
+| HUS-024 | Como administrador, quiero eliminar miembros del grupo familiar. | pendiente | Camila Torres | Detalles de Grupo |
+| HU-025 | Como miembro, quiero abandonar voluntariamente mi grupo familiar. | pendiente | Camila Torres | Detalles de Grupo |
+| HU-032 | Como miembro, quiero visualizar ranking de desempeño de integrantes. | pendiente | Camila Torres | Detalles de Grupo |
+| HU-010 | Como miembro, quiero visualizar detalles completos de una tarea en modal sin abandonar el tablero. | pantalla lista | Alejandro Toro | Tablero (TaskDetailModal) |
+| HUS-007 | Como administrador, quiero eliminar tareas del tablero. | pendiente | David Sánchez | Tablero (Modal Detalle Vista de Admin) |
+| HU-008 | Como administrador, quiero editar información de tareas. | pantalla lista | David Sánchez | Tablero (TaskEditModal) |
+| HU-011 | Como miembro, quiero filtrar tareas por estado/prioridad/miembro. | pendiente | Daniel Salas | Tablero (Componente FilterBar) |
 
 ---
 
 ## DIAGRAMA DE BD — ENTIDADES PRINCIPALES
-
-> Resume las entidades del diagrama para que la IA genere mocks y services coherentes con la BD real.
 
 ### Entidades y sus campos (formato frontend)
 
@@ -257,15 +253,13 @@
 | MiembroGrupo | id (number), usuarioId (number), grupoId (number), rolId (number), puntaje (number), racha (number), fechaUnion (string, ISO date) |
 | Tarea | id (number), titulo (string), descripcion (string), grupoId (number), creadoPor (number), asignadoA (number), prioridadId (number), estadoId (number), fechaLimite (string, ISO date), fechaCreacion (string, ISO date), fechaFinalizacion (string \| null), fechaActualizacion (string, ISO date) |
 | Estado | id (number), nombre (string), categoriaEstadoId (number) |
-| CategoriaEstado | id (number), nombre (string) — agrupa estados (ej: "En curso", "Finalizado") |
-| Prioridad | id (number), nombre (string) — valores esperados: "Alta", "Media", "Baja" |
+| CategoriaEstado | id (number), nombre (string) |
+| Prioridad | id (number), nombre (string) |
 | Comentario | id (number), tareaId (number), usuarioId (number), comentario (string), creadoEn (string, ISO date) |
-| Categoria | id (number), nombre (string) — etiquetas temáticas para tareas |
-| TareaCategoria | id (number), tareaId (number), categoriaId (number) — tabla intermedia M:N |
+| Categoria | id (number), nombre (string) |
+| TareaCategoria | id (number), tareaId (number), categoriaId (number) |
 | ReglaPuntaje | id (number), puntosMinimos (number), puntosMaximos (number), nombreNivel (string), descripcion (string) |
 | ReglaRacha | id (number), diasMinimos (number), diasMaximos (number), nombreRacha (string), descripcion (string) |
-
----
 
 ### Relaciones entre entidades
 
@@ -279,7 +273,7 @@
 - Una **Tarea** puede tener muchos **Comentarios**
 - Un **Comentario** pertenece a un **Usuario**
 - Una **Tarea** puede tener muchas **Categorias** (a través de TareaCategoria)
-- **ReglaPuntaje** y **ReglaRacha** son tablas de configuración del sistema de gamificación; no tienen FK directas pero se aplican al campo `puntaje` y `racha` de MiembroGrupo
+- **ReglaPuntaje** y **ReglaRacha** son tablas de configuración del sistema de gamificación
 
 ---
 
@@ -294,10 +288,11 @@
 
 ### DECISIONES SPRINT 3
 
-- **Recuperar Contraseña (HUS-018)**: Rate limit (3 intentos / 10 min, bloqueo 15 min) se maneja en **pantalla con `useRateLimit()`**
+- **Recuperar Contraseña (HUS-018)**: Rate limit (3 intentos / 10 min, bloqueo 15 min) se maneja en pantalla con `useRateLimit()`.
 - **Eliminar Miembro (HUS-024)**: Bloquea si el miembro tiene tareas PENDIENTE/EN_PROGRESO/VENCIDA. Solo permite eliminar si todas están COMPLETADA o sin tareas.
-- **Ranking (HU-032)**: Se calcula dinámicamente en mock. Filtra miembrosGrupo × grupoId, suma tareasCompletadas (estado COMPLETADA), ordena por puntaje DESC → tareasCompletadas DESC, asigna puesto.
-- **Importaciones agregadas**: `groupService.js` importa `tareas` desde `/mocks/tareas.js` para validar tareas activas y calcular ranking.
+- **Ranking (HU-032)**: Se calcula dinámicamente en mock. Filtra miembrosGrupo × grupoId, suma tareasCompletadas, ordena por puntaje DESC → tareasCompletadas DESC, asigna puesto.
+- **TaskEditModal (HU-008)**: COMPLETADA → todo bloqueado. VENCIDA → fecha límite bloqueada, resto editable. Confirma guardado con `ConfirmationModal`. El padre conecta `onGuardar` con `taskService.actualizarTarea`.
+- **TaskDetailModal (HU-010)**: Solo lectura. Avatar generado con iniciales de `tarea.asignadoA`. Prop `error` muestra banner sin cerrar el modal. Datos vienen del tablero padre, no hace fetch propio.
 
 ### CONFIGURACIÓN
 
@@ -306,13 +301,6 @@
 | `lib/api.js` | Config central de API. Cambiar `USE_MOCK = false` para conectar al backend real. Requiere `NEXT_PUBLIC_API_URL` en `.env.local` |
 | `lib/jwt.js` | Utilidades para manejo de JWT: validar expiración, calcular tiempo restante, decodificar payload |
 | `lib/validators.js` | Validaciones centralizadas para formularios: email, contraseña, nombre, PIN, etc. |
-
-### DECISIONES HU-002
-
-- El bloqueo por 5 intentos fallidos se maneja en **frontend** con `localStorage` (claves: `hs_login_intentos`, `hs_login_bloqueo_hasta`). Cuando el backend esté listo, puede retornar HTTP 429/423 y el bloqueo frontend queda como respaldo.
-- `cargarGrupo()` puede retornar `{ ok: false }` después de un login exitoso — eso **no es un error**, es el Escenario 6 (usuario sin grupo). No tratar como excepción.
-- El Escenario 7 (redirigir al dashboard si usuario con grupo entra a `/bienvenida`) debe implementarse en `app/(app)/bienvenida/page.jsx`.
-- El countdown del bloqueo se actualiza en tiempo real y persiste después de recargar, mediante useRateLimit.js compartido entre login y unirse a grupo.
 
 ---
 
@@ -329,11 +317,13 @@
 | 02/04/26 | David Sanchez | HU-002: pantalla de login con mocks. Notas de acoplamiento GroupContext/AuthContext |
 | 03/04/26 | Camila Torres | Ajustes de consistencia y realización de pruebas |
 | 13/04/26 | Camila Torres | Ajustes de consistencia y arreglo de bug en relación al login |
-| 20/04/26 | Camila Torres | Arreglo y revisión del sprint 1 completado: Todas las HU (001-005) implementadas y revisada. Documentación de ProtectedRoute, lib/jwt.js y lib/validators.js |
-| 20/04/26 | Camila Torres | Creación de Sprint 2: Definición de 5 HUs (HU-022, HU-006, HU-009, HU-015, HU-016) agrupadas en 3 pantallas principales |
+| 20/04/26 | Camila Torres | Arreglo y revisión del sprint 1 completado. Documentación de ProtectedRoute, lib/jwt.js y lib/validators.js |
+| 20/04/26 | Camila Torres | Creación de Sprint 2: Definición de HUs agrupadas en 3 pantallas principales |
 | 22/04/26 | Camila Torres | HUS-022 implementada: pantalla Unirse a Grupo con validación de código, verificación de membresía y rate limiting |
 | 22/04/26 | Camila Torres | Refactor de login para usar useRateLimit compartido y countdown en tiempo real |
-| 24/04/26 | Camila Torres | HUS-016, HU-009 y HU-015 implementadas: pantalla de tablero con tarjetas de tareas y botones de cambio de estado, verificando membresía |
-| 27/04/26 | Camila Torres | HUS-006 completada: pantalla Crear Tarea con validaciones frontend, límites de caracteres, modal de logout, protección de admin y redireccionamiento a tablero |
-| 18/05/26 | Camila Torres | Revisión y actualización de CONTEXT_IA.md: Agregado DateLimitModal, actualización de estado del proyecto, verificación de integridad de documentación y planificación Sprint 3 |
-| 19/05/26 | Camila Torres | **Sprint 3 Servicios**: Implementadas todas las funciones backend mock: `recuperarContrasena()`, `eliminarMiembro()`, `abandonarGrupo()` (2 flujos), `obtenerRanking()`, `eliminarTarea()`. Actualizado mocks/tareas.js con `eliminada: false`. |
+| 24/04/26 | Camila Torres | HUS-016, HU-009 y HU-015 implementadas: tablero con tarjetas de tareas y botones de cambio de estado |
+| 27/04/26 | Camila Torres | HUS-006 completada: pantalla Crear Tarea con validaciones frontend, modal de logout, protección de admin |
+| 18/05/26 | Camila Torres | Revisión y actualización de CONTEXT_IA.md: Agregado DateLimitModal, planificación Sprint 3 |
+| 19/05/26 | Camila Torres | Sprint 3 Servicios: recuperarContrasena, eliminarMiembro, abandonarGrupo, obtenerRanking, eliminarTarea |
+| 23/05/26 | David Sanchez | HU-008: TaskEditModal en /components/ui/. Edición de tarea con bloqueo por estado y confirmación de guardado |
+| 23/05/26 | Alejandro Toro | HU-010: TaskDetailModal en /components/ui/. Modal de solo lectura con skeleton, avatar de iniciales y manejo de error |
