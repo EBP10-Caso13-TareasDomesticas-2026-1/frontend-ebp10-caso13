@@ -327,3 +327,5 @@
 | 19/05/26 | Camila Torres | Sprint 3 Servicios: recuperarContrasena, eliminarMiembro, abandonarGrupo, obtenerRanking, eliminarTarea |
 | 23/05/26 | David Sanchez | HU-008: TaskEditModal en /components/ui/. Edición de tarea con bloqueo por estado y confirmación de guardado |
 | 23/05/26 | Alejandro Toro | HU-010: TaskDetailModal en /components/ui/. Modal de solo lectura con skeleton, avatar de iniciales y manejo de error |
+| 23/05/26 | salomé Toro | HU-018:Pantalla Recuperar Contraseña|
+
