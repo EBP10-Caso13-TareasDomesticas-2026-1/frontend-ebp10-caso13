@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import { X, Save, AlertCircle, Lock } from "lucide-react";
 import Button from "@/components/ui/Button";
-import Input from "@/components/ui/Input";
 import ConfirmationModal from "@/components/ui/ConfirmationModal";
 import { getEstados, getPrioridades } from "@/lib/taskHelpers";
 
@@ -40,6 +39,12 @@ function formatearParaInput(fechaISO) {
   return fechaISO.slice(0, 16);
 }
 
+function obtenerMinDateTimeLocal() {
+  const ahora = new Date();
+  const pad = (n) => String(n).padStart(2, "0");
+  return `${ahora.getFullYear()}-${pad(ahora.getMonth() + 1)}-${pad(ahora.getDate())}T${pad(ahora.getHours())}:${pad(ahora.getMinutes())}`;
+}
+
 // ─── COMPONENTE ──────────────────────────────────────────────────────────────
 
 /**
@@ -53,19 +58,26 @@ function formatearParaInput(fechaISO) {
  * @param {Function} onGuardar     - Callback al confirmar guardado: recibe (idTarea, datosActualizados)
  * @param {boolean}  loading       - Estado de carga externo (mientras se guarda)
  */
-export default function TaskEditModal({ isOpen, tarea, onClose, onGuardar, loading = false }) {
+export default function TaskEditModal({
+  isOpen,
+  tarea,
+  miembros = [],
+  onClose,
+  onGuardar,
+  loading = false,
+}) {
   // ── Estado del formulario ──
   const [form, setForm] = useState({
-    titulo: "",
+    nombre: "",
     estado: "",
     prioridad: "",
-    asignadoA: "",
+    idUsuarioAsignado: "",
     fechaLimite: "",
     descripcion: "",
   });
 
   // ── Errores por campo ──
-  const [errores, setErrores] = useState({ titulo: "" });
+  const [errores, setErrores] = useState({ nombre: "", idUsuarioAsignado: "" });
 
   // ── Estado del modal de confirmación ──
   const [mostrarConfirmacion, setMostrarConfirmacion] = useState(false);
@@ -84,14 +96,15 @@ export default function TaskEditModal({ isOpen, tarea, onClose, onGuardar, loadi
   useEffect(() => {
     if (tarea && isOpen) {
       setForm({
-        titulo: tarea.titulo ?? "",
+        nombre: tarea.nombre ?? tarea.titulo ?? "",
         estado: tarea.estado ?? "",
         prioridad: tarea.prioridad ?? "",
-        asignadoA: tarea.asignadoA ?? "",
+        idUsuarioAsignado:
+          tarea.idUsuarioAsignado ?? tarea.asignadoA?.id ?? tarea.asignadoA ?? "",
         fechaLimite: formatearParaInput(tarea.fechaLimite),
         descripcion: tarea.descripcion ?? "",
       });
-      setErrores({ titulo: "" });
+      setErrores({ nombre: "", idUsuarioAsignado: "" });
       setHayCambios(false);
     }
   }, [tarea, isOpen]);
@@ -104,7 +117,7 @@ export default function TaskEditModal({ isOpen, tarea, onClose, onGuardar, loadi
     const valor = e.target.value;
 
     // Límite de caracteres
-    if (campo === "titulo" && valor.length > MAX_TITULO) return;
+    if (campo === "nombre" && valor.length > MAX_TITULO) return;
     if (campo === "descripcion" && valor.length > MAX_DESCRIPCION) return;
 
     setForm((prev) => ({ ...prev, [campo]: valor }));
@@ -112,15 +125,45 @@ export default function TaskEditModal({ isOpen, tarea, onClose, onGuardar, loadi
     setHayCambios(true);
   };
 
-  const handleSelectChange = (campo) => (e) => {
-    setForm((prev) => ({ ...prev, [campo]: e.target.value }));
+  const seleccionarPrioridad = (prioridad) => {
+    setForm((prev) => ({ ...prev, prioridad }));
     setHayCambios(true);
   };
 
   const validarTodo = () => {
-    // Escenario 6: título obligatorio
-    if (!form.titulo.trim()) {
-      setErrores({ titulo: "El título es requerido para proceder." });
+    const fechaSeleccionada = form.fechaLimite ? new Date(form.fechaLimite) : null;
+    const ahora = new Date();
+    ahora.setSeconds(0, 0);
+
+    if (!form.nombre.trim()) {
+      setErrores((prev) => ({
+        ...prev,
+        nombre: "El nombre es requerido para proceder.",
+      }));
+      return false;
+    }
+
+    if (fechaSeleccionada && Number.isNaN(fechaSeleccionada.getTime())) {
+      setErrores((prev) => ({
+        ...prev,
+        fechaLimite: "La fecha límite no es válida.",
+      }));
+      return false;
+    }
+
+    if (fechaSeleccionada && fechaSeleccionada <= ahora) {
+      setErrores((prev) => ({
+        ...prev,
+        fechaLimite: "La fecha límite debe ser posterior a la fecha actual.",
+      }));
+      return false;
+    }
+
+    if (miembros.length > 0 && !form.idUsuarioAsignado) {
+      setErrores((prev) => ({
+        ...prev,
+        idUsuarioAsignado: "Debes seleccionar un miembro responsable.",
+      }));
       return false;
     }
     return true;
@@ -137,11 +180,13 @@ export default function TaskEditModal({ isOpen, tarea, onClose, onGuardar, loadi
   const handleConfirmarGuardado = async () => {
     setMostrarConfirmacion(false);
     await onGuardar(tarea.idTarea ?? tarea.id, {
-      titulo: form.titulo.trim(),
+      nombre: form.nombre.trim(),
       estado: form.estado,
       prioridad: form.prioridad,
-      asignadoA: form.asignadoA,
-      fechaLimite: form.fechaLimite ? new Date(form.fechaLimite).toISOString() : tarea.fechaLimite,
+      idUsuarioAsignado: form.idUsuarioAsignado ? Number(form.idUsuarioAsignado) : null,
+      fechaLimite: form.fechaLimite
+        ? new Date(form.fechaLimite).toISOString()
+        : tarea.fechaLimite,
       descripcion: form.descripcion.trim(),
     });
   };
@@ -172,27 +217,27 @@ export default function TaskEditModal({ isOpen, tarea, onClose, onGuardar, loadi
             {/* Título editable o en lectura */}
             {bloqueo.todo ? (
               <h2 className="text-base font-semibold text-foreground flex-1 pr-4 truncate">
-                {form.titulo}
+                {form.nombre}
               </h2>
             ) : (
               <div className="flex-1 pr-4">
                 <input
                   type="text"
-                  value={form.titulo}
-                  onChange={handleChange("titulo")}
-                  placeholder="Título de la tarea"
+                  value={form.nombre}
+                  onChange={handleChange("nombre")}
+                  placeholder="Nombre de la tarea"
                   maxLength={MAX_TITULO}
                   disabled={loading}
                   className={`w-full text-base font-semibold text-foreground bg-transparent border-b-2 outline-none pb-1 transition-colors
-                    ${errores.titulo
+                    ${errores.nombre
                       ? "border-error placeholder:text-error/50"
                       : "border-transparent focus:border-primary"
                     }`}
                 />
-                {errores.titulo && (
+                {errores.nombre && (
                   <p className="text-xs text-error mt-1 flex items-center gap-1">
                     <AlertCircle size={12} />
-                    {errores.titulo}
+                    {errores.nombre}
                   </p>
                 )}
               </div>
@@ -219,45 +264,40 @@ export default function TaskEditModal({ isOpen, tarea, onClose, onGuardar, loadi
           <div className="px-6 py-4 flex flex-col gap-4">
 
             {/* Fila: Estado + Prioridad */}
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <div className="flex flex-col gap-1">
                 <label className="text-xs font-medium text-secondary uppercase tracking-wide">
                   Estado
                 </label>
-                <select
-                  value={form.estado}
-                  onChange={handleSelectChange("estado")}
-                  disabled={bloqueo.todo || loading}
-                  className="border border-border rounded-lg px-3 py-2 text-sm text-foreground bg-white
-                    focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary
-                    disabled:bg-background disabled:text-secondary disabled:cursor-not-allowed transition-colors"
-                >
-                  {estados.map((e) => (
-                    <option key={e.nombre} value={e.nombre}>
-                      {e.label}
-                    </option>
-                  ))}
-                </select>
+                <div className="rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground">
+                  {estados.find((e) => e.nombre === form.estado)?.label || form.estado}
+                </div>
               </div>
 
               <div className="flex flex-col gap-1">
                 <label className="text-xs font-medium text-secondary uppercase tracking-wide">
                   Prioridad
                 </label>
-                <select
-                  value={form.prioridad}
-                  onChange={handleSelectChange("prioridad")}
-                  disabled={bloqueo.todo || loading}
-                  className="border border-border rounded-lg px-3 py-2 text-sm text-foreground bg-white
-                    focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary
-                    disabled:bg-background disabled:text-secondary disabled:cursor-not-allowed transition-colors"
-                >
-                  {prioridades.map((p) => (
-                    <option key={p.nombre} value={p.nombre}>
-                      {p.label}
-                    </option>
-                  ))}
-                </select>
+                <div className="flex flex-wrap gap-2">
+                  {prioridades.map((p) => {
+                    const activa = form.prioridad === p.nombre;
+                    return (
+                      <button
+                        key={p.nombre}
+                        type="button"
+                        onClick={() => seleccionarPrioridad(p.nombre)}
+                        disabled={bloqueo.todo || loading}
+                        className={`px-4 py-2 rounded-lg font-medium transition ${
+                          activa
+                            ? "bg-primary text-white"
+                            : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                        } disabled:opacity-50 disabled:cursor-not-allowed`}
+                      >
+                        {p.label}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
             </div>
 
@@ -267,16 +307,27 @@ export default function TaskEditModal({ isOpen, tarea, onClose, onGuardar, loadi
                 <label className="text-xs font-medium text-secondary uppercase tracking-wide">
                   Asignado a
                 </label>
-                <input
-                  type="text"
-                  value={form.asignadoA}
-                  onChange={handleChange("asignadoA")}
-                  disabled={bloqueo.todo || loading}
-                  placeholder="Nombre del miembro"
+                <select
+                  value={form.idUsuarioAsignado}
+                  onChange={handleChange("idUsuarioAsignado")}
+                  disabled={bloqueo.todo || loading || miembros.length === 0}
                   className="border border-border rounded-lg px-3 py-2 text-sm text-foreground bg-white
                     focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary
                     disabled:bg-background disabled:text-secondary disabled:cursor-not-allowed transition-colors"
-                />
+                >
+                  <option value="">Selecciona un miembro</option>
+                  {miembros.map((miembro) => (
+                    <option key={miembro.usuarioId} value={miembro.usuarioId}>
+                      {miembro.nombre}
+                    </option>
+                  ))}
+                </select>
+                {errores.idUsuarioAsignado && (
+                  <p className="text-xs text-error mt-1 flex items-center gap-1">
+                    <AlertCircle size={12} />
+                    {errores.idUsuarioAsignado}
+                  </p>
+                )}
               </div>
 
               {/* Escenario 4: fecha límite bloqueada en VENCIDA y COMPLETADA */}
@@ -290,10 +341,17 @@ export default function TaskEditModal({ isOpen, tarea, onClose, onGuardar, loadi
                   value={form.fechaLimite}
                   onChange={handleChange("fechaLimite")}
                   disabled={bloqueo.fechaLimite || bloqueo.todo || loading}
+                  min={obtenerMinDateTimeLocal()}
                   className="border border-border rounded-lg px-3 py-2 text-sm text-foreground bg-white
                     focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary
                     disabled:bg-background disabled:text-secondary disabled:cursor-not-allowed transition-colors"
                 />
+                {errores.fechaLimite && (
+                  <p className="text-xs text-error mt-1 flex items-center gap-1">
+                    <AlertCircle size={12} />
+                    {errores.fechaLimite}
+                  </p>
+                )}
               </div>
             </div>
 

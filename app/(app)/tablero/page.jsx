@@ -6,6 +6,7 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import AppLayout from "@/components/layout/AppLayout";
 import TaskColumn from "@/components/ui/TaskColumn";
 import TaskDetailModal from "@/components/ui/TaskDetailModal";
+import TaskEditModal from "@/components/ui/TaskEditModal";
 import Button from "@/components/ui/Button";
 import LogOut from "@/components/ui/LogOut";
 import { useAuth } from "@/hooks/useAuth";
@@ -26,7 +27,10 @@ function TableroContent() {
   // ─── Estado para TaskDetailModal ─────────────────────────────
   const [tareaSeleccionada, setTareaSeleccionada] = useState(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [tareaEnEdicion, setTareaEnEdicion] = useState(null);
   const [loadingEliminar, setLoadingEliminar] = useState(false);
+  const [loadingEdicion, setLoadingEdicion] = useState(false);
 
   const esAdmin =
     rolActual === "admin" ||
@@ -182,6 +186,58 @@ function TableroContent() {
   const handleCerrarDetalle = () => {
     setShowDetailModal(false);
     setTareaSeleccionada(null);
+  };
+
+  const handleAbrirEdicion = (tarea) => {
+    setTareaEnEdicion(tarea);
+    setShowDetailModal(false);
+    setShowEditModal(true);
+  };
+
+  const handleCerrarEdicion = () => {
+    setShowEditModal(false);
+    setTareaEnEdicion(null);
+    if (tareaSeleccionada) {
+      setShowDetailModal(true);
+    }
+  };
+
+  const handleGuardarEdicion = async (idTarea, datosActualizados) => {
+    const prevTareas = tareas;
+    try {
+      setLoadingEdicion(true);
+      setError(null);
+
+      const tareaActualizada = await taskService.actualizarTarea(
+        idTarea,
+        datosActualizados,
+        token
+      );
+
+      const tareaConMiembros = enriquecerTareasConMiembros(
+        [tareaActualizada],
+        grupo?.miembros || []
+      )[0];
+
+      setTareas((prev) =>
+        prev.map((t) =>
+          t.idTarea === idTarea
+            ? { ...t, ...tareaConMiembros }
+            : t
+        )
+      );
+      setTareaSeleccionada(tareaConMiembros);
+      setTareaEnEdicion(null);
+      setShowEditModal(false);
+      setShowDetailModal(true);
+    } catch (err) {
+      console.error("Error guardando tarea:", err);
+      setError(err.message || "No se pudo guardar la tarea. Intenta nuevamente.");
+      setTareas(prevTareas);
+      throw err;
+    } finally {
+      setLoadingEdicion(false);
+    }
   };
 
   /**
@@ -349,10 +405,16 @@ function TableroContent() {
         loading={loadingEliminar}
         onClose={handleCerrarDetalle}
         onEliminar={handleEliminarTarea}
-        onEditar={(tarea) => {
-          // TODO: HU-008 — abrir flujo de edición
-          console.log("Editar tarea:", tarea);
-        }}
+        onEditar={handleAbrirEdicion}
+      />
+
+      <TaskEditModal
+        isOpen={showEditModal}
+        tarea={tareaEnEdicion}
+        miembros={grupo?.miembros || []}
+        loading={loadingEdicion}
+        onClose={handleCerrarEdicion}
+        onGuardar={handleGuardarEdicion}
       />
 
       {/* Modal logout */}
