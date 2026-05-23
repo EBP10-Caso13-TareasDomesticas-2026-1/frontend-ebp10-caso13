@@ -2,12 +2,7 @@
 
 import { createContext, useContext, useState, useCallback } from "react";
 import { useAuth } from "@/hooks/useAuth";
-import {
-  obtenerGrupoDeUsuario,
-  crearGrupo,
-  unirseConCodigo,
-  obtenerGrupo,
-} from "@/services/groupService";
+import groupService from "@/services/groupService";
 
 /**
  * GroupContext
@@ -64,15 +59,13 @@ export function GroupProvider({ children }) {
     setLoading(true);
     try {
       // Devuelve el MiembroGrupo con info del grupo y rol
-      const miembroData = await obtenerGrupoDeUsuario(usuario.idUsuario, token);
+      const miembroData = await groupService.obtenerGrupoDeUsuario(usuario.idUsuario, token);
 
-      // Con el grupoId obtenemos el detalle completo del grupo
-      const grupoData = await obtenerGrupo(miembroData.grupoId, token);
+      const grupoData = await groupService.obtenerGrupo(miembroData.grupoId, token);
 
       setGrupo(grupoData);
-      // obtenerGrupoDeUsuario devuelve un solo miembro; los demás se cargan si se necesitan
-      setMiembros([miembroData]);
-      setRolActual(_resolverRol([miembroData]));
+      setMiembros(miembroData.miembros || [miembroData]);
+      setRolActual(_resolverRol(miembroData.miembros || [miembroData]));
       return { ok: true };
     } catch (err) {
       const mensaje = err.message ?? "Error al cargar el grupo";
@@ -94,7 +87,7 @@ export function GroupProvider({ children }) {
       _resetError();
       setLoading(true);
       try {
-        const grupoCreado = await crearGrupo(data, token, usuario.idUsuario);
+        const grupoCreado = await groupService.crearGrupo(data, token, usuario.idUsuario);
         setGrupo(grupoCreado);
         setRolActual("admin");
         setMiembros([]);
@@ -121,10 +114,10 @@ export function GroupProvider({ children }) {
       _resetError();
       setLoading(true);
       try {
-        const miembroData = await unirseConCodigo(codigoInvitacion, token);
-        const grupoData = await obtenerGrupo(miembroData.grupoId, token);
+        const miembroData = await groupService.unirseConCodigo(codigoInvitacion, token);
+        const grupoData = await groupService.obtenerGrupo(miembroData.grupoId, token);
         setGrupo(grupoData);
-        setMiembros([miembroData]);
+        setMiembros(grupoData.miembros || [miembroData]);
         setRolActual("miembro");
         return { ok: true };
       } catch (err) {
