@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import AppLayout from "@/components/layout/AppLayout";
@@ -9,9 +9,13 @@ import TaskDetailModal from "@/components/ui/TaskDetailModal";
 import TaskEditModal from "@/components/ui/TaskEditModal";
 import Button from "@/components/ui/Button";
 import LogOut from "@/components/ui/LogOut";
+import FilterBar from "@/components/ui/FilterBar";
 import { useAuth } from "@/hooks/useAuth";
 import { useGroup } from "@/hooks/useGroup";
 import taskService from "@/services/taskService";
+import { estados as estadosList } from "@/mocks/estados";
+import { prioridades as prioridadesList } from "@/mocks/prioridades";
+import { FileSearch } from "lucide-react";
 
 function TableroContent() {
   const router = useRouter();
@@ -23,6 +27,8 @@ function TableroContent() {
   const [loadingEstado, setLoadingEstado] = useState(false);
   const [error, setError] = useState(null);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+
+  const [filtros, setFiltros] = useState({ estados: [], prioridades: [], miembros: [] });
 
   // ─── Estado para TaskDetailModal ─────────────────────────────
   const [tareaSeleccionada, setTareaSeleccionada] = useState(null);
@@ -95,10 +101,25 @@ function TableroContent() {
           grupo.id,
           token
         );
+        // Enriquecer tareas con miembros y normalizar IDs de estado/prioridad
         const tareasEnriquecidas = enriquecerTareasConMiembros(
           tareasData,
           grupo.miembros || []
-        );
+        ).map((t) => {
+          const estadoNombre = String(t.estado || "").toUpperCase().trim();
+          const prioridadNombre = String(t.prioridad || "").toUpperCase().trim();
+          const estadoObj = estadosList.find(
+            (e) => String(e.nombre || "").toUpperCase().trim() === estadoNombre
+          );
+          const prioridadObj = prioridadesList.find(
+            (p) => String(p.nombre || "").toUpperCase().trim() === prioridadNombre
+          );
+          return {
+            ...t,
+            estadoId: estadoObj?.id ?? null,
+            prioridadId: prioridadObj?.id ?? null,
+          };
+        });
         setTareas(tareasEnriquecidas);
       } catch (err) {
         console.error("Error cargando tareas:", err);
@@ -144,7 +165,23 @@ function TableroContent() {
     };
   };
 
-  const { pendientes, enProgreso, completadas } = clasificarTareas(tareas);
+  const tareasFiltradas = useMemo(() => {
+    const estadosIds = filtros.estados.map((i) => String(i));
+    const prioridadesIds = filtros.prioridades.map((i) => String(i));
+    const miembrosIds = filtros.miembros.map((i) => String(i));
+
+    return tareas.filter((t) => {
+      if (estadosIds.length > 0 && !estadosIds.includes(String(t.estadoId))) return false;
+      if (prioridadesIds.length > 0 && !prioridadesIds.includes(String(t.prioridadId))) return false;
+      if (miembrosIds.length > 0 && !miembrosIds.includes(String(t.idUsuarioAsignado))) return false;
+      return true;
+    });
+  }, [tareas, filtros]);
+
+  const tieneFiltrosActivos =
+    filtros.estados.length > 0 || filtros.prioridades.length > 0 || filtros.miembros.length > 0;
+
+  const { pendientes, enProgreso, completadas } = clasificarTareas(tareasFiltradas);
 
   // ─── Handlers ────────────────────────────────────────────────
 
@@ -351,6 +388,33 @@ function TableroContent() {
         {error && (
           <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
             {error}
+          </div>
+        )}
+
+        <div className="mb-6">
+          <FilterBar
+            filtros={filtros}
+            onChangeFiltros={setFiltros}
+            miembros={grupo?.miembros || []}
+          />
+        </div>
+
+        
+
+        {/* Sin resultados */}
+        {!loading && !loadingGroup && tareasFiltradas.length === 0 && (
+          <div className="flex flex-col items-center justify-center py-16 text-center bg-white rounded-lg border border-border">
+            <FileSearch size={48} className="text-secondary-light mb-4" />
+            <h3 className="text-lg font-semibold text-secondary mb-1">
+              {tieneFiltrosActivos
+                ? "No hay tareas que coincidan con los filtros"
+                : "No hay tareas en el tablero"}
+            </h3>
+            <p className="text-sm text-secondary-light max-w-md">
+              {tieneFiltrosActivos
+                ? "Intenta modificar o limpiar los filtros para ver mas resultados."
+                : "Crea una nueva tarea para comenzar a organizar tu hogar."}
+            </p>
           </div>
         )}
 
