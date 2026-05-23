@@ -35,7 +35,10 @@ export default function MemberCard({
         {/* Posición o Podio */}
         <div className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 font-semibold text-sm">
           {podioIcon ? (
-            <span className="text-2xl">{podioIcon}</span>
+            <div className="flex flex-col items-center justify-center leading-none">
+              <span className="text-xl" aria-hidden="true">{podioIcon}</span>
+              <span className="text-[10px] text-gray-600 mt-1">{member.puesto}°</span>
+            </div>
           ) : (
             <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center text-gray-700 font-bold text-xs">
               {member.puesto}°

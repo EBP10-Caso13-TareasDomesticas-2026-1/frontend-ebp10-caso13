@@ -14,7 +14,7 @@ const generarCodigo = () => Math.random().toString(36).substring(2, 8).toUpperCa
 const resolverGrupo = (grupo) => ({
   ...grupo,
   miembros: miembrosGrupo
-    .filter((m) => m.grupoId === grupo.id)
+    .filter((m) => m.grupoId === grupo.id && m.activo !== false)
     .map((m) => {
       const usuario = usuarios.find((u) => u.idUsuario === m.usuarioId);
       return {
@@ -42,7 +42,7 @@ const resolverGrupo = (grupo) => ({
 const mock = {
   // HU-002 escenario 6 / HU-004 escenario 4
   async obtenerGrupoDeUsuario(usuarioId, token) {
-    return miembrosGrupo.find((m) => m.usuarioId === usuarioId) || null;
+    return miembrosGrupo.find((m) => m.usuarioId === usuarioId && m.activo !== false) || null;
   },
 
   // HU-004
@@ -67,6 +67,8 @@ const mock = {
     puntaje: 0,
     racha: 0,
     fechaUnion: new Date().toISOString(),
+    activo: true,
+    fechaSalida: null,
   });
   return nuevoGrupo;
 },
@@ -78,6 +80,21 @@ const mock = {
   // Quita checks — el backend los maneja
   const grupo = grupos.find((g) => g.codigoInvitacion === codigoInvitacion);
   if (!grupo) throw new Error("Código inválido o expirado...");
+
+  const membresiaInactiva = miembrosGrupo.find(
+    (m) =>
+      m.usuarioId === usuarioId &&
+      m.grupoId === grupo.id &&
+      m.activo === false
+  );
+
+  if (membresiaInactiva) {
+    membresiaInactiva.activo = true;
+    membresiaInactiva.fechaSalida = null;
+    membresiaInactiva.rolId = 2;
+    return membresiaInactiva;
+  }
+
   const nuevaMembresia = {
     id: miembrosGrupo.length + 1,
     usuarioId,
@@ -86,6 +103,8 @@ const mock = {
     puntaje: 0,
     racha: 0,
     fechaUnion: new Date().toISOString(),
+    activo: true,
+    fechaSalida: null,
   };
   miembrosGrupo.push(nuevaMembresia);
   return nuevaMembresia;
@@ -102,7 +121,9 @@ const mock = {
   // HUS-024 — Eliminar miembro del grupo
   async eliminarMiembro(idMiembroGrupo, _token) {
     await delay(600);
-    const miembro = miembrosGrupo.find((m) => m.id === Number(idMiembroGrupo));
+    const miembro = miembrosGrupo.find(
+      (m) => m.id === Number(idMiembroGrupo) && m.activo !== false
+    );
     if (!miembro) throw new Error("Miembro no encontrado.");
 
     // Validar que no tiene tareas PENDIENTE, EN_PROGRESO o VENCIDA dentro del mismo grupo
@@ -118,9 +139,9 @@ const mock = {
       throw new Error("El miembro tiene tareas pendientes. Completa o reasigna antes de eliminar.");
     }
 
-    // Remover del array
-    const index = miembrosGrupo.indexOf(miembro);
-    miembrosGrupo.splice(index, 1);
+    // Marcar membresía como inactiva para conservar historial
+    miembro.activo = false;
+    miembro.fechaSalida = new Date().toISOString();
 
     return { mensaje: "Miembro eliminado exitosamente." };
   },
@@ -130,7 +151,9 @@ const mock = {
   // Flujo 2: Admin con delegación (con nuevo admin) → PUT (cambiar rol) + DELETE
   async abandonarGrupo(idMiembroGrupo, idMiembroNuevoAdmin, _token) {
     await delay(600);
-    const miembroAbandonar = miembrosGrupo.find((m) => m.id === Number(idMiembroGrupo));
+    const miembroAbandonar = miembrosGrupo.find(
+      (m) => m.id === Number(idMiembroGrupo) && m.activo !== false
+    );
     if (!miembroAbandonar) throw new Error("Miembro no encontrado.");
 
     // Validación común: verificar tareas activas
@@ -148,14 +171,17 @@ const mock = {
     if (!idMiembroNuevoAdmin) {
       if (miembroAbandonar.rolId === 1) {
         const otrosMiembros = miembrosGrupo.filter(
-          (m) => m.grupoId === miembroAbandonar.grupoId && m.id !== miembroAbandonar.id
+          (m) =>
+            m.grupoId === miembroAbandonar.grupoId &&
+            m.id !== miembroAbandonar.id &&
+            m.activo !== false
         );
         if (otrosMiembros.length > 0) {
           throw new Error("Debes delegar el rol de administrador antes de abandonar el grupo.");
         }
       }
-      const index = miembrosGrupo.indexOf(miembroAbandonar);
-      miembrosGrupo.splice(index, 1);
+      miembroAbandonar.activo = false;
+      miembroAbandonar.fechaSalida = new Date().toISOString();
       return { mensaje: "Has abandonado el grupo exitosamente." };
     }
 
@@ -164,7 +190,9 @@ const mock = {
       throw new Error("Solo administradores pueden delegar el rol. Usa abandonarGrupo sin nuevo admin para salir.");
     }
 
-    const miembroNuevoAdmin = miembrosGrupo.find((m) => m.id === Number(idMiembroNuevoAdmin));
+    const miembroNuevoAdmin = miembrosGrupo.find(
+      (m) => m.id === Number(idMiembroNuevoAdmin) && m.activo !== false
+    );
     if (!miembroNuevoAdmin) throw new Error("Nuevo administrador no encontrado.");
     if (miembroNuevoAdmin.grupoId !== miembroAbandonar.grupoId) {
       throw new Error("El nuevo administrador debe estar en el mismo grupo.");
@@ -176,9 +204,9 @@ const mock = {
     // Cambiar rol del nuevo admin a 1 (admin)
     miembroNuevoAdmin.rolId = 1;
 
-    // Remover al admin antiguo
-    const index = miembrosGrupo.indexOf(miembroAbandonar);
-    miembrosGrupo.splice(index, 1);
+    // Marcar inactivo al admin saliente
+    miembroAbandonar.activo = false;
+    miembroAbandonar.fechaSalida = new Date().toISOString();
 
     return { mensaje: "Has designado nuevo administrador y abandonado el grupo exitosamente." };
   },
@@ -189,7 +217,9 @@ const mock = {
     const grupoId = Number(idGrupo);
 
     // Filtrar miembros del grupo
-    const miembrosDelGrupo = miembrosGrupo.filter((m) => m.grupoId === grupoId);
+    const miembrosDelGrupo = miembrosGrupo.filter(
+      (m) => m.grupoId === grupoId && m.activo !== false
+    );
     if (miembrosDelGrupo.length === 0) throw new Error("Grupo no encontrado o sin miembros.");
 
     // Mapear miembros con datos de usuario y tareas completadas
@@ -219,20 +249,19 @@ const mock = {
       };
     });
 
-    // Ordenar por puntaje DESC, luego por tareasCompletadas DESC, luego por nombre ASC
+    // Ordenar por puntaje DESC y, en empate, por nombre ASC
     ranking.sort((a, b) => {
       if (b.puntaje !== a.puntaje) return b.puntaje - a.puntaje;
-      if (b.tareasCompletadas !== a.tareasCompletadas) return b.tareasCompletadas - a.tareasCompletadas;
       return a.nombre.localeCompare(b.nombre);
     });
 
-    // Asignar puestos considerando empates (mismo puntaje + mismas tareas = mismo puesto)
+    // Asignar puestos considerando empates (mismo puntaje = mismo puesto)
     ranking.forEach((miembro, index) => {
       if (index === 0) {
         miembro.puesto = 1;
       } else {
         const anterior = ranking[index - 1];
-        if (anterior.puntaje === miembro.puntaje && anterior.tareasCompletadas === miembro.tareasCompletadas) {
+        if (anterior.puntaje === miembro.puntaje) {
           miembro.puesto = anterior.puesto;
         } else {
           miembro.puesto = index + 1;

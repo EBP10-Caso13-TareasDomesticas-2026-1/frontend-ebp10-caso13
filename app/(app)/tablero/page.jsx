@@ -36,6 +36,16 @@ function TableroContent() {
         (m) => m.usuarioId === tarea.idUsuarioAsignado,
       );
 
+      if (!usuarioAsignado && tarea.asignadoA) {
+        return {
+          ...tarea,
+          asignadoA: {
+            ...tarea.asignadoA,
+            esExMiembro: true,
+          },
+        };
+      }
+
       return {
         ...tarea,
         asignadoA: usuarioAsignado
@@ -44,8 +54,9 @@ function TableroContent() {
             nombre: usuarioAsignado.nombre,
             correo: usuarioAsignado.correo,
             fotoPerfil: usuarioAsignado.fotoPerfil,
+            esExMiembro: false,
           }
-          : null,
+          : tarea.asignadoA || null,
       };
     });
   };

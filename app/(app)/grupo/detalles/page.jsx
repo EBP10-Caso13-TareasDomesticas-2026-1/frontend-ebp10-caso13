@@ -12,6 +12,26 @@ import { useAuth } from "@/hooks/useAuth";
 import { useGroup } from "@/hooks/useGroup";
 import groupService from "@/services/groupService";
 
+function normalizarRanking(rankingData = []) {
+  const lista = [...rankingData].sort((a, b) => {
+    if (b.puntaje !== a.puntaje) return b.puntaje - a.puntaje;
+    return (a.nombre || "").localeCompare(b.nombre || "", "es", {
+      sensitivity: "base",
+    });
+  });
+
+  lista.forEach((miembro, index) => {
+    if (index === 0) {
+      miembro.puesto = 1;
+      return;
+    }
+    const anterior = lista[index - 1];
+    miembro.puesto = anterior.puntaje === miembro.puntaje ? anterior.puesto : index + 1;
+  });
+
+  return lista;
+}
+
 function GroupDetailsContent() {
   const router = useRouter();
   const { usuario, token, logout } = useAuth();
@@ -28,6 +48,7 @@ function GroupDetailsContent() {
   const [selectedMemberId, setSelectedMemberId] = useState(null);
   const [selectedMemberName, setSelectedMemberName] = useState("");
   const [newAdminSelected, setNewAdminSelected] = useState(null);
+  const [reloadKey, setReloadKey] = useState(0);
 
   const esAdmin = rolActual === "admin";
 
@@ -48,17 +69,18 @@ function GroupDetailsContent() {
         setLoading(true);
         setError(null);
         const rankingData = await groupService.obtenerRanking(grupo.id, token);
-        setRanking(rankingData);
+        setRanking(normalizarRanking(rankingData));
       } catch (err) {
         console.error("Error cargando ranking:", err);
         setError(err.message || "Error al cargar el ranking");
+        setRanking([]);
       } finally {
         setLoading(false);
       }
     };
 
     cargarRanking();
-  }, [grupo?.id, token, loadingGroup]);
+  }, [grupo?.id, token, loadingGroup, reloadKey]);
 
   // ─── Handlers ────────────────────────────────────────────────
 
@@ -80,7 +102,7 @@ function GroupDetailsContent() {
       await groupService.eliminarMiembro(selectedMemberId, token);
 
       // Remover de la lista local
-      setRanking((prev) => prev.filter((m) => m.id !== selectedMemberId));
+      setRanking((prev) => normalizarRanking(prev.filter((m) => m.id !== selectedMemberId)));
       setShowDeleteMemberModal(false);
       setSelectedMemberId(null);
       setSelectedMemberName("");
@@ -90,7 +112,7 @@ function GroupDetailsContent() {
     } finally {
       setLoadingDelete(false);
     }
-  };;;
+  };
 
   const handleLeaveGroup = () => {
     if (esAdmin && ranking.length > 1) {
@@ -100,9 +122,14 @@ function GroupDetailsContent() {
       // Si no es admin o es el único, abandonar directamente
       setShowLeaveGroupModal(true);
     }
-  };;
+  };
 
   const confirmLeaveGroup = async () => {
+    if (esAdmin && ranking.length > 1 && !newAdminSelected) {
+      setModalError("Debes seleccionar un nuevo administrador para continuar.");
+      return;
+    }
+
     try {
       setLoadingDelete(true);
       setModalError(null);
@@ -126,7 +153,7 @@ function GroupDetailsContent() {
     } finally {
       setLoadingDelete(false);
     }
-  };;
+  };
 
   const handleLogout = async () => {
     await logout();
@@ -138,6 +165,8 @@ function GroupDetailsContent() {
   const currentUserRanking = ranking.find(
     (r) => r.usuarioId === usuario?.idUsuario
   );
+  const lideresRanking = ranking.filter((member) => member.puesto <= 3);
+  const restoRanking = ranking.filter((member) => member.puesto > 3);
 
   // ─── Navbar content ──────────────────────────────────────────
 
@@ -178,6 +207,25 @@ function GroupDetailsContent() {
     );
   }
 
+  if (error) {
+    return (
+      <AppLayout navbarContent={navbarContent}>
+        <div className="w-full py-8 px-4 md:px-6 max-w-4xl mx-auto">
+          <div className="p-6 bg-red-50 border border-red-200 rounded-lg text-red-700">
+            <p className="font-semibold mb-2">No fue posible cargar el ranking.</p>
+            <p className="text-sm mb-4">{error}</p>
+            <Button
+              variant="secondary"
+              onClick={() => setReloadKey((prev) => prev + 1)}
+            >
+              Reintentar
+            </Button>
+          </div>
+        </div>
+      </AppLayout>
+    );
+  }
+
   return (
     <AppLayout navbarContent={navbarContent}>
       <div className="w-full py-8 px-4 md:px-6 max-w-4xl mx-auto">
@@ -207,13 +255,6 @@ function GroupDetailsContent() {
           )}
         </div>
 
-        {/* Error message */}
-        {error && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
-            {error}
-          </div>
-        )}
-
         {/* Mi Desempeño */}
         <div className="mb-8">
           <StatsCard ranking={currentUserRanking} stats={currentUserRanking} />
@@ -232,19 +273,49 @@ function GroupDetailsContent() {
               <p className="text-gray-600">No hay miembros en este grupo.</p>
             </div>
           ) : (
-            <div className="space-y-3">
-              {ranking.map((member) => (
-                <MemberCard
-                  key={member.id}
-                  member={member}
-                  esAdmin={esAdmin}
-                  isCurrentUser={member.usuarioId === usuario?.idUsuario}
-                  onDelete={handleDeleteMember}
-                  onLeave={handleLeaveGroup}
-                  loadingDelete={loadingDelete}
-                />
-              ))}
-            </div>
+            <>
+              {lideresRanking.length > 0 && (
+                <div className="mb-4">
+                  <h3 className="text-sm font-semibold text-gray-600 uppercase tracking-wide mb-3">
+                    Podio de desempeño
+                  </h3>
+                  <div className="space-y-3">
+                    {lideresRanking.map((member) => (
+                      <MemberCard
+                        key={member.id}
+                        member={member}
+                        esAdmin={esAdmin}
+                        isCurrentUser={member.usuarioId === usuario?.idUsuario}
+                        onDelete={handleDeleteMember}
+                        onLeave={handleLeaveGroup}
+                        loadingDelete={loadingDelete}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {restoRanking.length > 0 && (
+                <div>
+                  <h3 className="text-sm font-semibold text-gray-600 uppercase tracking-wide mb-3">
+                    Resto de integrantes
+                  </h3>
+                  <div className="space-y-3">
+                    {restoRanking.map((member) => (
+                      <MemberCard
+                        key={member.id}
+                        member={member}
+                        esAdmin={esAdmin}
+                        isCurrentUser={member.usuarioId === usuario?.idUsuario}
+                        onDelete={handleDeleteMember}
+                        onLeave={handleLeaveGroup}
+                        loadingDelete={loadingDelete}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
+            </>
           )}
 
           {ranking.length > 0 && ranking.every((m) => m.tareasCompletadas === 0) && (
@@ -286,6 +357,7 @@ function GroupDetailsContent() {
         confirmText="Abandonar"
         cancelText="Cancelar"
         onConfirm={confirmLeaveGroup}
+        confirmDisabled={esAdmin && ranking.length > 1 && !newAdminSelected}
         onCancel={() => {
           setShowLeaveGroupModal(false);
           setNewAdminSelected(null);

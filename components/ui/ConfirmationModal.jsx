@@ -16,6 +16,7 @@ import Button from "@/components/ui/Button";
   - onCancel             (function)  Función que se ejecuta al cancelar
   - variant              (string)    Estilo del botón confirmar. Default: "primary"
                                      Opciones: "primary" | "danger"
+  - confirmDisabled      (boolean)   Deshabilita botón de confirmación
 
   PROPS OPCIONALES (para selector de miembro):
   - showMemberSelector   (boolean)   Si es true, renderiza un selector de miembro
@@ -34,6 +35,7 @@ export default function ConfirmationModal({
   onConfirm,
   onCancel,
   variant = "primary",
+  confirmDisabled = false,
   showMemberSelector = false,
   members = [],
   selectedMemberId,
@@ -91,6 +93,7 @@ export default function ConfirmationModal({
           <Button
             variant={variant}
             onClick={onConfirm}
+            disabled={confirmDisabled}
             className="w-full"
           >
             {confirmText}

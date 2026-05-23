@@ -301,9 +301,12 @@ export default function TaskCard({
           >
             {getIniciales(tarea.asignadoA.nombre)}
           </div>
-          <span className="text-xs text-gray-600">
-            {tarea.asignadoA.nombre}
-          </span>
+          <span className="text-xs text-gray-600">{tarea.asignadoA.nombre}</span>
+          {tarea.asignadoA.esExMiembro && (
+            <span className="text-[10px] font-semibold text-amber-700 bg-amber-100 px-2 py-0.5 rounded">
+              Ex-miembro
+            </span>
+          )}
         </div>
       )}
 
