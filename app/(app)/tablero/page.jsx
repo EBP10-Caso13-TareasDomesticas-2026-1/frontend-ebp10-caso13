@@ -30,11 +30,12 @@ function TableroContent() {
 
   const esAdmin =
     rolActual === "admin" ||
-    grupo?.miembros?.some(
-      (miembro) =>
-        miembro.usuarioId === usuario?.idUsuario &&
-        miembro.rol?.nombre === "ADMINISTRADOR"
-    );
+    grupo?.miembros?.some((miembro) => {
+      if (miembro.usuarioId !== usuario?.idUsuario) return false;
+      if (miembro.rolId === 1) return true;
+      const nombre = (miembro.rol?.nombre || "").toString().toLowerCase();
+      return nombre === "admin" || nombre === "administrador";
+    });
 
   const enriquecerTareasConMiembros = (tareasData, miembros = []) => {
     return tareasData.map((tarea) => {
