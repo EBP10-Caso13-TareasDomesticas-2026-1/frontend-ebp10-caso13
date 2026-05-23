@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import AppLayout from "@/components/layout/AppLayout";
 import TaskColumn from "@/components/ui/TaskColumn";
+import TaskDetailModal from "@/components/ui/TaskDetailModal";
+import TaskEditModal from "@/components/ui/TaskEditModal";
 import Button from "@/components/ui/Button";
 import LogOut from "@/components/ui/LogOut";
 import { useAuth } from "@/hooks/useAuth";
@@ -22,20 +24,31 @@ function TableroContent() {
   const [error, setError] = useState(null);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
 
+  // ─── Estado para TaskDetailModal ─────────────────────────────
+  const [tareaSeleccionada, setTareaSeleccionada] = useState(null);
+  const [showDetailModal, setShowDetailModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [tareaEnEdicion, setTareaEnEdicion] = useState(null);
+  const [loadingEliminar, setLoadingEliminar] = useState(false);
+  const [loadingEdicion, setLoadingEdicion] = useState(false);
+
   const esAdmin =
     rolActual === "admin" ||
-    grupo?.miembros?.some(
-      (miembro) =>
-        miembro.usuarioId === usuario?.idUsuario &&
-        (miembro.rol?.nombre === 'ADMINISTRADOR')
-    );
+    grupo?.miembros?.some((miembro) => {
+      if (miembro.usuarioId !== usuario?.idUsuario) return false;
+      if (miembro.rolId === 1) return true;
+      const nombre = (miembro.rol?.nombre || "").toString().toLowerCase();
+      return nombre === "admin" || nombre === "administrador";
+    });
 
   const enriquecerTareasConMiembros = (tareasData, miembros = []) => {
     return tareasData.map((tarea) => {
       const usuarioAsignado = miembros.find(
-        (m) => m.usuarioId === tarea.idUsuarioAsignado,
+        (m) => m.usuarioId === tarea.idUsuarioAsignado
       );
 
+      // Si no encontramos al miembro en la lista pero la tarea ya tiene
+      // `asignadoA`, interpretamos que es un ex-miembro y lo marcamos.
       if (!usuarioAsignado && tarea.asignadoA) {
         return {
           ...tarea,
@@ -50,18 +63,18 @@ function TableroContent() {
         ...tarea,
         asignadoA: usuarioAsignado
           ? {
-            id: usuarioAsignado.usuarioId,
-            nombre: usuarioAsignado.nombre,
-            correo: usuarioAsignado.correo,
-            fotoPerfil: usuarioAsignado.fotoPerfil,
-            esExMiembro: false,
-          }
+              id: usuarioAsignado.usuarioId,
+              nombre: usuarioAsignado.nombre,
+              correo: usuarioAsignado.correo,
+              fotoPerfil: usuarioAsignado.fotoPerfil,
+              esExMiembro: false,
+            }
           : tarea.asignadoA || null,
       };
     });
   };
 
-  // ─── Cargar tareas y enriquecerlas ───────────────────────────
+  // ─── Cargar tareas ───────────────────────────────────────────
 
   useEffect(() => {
     const cargarTareas = async () => {
@@ -69,33 +82,23 @@ function TableroContent() {
         setLoading(false);
         return;
       }
-
-      if (loadingGroup) {
-        return;
-      }
-
+      if (loadingGroup) return;
       if (!grupo?.id) {
         setLoading(false);
         router.replace("/bienvenida");
         return;
       }
-
       try {
         setLoading(true);
         setError(null);
-
-        // Obtener tareas del grupo
         const tareasData = await taskService.obtenerTareasGrupo(
           grupo.id,
-          token,
+          token
         );
-
-        // Enriquecer tareas con miembros ya disponibles en GroupContext
         const tareasEnriquecidas = enriquecerTareasConMiembros(
           tareasData,
-          grupo.miembros || [],
+          grupo.miembros || []
         );
-
         setTareas(tareasEnriquecidas);
       } catch (err) {
         console.error("Error cargando tareas:", err);
@@ -104,11 +107,10 @@ function TableroContent() {
         setLoading(false);
       }
     };
-
     cargarTareas();
   }, [grupo?.id, grupo?.miembros, token, router, loadingGroup]);
 
-  // ─── Lógica de ordenamiento y clasificación ──────────────────
+  // ─── Helpers de ordenamiento ─────────────────────────────────
 
   const getPrioridadNum = (prioridad) => {
     const map = { ALTA: 1, MEDIA: 2, BAJA: 3 };
@@ -117,29 +119,24 @@ function TableroContent() {
 
   const ordenarTareas = (listaTareas) => {
     return [...listaTareas].sort((a, b) => {
-      // 1. Por prioridad (mayor urgencia primero)
       const prioridadDiff =
         getPrioridadNum(a.prioridad) - getPrioridadNum(b.prioridad);
       if (prioridadDiff !== 0) return prioridadDiff;
-
-      // 2. Por fecha límite (más cercana primero)
       if (a.fechaLimite && b.fechaLimite) {
         return new Date(a.fechaLimite) - new Date(b.fechaLimite);
       }
       if (a.fechaLimite) return -1;
       if (b.fechaLimite) return 1;
-
       return 0;
     });
   };
 
   const clasificarTareas = (listaTareas) => {
     const pendientes = listaTareas.filter(
-      (t) => t.estado === "PENDIENTE" || t.estado === "VENCIDA",
+      (t) => t.estado === "PENDIENTE" || t.estado === "VENCIDA"
     );
     const enProgreso = listaTareas.filter((t) => t.estado === "EN_PROGRESO");
     const completadas = listaTareas.filter((t) => t.estado === "COMPLETADA");
-
     return {
       pendientes: ordenarTareas(pendientes),
       enProgreso: ordenarTareas(enProgreso),
@@ -149,72 +146,164 @@ function TableroContent() {
 
   const { pendientes, enProgreso, completadas } = clasificarTareas(tareas);
 
+  // ─── Handlers ────────────────────────────────────────────────
+
   const handleLogout = async () => {
     await logout();
     router.push("/login");
   };
 
-  // ─── Manejar cambio de estado (optimistic UI) ─────────────────
-
   const onCambiarEstado = async (idTarea, nuevoEstado, fechaLimite = null) => {
     const prevTareas = tareas;
-
     try {
       setLoadingEstado(true);
       setError(null);
-
-      // 1. Optimistic update
       setTareas((prev) =>
         prev.map((t) =>
           t.idTarea === idTarea
-            ? {
-              ...t,
-              estado: nuevoEstado,
-              ...(fechaLimite ? { fechaLimite } : {}),
-            }
+            ? { ...t, estado: nuevoEstado, ...(fechaLimite ? { fechaLimite } : {}) }
             : t
         )
       );
-
-      // 2. Llamar al backend
       await taskService.actualizarTarea(
         idTarea,
-        {
-          estado: nuevoEstado,
-          ...(fechaLimite ? { fechaLimite } : {}),
-        },
-        token,
+        { estado: nuevoEstado, ...(fechaLimite ? { fechaLimite } : {}) },
+        token
       );
     } catch (err) {
       console.error("Error cambiando estado:", err);
       setError("No se pudo actualizar la tarea. Intenta nuevamente.");
-
-      // Intentar sincronizar con datos reales; si falla, hacer rollback estable
       try {
-        const tareasData = await taskService.obtenerTareasGrupo(
-          grupo.id,
-          token,
-        );
+        const tareasData = await taskService.obtenerTareasGrupo(grupo.id, token);
         const tareasEnriquecidas = enriquecerTareasConMiembros(
           tareasData,
-          grupo?.miembros || [],
+          grupo?.miembros || []
         );
         setTareas(tareasEnriquecidas);
-      } catch (reloadError) {
-        console.error("Error recargando tareas tras fallo:", reloadError);
+      } catch {
         setTareas(prevTareas);
       }
     } finally {
       setLoadingEstado(false);
     }
   };
+  /**
+   * Abre el modal de detalle al hacer clic en una tarjeta.
+   * Solo el admin puede ver acciones de eliminar/editar (controlado en TaskDetailModal).
+   */
+  const handleAbrirDetalle = (tarea) => {
+    setTareaSeleccionada(tarea);
+    setShowDetailModal(true);
+  };
+
+  const handleCerrarDetalle = () => {
+    setShowDetailModal(false);
+    setTareaSeleccionada(null);
+  };
+
+  const handleAbrirEdicion = (tarea) => {
+    setTareaEnEdicion(tarea);
+    setShowDetailModal(false);
+    setShowEditModal(true);
+  };
+
+  const handleCerrarEdicion = () => {
+    setShowEditModal(false);
+    setTareaEnEdicion(null);
+    if (tareaSeleccionada) {
+      setShowDetailModal(true);
+    }
+  };
+
+  const handleGuardarEdicion = async (idTarea, datosActualizados) => {
+    const prevTareas = tareas;
+    try {
+      setLoadingEdicion(true);
+      setError(null);
+
+      const tareaActualizada = await taskService.actualizarTarea(
+        idTarea,
+        datosActualizados,
+        token
+      );
+
+      const tareaConMiembros = enriquecerTareasConMiembros(
+        [tareaActualizada],
+        grupo?.miembros || []
+      )[0];
+
+      setTareas((prev) =>
+        prev.map((t) => (t.idTarea === idTarea ? { ...t, ...tareaConMiembros } : t))
+      );
+      setTareaSeleccionada(tareaConMiembros);
+      setTareaEnEdicion(null);
+      setShowEditModal(false);
+      setShowDetailModal(true);
+    } catch (err) {
+      console.error("Error guardando tarea:", err);
+      setError(err.message || "No se pudo guardar la tarea. Intenta nuevamente.");
+      setTareas(prevTareas);
+      throw err;
+    } finally {
+      setLoadingEdicion(false);
+    }
+  };
+
+  /**
+   * HUS-007: Eliminar tarea (soft delete).
+   * Validación de rol admin se hace también aquí (HA-02: guardia frontend).
+   * Si no es admin, la función no procede y muestra error de acceso denegado.
+   */
+  const handleEliminarTarea = async (idTarea) => {
+    // Guardia de seguridad frontend (HA-02)
+    if (!esAdmin) {
+      setError("Acceso denegado. Solo el administrador puede eliminar tareas.");
+      return;
+    }
+
+    const prevTareas = tareas;
+    try {
+      setLoadingEliminar(true);
+      setError(null);
+
+      // Optimistic update: ocultar la tarea del tablero inmediatamente
+      setTareas((prev) => prev.filter((t) => t.idTarea !== idTarea));
+
+      // Llamada al servicio de soft delete
+      await taskService.eliminarTarea(idTarea, token);
+    } catch (err) {
+      console.error("Error eliminando tarea:", err);
+
+      const mensajeError =
+        err?.status === 403 || err?.status === 401
+          ? "Acceso denegado."
+          : "No se pudo eliminar la tarea. Intenta nuevamente.";
+
+      setError(mensajeError);
+
+      // Rollback del optimistic update
+      try {
+        const tareasData = await taskService.obtenerTareasGrupo(grupo.id, token);
+        const tareasEnriquecidas = enriquecerTareasConMiembros(
+          tareasData,
+          grupo?.miembros || []
+        );
+        setTareas(tareasEnriquecidas);
+      } catch {
+        setTareas(prevTareas);
+      }
+
+      // Re-lanzar para que TaskDetailModal capture y cierre el modal de confirmación
+      throw err;
+    } finally {
+      setLoadingEliminar(false);
+    }
+  };
 
   // ─── Navbar content ───────────────────────────────────────────
   const navbarContent = (
     <div className="flex items-center gap-4">
-      <span className="text-sm text-gray-600">
-        {grupo?.nombre}
-      </span>
+      <span className="text-sm text-gray-600">{grupo?.nombre}</span>
       <Button
         variant="secondary"
         onClick={() => router.push("/grupo/detalles")}
@@ -227,7 +316,7 @@ function TableroContent() {
     </div>
   );
 
-  // ─── Renderizar ──────────────────────────────────────────────
+  // ─── Render ──────────────────────────────────────────────────
 
   return (
     <AppLayout navbarContent={navbarContent} fullWidth>
@@ -258,7 +347,7 @@ function TableroContent() {
           )}
         </div>
 
-        {/* Error message */}
+        {/* Mensaje de error */}
         {error && (
           <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
             {error}
@@ -266,12 +355,12 @@ function TableroContent() {
         )}
 
         {/* Loading */}
-        {(loading || loadingGroup) ? (
+        {loading || loadingGroup ? (
           <div className="flex items-center justify-center py-16">
             <div className="text-gray-500">Cargando tareas...</div>
           </div>
         ) : (
-          /* Kanban board */
+          /* Tablero Kanban */
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             <TaskColumn
               titulo="Pendientes"
@@ -279,31 +368,52 @@ function TableroContent() {
               esAdmin={esAdmin}
               usuarioId={usuario?.idUsuario}
               onCambiarEstado={onCambiarEstado}
+              onVerDetalle={handleAbrirDetalle}
               loading={loadingEstado}
             />
-
             <TaskColumn
               titulo="En progreso"
               tareas={enProgreso}
               esAdmin={esAdmin}
               usuarioId={usuario?.idUsuario}
               onCambiarEstado={onCambiarEstado}
+              onVerDetalle={handleAbrirDetalle}
               loading={loadingEstado}
             />
-
             <TaskColumn
               titulo="Completadas"
               tareas={completadas}
               esAdmin={esAdmin}
               usuarioId={usuario?.idUsuario}
               onCambiarEstado={onCambiarEstado}
+              onVerDetalle={handleAbrirDetalle}
               loading={loadingEstado}
             />
           </div>
         )}
       </div>
 
-      {/* ─── MODAL LOGOUT ───────────────────────────────────────────── */}
+      {/* Modal de detalle de tarea (HU-010 + HUS-007) */}
+      <TaskDetailModal
+        isOpen={showDetailModal}
+        tarea={tareaSeleccionada}
+        esAdmin={esAdmin}
+        loading={loadingEliminar}
+        onClose={handleCerrarDetalle}
+        onEliminar={handleEliminarTarea}
+        onEditar={handleAbrirEdicion}
+      />
+
+      <TaskEditModal
+        isOpen={showEditModal}
+        tarea={tareaEnEdicion}
+        miembros={grupo?.miembros || []}
+        loading={loadingEdicion}
+        onClose={handleCerrarEdicion}
+        onGuardar={handleGuardarEdicion}
+      />
+
+      {/* Modal logout */}
       <LogOut
         isOpen={showLogoutModal}
         title="Cerrar sesión"

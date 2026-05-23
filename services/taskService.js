@@ -4,6 +4,8 @@
 //   HU-006 — Crear tarea
 //   HU-007 — Listar tareas del grupo (tablero)
 //   HU-008 — Actualizar estado de tarea
+// Sprint 3
+//   HUS-007 — Eliminar tarea
 
 import { USE_MOCK, apiRequest, delay } from "@/lib/api";
 import { tareas } from "@/mocks/tareas";
@@ -69,20 +71,20 @@ const mock = {
       });
   },
 
-  // HU-008 — Actualizar estado de tarea
+  // HU-008 — Actualizar tarea
   async actualizarTarea(idTarea, data, _token) {
     await delay(600);
     const tarea = tareas.find((t) => t.idTarea === Number(idTarea));
     if (!tarea) throw new Error("Tarea no encontrada.");
 
-    // Actualizar estado y fecha límite cuando aplique
-    if (data.estado) {
-      tarea.estado = data.estado;
+    if (data.nombre !== undefined) tarea.nombre = data.nombre;
+    if (data.descripcion !== undefined) tarea.descripcion = data.descripcion;
+    if (data.prioridad) tarea.prioridad = data.prioridad;
+    if (data.estado) tarea.estado = data.estado;
+    if (data.idUsuarioAsignado !== undefined && data.idUsuarioAsignado !== null) {
+      tarea.idUsuarioAsignado = Number(data.idUsuarioAsignado);
     }
-
-    if (data.fechaLimite) {
-      tarea.fechaLimite = data.fechaLimite;
-    }
+    if (data.fechaLimite) tarea.fechaLimite = data.fechaLimite;
 
     return tarea;
   },
