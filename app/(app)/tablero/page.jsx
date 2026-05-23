@@ -46,6 +46,19 @@ function TableroContent() {
       const usuarioAsignado = miembros.find(
         (m) => m.usuarioId === tarea.idUsuarioAsignado
       );
+
+      // Si no encontramos al miembro en la lista pero la tarea ya tiene
+      // `asignadoA`, interpretamos que es un ex-miembro y lo marcamos.
+      if (!usuarioAsignado && tarea.asignadoA) {
+        return {
+          ...tarea,
+          asignadoA: {
+            ...tarea.asignadoA,
+            esExMiembro: true,
+          },
+        };
+      }
+
       return {
         ...tarea,
         asignadoA: usuarioAsignado
@@ -54,8 +67,9 @@ function TableroContent() {
               nombre: usuarioAsignado.nombre,
               correo: usuarioAsignado.correo,
               fotoPerfil: usuarioAsignado.fotoPerfil,
+              esExMiembro: false,
             }
-          : null,
+          : tarea.asignadoA || null,
       };
     });
   };
@@ -173,7 +187,6 @@ function TableroContent() {
       setLoadingEstado(false);
     }
   };
-
   /**
    * Abre el modal de detalle al hacer clic en una tarjeta.
    * Solo el admin puede ver acciones de eliminar/editar (controlado en TaskDetailModal).
@@ -220,11 +233,7 @@ function TableroContent() {
       )[0];
 
       setTareas((prev) =>
-        prev.map((t) =>
-          t.idTarea === idTarea
-            ? { ...t, ...tareaConMiembros }
-            : t
-        )
+        prev.map((t) => (t.idTarea === idTarea ? { ...t, ...tareaConMiembros } : t))
       );
       setTareaSeleccionada(tareaConMiembros);
       setTareaEnEdicion(null);
@@ -257,7 +266,7 @@ function TableroContent() {
       setLoadingEliminar(true);
       setError(null);
 
-      // Optimistic update: ocultar la tarea del tablero inmediatamente (Escenario 1)
+      // Optimistic update: ocultar la tarea del tablero inmediatamente
       setTareas((prev) => prev.filter((t) => t.idTarea !== idTarea));
 
       // Llamada al servicio de soft delete
@@ -265,7 +274,6 @@ function TableroContent() {
     } catch (err) {
       console.error("Error eliminando tarea:", err);
 
-      // Si el backend devuelve acceso denegado (HA-01 mitigación backend)
       const mensajeError =
         err?.status === 403 || err?.status === 401
           ? "Acceso denegado."
@@ -292,13 +300,15 @@ function TableroContent() {
     }
   };
 
-  // ─── Navbar ──────────────────────────────────────────────────
-
+  // ─── Navbar content ───────────────────────────────────────────
   const navbarContent = (
     <div className="flex items-center gap-4">
       <span className="text-sm text-gray-600">{grupo?.nombre}</span>
-      <Button variant="secondary" disabled onClick={() => {}}>
-        Perfil
+      <Button
+        variant="secondary"
+        onClick={() => router.push("/grupo/detalles")}
+      >
+        Detalles del Grupo
       </Button>
       <Button variant="primary" onClick={() => setShowLogoutModal(true)}>
         Cerrar sesión
@@ -332,20 +342,6 @@ function TableroContent() {
                 className="w-full sm:w-auto"
               >
                 + Nueva Tarea
-              </Button>
-              <Button
-                variant="secondary"
-                onClick={() => {
-                  const codigo =
-                    grupo.codigoInvitacion ||
-                    grupo.miembros?.[0]?.grupo?.codigoInvitacion ||
-                    grupo.grupo?.codigoInvitacion ||
-                    "";
-                  router.push(`/grupo/invitar?codigo=${codigo}`);
-                }}
-                className="w-full sm:w-auto"
-              >
-                Invitar miembros
               </Button>
             </div>
           )}

@@ -197,13 +197,15 @@ export default function TaskCard({
       {/* Responsable */}
       {tarea.asignadoA && (
         <div className="flex items-center gap-2 mb-2">
-          <div
-            className="w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-bold"
-            style={{ backgroundColor: "#6467F2" }}
-          >
+          <div className="w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-bold" style={{ backgroundColor: "#6467F2" }}>
             {getIniciales(tarea.asignadoA.nombre)}
           </div>
           <span className="text-xs text-gray-600">{tarea.asignadoA.nombre}</span>
+          {tarea.asignadoA.esExMiembro && (
+            <span className="text-[10px] font-semibold text-amber-700 bg-amber-100 px-2 py-0.5 rounded ml-2">
+              Ex-miembro
+            </span>
+          )}
         </div>
       )}
 

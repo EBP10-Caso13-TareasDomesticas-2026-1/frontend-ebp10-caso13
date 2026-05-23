@@ -10,6 +10,7 @@
 import { USE_MOCK, apiRequest, delay } from "@/lib/api";
 import { tareas } from "@/mocks/tareas";
 import { miembrosGrupo } from "@/mocks/miembrosGrupo";
+import { usuarios } from "@/mocks/usuarios";
 
 const mock = {
   // HU-006 — Crear tarea
@@ -20,7 +21,9 @@ const mock = {
     const { nombre, descripcion, idUsuarioAsignado, prioridad, fechaLimite } = data;
 
     // Inferir el grupo del usuario (el backend lo haría por token)
-    const miembro = miembrosGrupo.find((m) => m.usuarioId === usuarioId);
+    const miembro = miembrosGrupo.find(
+      (m) => m.usuarioId === usuarioId && m.activo !== false
+    );
     if (!miembro) throw new Error("Usuario no pertenece a ningún grupo.");
 
     const nuevaTarea = {
@@ -42,7 +45,30 @@ const mock = {
   // HU-007 — Obtener tareas del grupo (para tablero)
   async obtenerTareasGrupo(idGrupo, _token) {
     await delay(400);
-    return tareas.filter((t) => t.idGrupo === Number(idGrupo) && t.eliminada !== true);
+    const grupoId = Number(idGrupo);
+    return tareas
+      .filter((t) => t.idGrupo === grupoId && t.eliminada !== true)
+      .map((tarea) => {
+        const usuario = usuarios.find((u) => u.idUsuario === tarea.idUsuarioAsignado);
+        const esMiembroActivo = miembrosGrupo.some(
+          (m) =>
+            m.grupoId === grupoId &&
+            m.usuarioId === tarea.idUsuarioAsignado &&
+            m.activo !== false
+        );
+
+        return {
+          ...tarea,
+          asignadoA: usuario
+            ? {
+              id: usuario.idUsuario,
+              nombre: usuario.nombre,
+              correo: usuario.correo,
+              esExMiembro: !esMiembroActivo,
+            }
+            : null,
+        };
+      });
   },
 
   // HU-008 — Actualizar tarea
