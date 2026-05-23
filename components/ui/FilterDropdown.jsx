@@ -38,22 +38,26 @@ export default function FilterDropdown({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  // Normalize selected IDs as strings to avoid number/string mismatches
+  const selectedIds = (selected || []).map((s) => String(s));
+
   const toggleOption = (id) => {
-    const next = selected.includes(id)
-      ? selected.filter((s) => s !== id)
-      : [...selected, id];
+    const idStr = String(id);
+    const next = selectedIds.includes(idStr)
+      ? selectedIds.filter((s) => s !== idStr)
+      : [...selectedIds, idStr];
     onChange(next);
   };
 
   const toggleAll = () => {
-    if (selected.length === options.length) {
+    if (selectedIds.length === options.length) {
       onChange([]);
     } else {
-      onChange(options.map((o) => o.id));
+      onChange(options.map((o) => String(o.id)));
     }
   };
 
-  const count = selected.length;
+  const count = selectedIds.length;
   const buttonLabel = count > 0 ? `${label} (${count})` : label;
 
   return (
@@ -87,7 +91,7 @@ export default function FilterDropdown({
           </button>
           <div className="max-h-48 overflow-y-auto">
             {options.map((option) => {
-              const isSelected = selected.includes(option.id);
+              const isSelected = selectedIds.includes(String(option.id));
               return (
                 <button
                   key={option.id}

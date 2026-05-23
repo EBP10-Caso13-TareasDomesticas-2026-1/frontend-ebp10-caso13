@@ -50,16 +50,16 @@ export default function FilterBar({
     fotoPerfil: m.fotoPerfil || null,
   }));
 
-  const resolvedEstados = filtros.estados
-    .map((id) => estadosList.find((e) => e.id === id))
+  const resolvedEstados = (filtros.estados || [])
+    .map((id) => estadosList.find((e) => String(e.id) === String(id)))
     .filter(Boolean);
 
-  const resolvedPrioridades = filtros.prioridades
-    .map((id) => prioridadesList.find((p) => p.id === id))
+  const resolvedPrioridades = (filtros.prioridades || [])
+    .map((id) => prioridadesList.find((p) => String(p.id) === String(id)))
     .filter(Boolean);
 
-  const resolvedMiembros = filtros.miembros
-    .map((id) => miembrosOptions.find((m) => m.id === id))
+  const resolvedMiembros = (filtros.miembros || [])
+    .map((id) => miembrosOptions.find((m) => String(m.id) === String(id)))
     .filter(Boolean);
 
   return (

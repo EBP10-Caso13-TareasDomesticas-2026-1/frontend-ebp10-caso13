@@ -13,6 +13,8 @@ import FilterBar from "@/components/ui/FilterBar";
 import { useAuth } from "@/hooks/useAuth";
 import { useGroup } from "@/hooks/useGroup";
 import taskService from "@/services/taskService";
+import { estados as estadosList } from "@/mocks/estados";
+import { prioridades as prioridadesList } from "@/mocks/prioridades";
 import { FileSearch } from "lucide-react";
 
 function TableroContent() {
@@ -99,10 +101,25 @@ function TableroContent() {
           grupo.id,
           token
         );
+        // Enriquecer tareas con miembros y normalizar IDs de estado/prioridad
         const tareasEnriquecidas = enriquecerTareasConMiembros(
           tareasData,
           grupo.miembros || []
-        );
+        ).map((t) => {
+          const estadoNombre = String(t.estado || "").toUpperCase().trim();
+          const prioridadNombre = String(t.prioridad || "").toUpperCase().trim();
+          const estadoObj = estadosList.find(
+            (e) => String(e.nombre || "").toUpperCase().trim() === estadoNombre
+          );
+          const prioridadObj = prioridadesList.find(
+            (p) => String(p.nombre || "").toUpperCase().trim() === prioridadNombre
+          );
+          return {
+            ...t,
+            estadoId: estadoObj?.id ?? null,
+            prioridadId: prioridadObj?.id ?? null,
+          };
+        });
         setTareas(tareasEnriquecidas);
       } catch (err) {
         console.error("Error cargando tareas:", err);
@@ -149,10 +166,14 @@ function TableroContent() {
   };
 
   const tareasFiltradas = useMemo(() => {
+    const estadosIds = filtros.estados.map((i) => String(i));
+    const prioridadesIds = filtros.prioridades.map((i) => String(i));
+    const miembrosIds = filtros.miembros.map((i) => String(i));
+
     return tareas.filter((t) => {
-      if (filtros.estados.length > 0 && !filtros.estados.includes(t.estado)) return false;
-      if (filtros.prioridades.length > 0 && !filtros.prioridades.includes(t.prioridad)) return false;
-      if (filtros.miembros.length > 0 && !filtros.miembros.includes(t.idUsuarioAsignado)) return false;
+      if (estadosIds.length > 0 && !estadosIds.includes(String(t.estadoId))) return false;
+      if (prioridadesIds.length > 0 && !prioridadesIds.includes(String(t.prioridadId))) return false;
+      if (miembrosIds.length > 0 && !miembrosIds.includes(String(t.idUsuarioAsignado))) return false;
       return true;
     });
   }, [tareas, filtros]);
@@ -377,6 +398,8 @@ function TableroContent() {
             miembros={grupo?.miembros || []}
           />
         </div>
+
+        
 
         {/* Sin resultados */}
         {!loading && !loadingGroup && tareasFiltradas.length === 0 && (
