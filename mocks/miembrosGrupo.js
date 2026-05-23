@@ -10,7 +10,9 @@ export const miembrosGrupo = [
     rolId: 1,
     puntaje: 120,
     racha: 5,
-    fechaUnion: "2026-03-05T08:00:00.000Z"
+    fechaUnion: "2026-03-05T08:00:00.000Z",
+    activo: true,
+    fechaSalida: null,
   },
   {
     id: 2,
@@ -19,7 +21,9 @@ export const miembrosGrupo = [
     rolId: 2,
     puntaje: 80,
     racha: 3,
-    fechaUnion: "2026-03-06T10:00:00.000Z"
+    fechaUnion: "2026-03-06T10:00:00.000Z",
+    activo: true,
+    fechaSalida: null,
   },
   {
     id: 3,
@@ -28,7 +32,9 @@ export const miembrosGrupo = [
     rolId: 2,
     puntaje: 45,
     racha: 1,
-    fechaUnion: "2026-03-07T09:30:00.000Z"
+    fechaUnion: "2026-03-07T09:30:00.000Z",
+    activo: false,
+    fechaSalida: null,
   },
   {
     id: 4,
@@ -37,6 +43,19 @@ export const miembrosGrupo = [
     rolId: 1,
     puntaje: 60,
     racha: 2,
-    fechaUnion: "2026-03-10T17:00:00.000Z"
+    fechaUnion: "2026-03-10T17:00:00.000Z",
+    activo: true,
+    fechaSalida: null,
+  },
+  {
+    id: 5,
+    usuarioId: 4,   // David — miembro de Familia Torres (empate de puntaje con Daniel)
+    grupoId: 1,
+    rolId: 2,
+    puntaje: 80,
+    racha: 2,
+    fechaUnion: "2026-03-08T12:20:00.000Z",
+    activo: true,
+    fechaSalida: null,
   }
 ];

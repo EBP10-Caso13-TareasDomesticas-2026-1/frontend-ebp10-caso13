@@ -4,10 +4,13 @@
 //   HU-006 — Crear tarea
 //   HU-007 — Listar tareas del grupo (tablero)
 //   HU-008 — Actualizar estado de tarea
+// Sprint 3
+//   HUS-007 — Eliminar tarea
 
 import { USE_MOCK, apiRequest, delay } from "@/lib/api";
 import { tareas } from "@/mocks/tareas";
 import { miembrosGrupo } from "@/mocks/miembrosGrupo";
+import { usuarios } from "@/mocks/usuarios";
 
 const mock = {
   // HU-006 — Crear tarea
@@ -18,7 +21,9 @@ const mock = {
     const { nombre, descripcion, idUsuarioAsignado, prioridad, fechaLimite } = data;
 
     // Inferir el grupo del usuario (el backend lo haría por token)
-    const miembro = miembrosGrupo.find((m) => m.usuarioId === usuarioId);
+    const miembro = miembrosGrupo.find(
+      (m) => m.usuarioId === usuarioId && m.activo !== false
+    );
     if (!miembro) throw new Error("Usuario no pertenece a ningún grupo.");
 
     const nuevaTarea = {
@@ -40,23 +45,46 @@ const mock = {
   // HU-007 — Obtener tareas del grupo (para tablero)
   async obtenerTareasGrupo(idGrupo, _token) {
     await delay(400);
-    return tareas.filter((t) => t.idGrupo === Number(idGrupo) && t.eliminada !== true);
+    const grupoId = Number(idGrupo);
+    return tareas
+      .filter((t) => t.idGrupo === grupoId && t.eliminada !== true)
+      .map((tarea) => {
+        const usuario = usuarios.find((u) => u.idUsuario === tarea.idUsuarioAsignado);
+        const esMiembroActivo = miembrosGrupo.some(
+          (m) =>
+            m.grupoId === grupoId &&
+            m.usuarioId === tarea.idUsuarioAsignado &&
+            m.activo !== false
+        );
+
+        return {
+          ...tarea,
+          asignadoA: usuario
+            ? {
+              id: usuario.idUsuario,
+              nombre: usuario.nombre,
+              correo: usuario.correo,
+              esExMiembro: !esMiembroActivo,
+            }
+            : null,
+        };
+      });
   },
 
-  // HU-008 — Actualizar estado de tarea
+  // HU-008 — Actualizar tarea
   async actualizarTarea(idTarea, data, _token) {
     await delay(600);
     const tarea = tareas.find((t) => t.idTarea === Number(idTarea));
     if (!tarea) throw new Error("Tarea no encontrada.");
 
-    // Actualizar estado y fecha límite cuando aplique
-    if (data.estado) {
-      tarea.estado = data.estado;
+    if (data.nombre !== undefined) tarea.nombre = data.nombre;
+    if (data.descripcion !== undefined) tarea.descripcion = data.descripcion;
+    if (data.prioridad) tarea.prioridad = data.prioridad;
+    if (data.estado) tarea.estado = data.estado;
+    if (data.idUsuarioAsignado !== undefined && data.idUsuarioAsignado !== null) {
+      tarea.idUsuarioAsignado = Number(data.idUsuarioAsignado);
     }
-
-    if (data.fechaLimite) {
-      tarea.fechaLimite = data.fechaLimite;
-    }
+    if (data.fechaLimite) tarea.fechaLimite = data.fechaLimite;
 
     return tarea;
   },

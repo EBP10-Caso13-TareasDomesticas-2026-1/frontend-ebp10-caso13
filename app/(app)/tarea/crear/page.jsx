@@ -194,9 +194,6 @@ function CrearTareaContent() {
           <span className="text-sm text-gray-600">
             {grupo?.nombre}
           </span>
-          <Button variant="secondary" disabled onClick={() => {}}>
-            Perfil
-          </Button>
           <Button variant="primary" onClick={() => setShowLogoutModal(true)}>
             Cerrar sesión
           </Button>

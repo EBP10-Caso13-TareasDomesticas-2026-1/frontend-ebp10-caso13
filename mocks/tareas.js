@@ -38,6 +38,7 @@ export const tareas = [
     estado: "COMPLETADA",
     fechaLimite: "2026-04-21T20:00:00.000Z",
     fechaCreacion: "2026-04-19T08:00:00.000Z",
+    // Caso QA: al eliminar a Salome del grupo, esta tarea debe verse con etiqueta "Ex-miembro".
     eliminada: false,
   },
   {

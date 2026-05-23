@@ -16,6 +16,13 @@ export const sesiones = [
     correo: "daniel.sanchez@homesync.com",
     token: "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIyIn0.mock_signature_daniel",
     mensaje: "Inicio de sesión exitoso"
+  },
+  {
+    idUsuario: 4,
+    nombre: "David Sanchez",
+    correo: "david.sanchez@homesync.com",
+    token: "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiI0In0.mock_signature_david",
+    mensaje: "Inicio de sesión exitoso"
   }
 ];
 
