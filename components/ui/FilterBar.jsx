@@ -8,14 +8,14 @@ import { prioridades as prioridadesList } from "@/mocks/prioridades";
 function getBadgeClass(item, type) {
   if (type === "estado") {
     if (item.nombre === "PENDIENTE") return "badge-secondary";
-    if (item.nombre === "EN PROGRESO") return "badge-primary";
+    if (item.nombre === "EN_PROGRESO") return "badge-primary";
     if (item.nombre === "COMPLETADA") return "badge-success";
     if (item.nombre === "VENCIDA") return "badge-error";
   }
   if (type === "prioridad") {
-    if (item.nombre === "Alta") return "badge-error";
-    if (item.nombre === "Media") return "badge-secondary";
-    if (item.nombre === "Baja") return "bg-blue-100 text-blue-700 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium";
+    if (item.nombre === "ALTA") return "badge-error";
+    if (item.nombre === "MEDIA") return "badge-secondary";
+    if (item.nombre === "BAJA") return "bg-blue-100 text-blue-700 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium";
   }
   if (type === "miembro") {
     return "badge-primary";
@@ -109,7 +109,7 @@ export default function FilterBar({
               className={`${getBadgeClass(item, "estado")} flex items-center gap-1 cursor-pointer`}
               onClick={() => quitarFiltro("estados", item.id)}
             >
-              {item.nombre}
+              {item.label || item.nombre}
               <X size={12} />
             </span>
           ))}
@@ -119,7 +119,7 @@ export default function FilterBar({
               className={`${getBadgeClass(item, "prioridad")} flex items-center gap-1 cursor-pointer`}
               onClick={() => quitarFiltro("prioridades", item.id)}
             >
-              {item.nombre}
+              {item.label || item.nombre}
               <X size={12} />
             </span>
           ))}

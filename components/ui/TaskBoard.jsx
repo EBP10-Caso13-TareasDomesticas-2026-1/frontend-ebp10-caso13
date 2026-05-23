@@ -1,11 +1,11 @@
 "use client";
 
-import TaskCard from "./TaskCard";
+import TaskCardSimple from "./TaskCardSimple";
 import { estados as estadosList } from "@/mocks/estados";
 
 function estadoBadge(estado) {
   if (estado?.nombre === "PENDIENTE") return "badge-secondary";
-  if (estado?.nombre === "EN PROGRESO") return "badge-primary";
+  if (estado?.nombre === "EN_PROGRESO") return "badge-primary";
   if (estado?.nombre === "COMPLETADA") return "badge-success";
   if (estado?.nombre === "VENCIDA") return "badge-error";
   return "badge-secondary";
@@ -31,7 +31,7 @@ export default function TaskBoard({ tareas = [] }) {
           {col.tareas.length > 0 ? (
             <div className="space-y-3">
               {col.tareas.map((tarea) => (
-                <TaskCard key={tarea.id} tarea={tarea} />
+                <TaskCardSimple key={tarea.id} tarea={tarea} />
               ))}
             </div>
           ) : (

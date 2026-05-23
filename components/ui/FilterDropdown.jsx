@@ -6,14 +6,14 @@ import { ChevronDown, Check } from "lucide-react";
 function getBadgeClass(option, type) {
   if (type === "estado") {
     if (option.nombre === "PENDIENTE") return "badge-secondary";
-    if (option.nombre === "EN PROGRESO") return "badge-primary";
+    if (option.nombre === "EN_PROGRESO") return "badge-primary";
     if (option.nombre === "COMPLETADA") return "badge-success";
     if (option.nombre === "VENCIDA") return "badge-error";
   }
   if (type === "prioridad") {
-    if (option.nombre === "Alta") return "badge-error";
-    if (option.nombre === "Media") return "badge-secondary";
-    if (option.nombre === "Baja") return "bg-blue-100 text-blue-700 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium";
+    if (option.nombre === "ALTA") return "badge-error";
+    if (option.nombre === "MEDIA") return "badge-secondary";
+    if (option.nombre === "BAJA") return "bg-blue-100 text-blue-700 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium";
   }
   return "badge-secondary";
 }
@@ -105,7 +105,7 @@ export default function FilterDropdown({
                     {isSelected && <Check size={12} className="text-white" />}
                   </div>
                   <span className={getBadgeClass(option, type)}>
-                    {option.nombre}
+                    {option.label || option.nombre}
                   </span>
                   {option.fotoPerfil && (
                     <span

@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useState, useCallback } from "react";
+import { createContext, useContext, useState, useCallback, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import groupService from "@/services/groupService";
 
@@ -27,23 +27,29 @@ export function GroupProvider({ children }) {
   const [rolActual, setRolActual] = useState(null); // "admin" | "miembro"
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [hasTriedInitialLoad, setHasTriedInitialLoad] = useState(false);
 
   // ─── Helpers internos ─────────────────────────────────────────
 
-  const _resetError = () => setError(null);
+  const clearGroupError = () => setError(null);
 
   /**
    * Determina el rol del usuario en el grupo a partir de la lista de miembros.
    * rolId === 1 → "admin", rolId === 2 → "miembro" (según seed de BD)
    */
-  const _resolverRol = useCallback(
-    (listaMiembros) => {
-      if (!usuario || !listaMiembros.length) return null;
-      const yo = listaMiembros.find((m) => m.usuarioId === usuario.idUsuario);
+  const determineUserRole = useCallback(
+    (usuarioId, listaMiembros) => {
+      if (!usuarioId || !listaMiembros.length) return null;
+      const yo = listaMiembros.find((m) => m.usuarioId === usuarioId);
       if (!yo) return null;
-      return yo.rolId === 1 ? "admin" : "miembro";
+      
+      if (yo.rol?.nombre === 'ADMINISTRADOR') {
+        return "admin";
+      }
+      
+      return "miembro";
     },
-    [usuario]
+    [],
   );
 
   // ─── Acciones ─────────────────────────────────────────────────
@@ -53,28 +59,50 @@ export function GroupProvider({ children }) {
    * Se llama al montar pantallas que necesitan datos del grupo.
    * @returns {{ ok: boolean, error?: string }}
    */
-  const cargarGrupo = useCallback(async () => {
-    if (!usuario || !token) return { ok: false, error: "Sin sesión activa" };
-    _resetError();
-    setLoading(true);
-    try {
-      // Devuelve el MiembroGrupo con info del grupo y rol
-      const miembroData = await groupService.obtenerGrupoDeUsuario(usuario.idUsuario, token);
+  const cargarGrupo = useCallback(
+    async (usuarioIdParam, tokenParam) => {
+      const usuarioId = usuarioIdParam ?? usuario?.idUsuario;
+      const tokenUser = tokenParam ?? token;
+      if (!usuarioId || !tokenUser)
+        return { ok: false, error: "Sin sesión activa" };
+      clearGroupError();
+      setLoading(true);
+      try {
+        // Devuelve el MiembroGrupo si el usuario pertenece a un grupo
+        const miembroData = await groupService.obtenerGrupoDeUsuario(
+          usuarioId,
+          tokenUser,
+        );
 
-      const grupoData = await groupService.obtenerGrupo(miembroData.grupoId, token);
+        if (!miembroData) {
+          // Escenario 6: sin grupo asignado
+          setGrupo(null);
+          setMiembros([]);
+          setRolActual(null);
+          return { ok: false, noGrupo: true };
+        }
 
-      setGrupo(grupoData);
-      setMiembros(miembroData.miembros || [miembroData]);
-      setRolActual(_resolverRol(miembroData.miembros || [miembroData]));
-      return { ok: true };
-    } catch (err) {
-      const mensaje = err.message ?? "Error al cargar el grupo";
-      setError(mensaje);
-      return { ok: false, error: mensaje };
-    } finally {
-      setLoading(false);
-    }
-  }, [usuario, token, _resolverRol]);
+        // Con el grupoId obtenemos el detalle completo del grupo
+        const grupoData = await groupService.obtenerGrupo(
+          miembroData.grupoId,
+          tokenUser,
+        );
+
+        setGrupo(grupoData);
+        setMiembros(grupoData.miembros);
+        const rolCalculado = determineUserRole(usuarioId, grupoData.miembros);
+        setRolActual(rolCalculado);
+        return { ok: true };
+      } catch (err) {
+        const mensaje = err.message ?? "Error al cargar el grupo";
+        setError(mensaje);
+        return { ok: false, error: mensaje };
+      } finally {
+        setLoading(false);
+      }
+    },
+    [usuario, token, determineUserRole]
+  );
 
   /**
    * Crea un nuevo grupo familiar. El usuario queda como administrador.
@@ -84,10 +112,14 @@ export function GroupProvider({ children }) {
   const crearNuevoGrupo = useCallback(
     async (data) => {
       if (!usuario || !token) return { ok: false, error: "Sin sesión activa" };
-      _resetError();
+      clearGroupError();
       setLoading(true);
       try {
-        const grupoCreado = await groupService.crearGrupo(data, token, usuario.idUsuario);
+        const grupoCreado = await groupService.crearGrupo(
+          data,
+          token,
+          usuario.idUsuario,
+        );
         setGrupo(grupoCreado);
         setRolActual("admin");
         setMiembros([]);
@@ -100,7 +132,7 @@ export function GroupProvider({ children }) {
         setLoading(false);
       }
     },
-    [usuario, token]
+    [usuario, token],
   );
 
   /**
@@ -111,14 +143,23 @@ export function GroupProvider({ children }) {
   const unirseAlGrupo = useCallback(
     async (codigoInvitacion) => {
       if (!usuario || !token) return { ok: false, error: "Sin sesión activa" };
-      _resetError();
+      clearGroupError();
       setLoading(true);
       try {
-        const miembroData = await groupService.unirseConCodigo(codigoInvitacion, token);
-        const grupoData = await groupService.obtenerGrupo(miembroData.grupoId, token);
+        const miembroData = await groupService.unirseConCodigo(
+          codigoInvitacion,
+          token,
+          usuario.idUsuario,
+        );
+        const grupoId = miembroData.idGrupo || miembroData.grupoId;
+        const grupoData = await groupService.obtenerGrupo(
+          grupoId,
+          token,
+        );
         setGrupo(grupoData);
-        setMiembros(grupoData.miembros || [miembroData]);
-        setRolActual("miembro");
+        setMiembros(grupoData.miembros);
+        const rolCalculado = determineUserRole(usuario.idUsuario, grupoData.miembros);
+        setRolActual(rolCalculado);
         return { ok: true };
       } catch (err) {
         const mensaje = err.message ?? "Código de invitación inválido";
@@ -128,7 +169,7 @@ export function GroupProvider({ children }) {
         setLoading(false);
       }
     },
-    [usuario, token]
+    [usuario, token, determineUserRole],
   );
 
   /**
@@ -141,11 +182,22 @@ export function GroupProvider({ children }) {
     setError(null);
   }, []);
 
+  // ─── Disparador automático de carga ───────────────────────────
+  // Si tenemos sesión activa pero el grupo está en null y aún no intentamos
+  // cargarlo, disparar la carga automáticamente (útil para el F5).
+  useEffect(() => {
+    if (usuario?.idUsuario && token && !grupo && !hasTriedInitialLoad && !loading) {
+      cargarGrupo(usuario.idUsuario, token).then(() => {
+        setHasTriedInitialLoad(true);
+      });
+    }
+  }, [usuario?.idUsuario, token, grupo, hasTriedInitialLoad, loading, cargarGrupo]);
+
   // ─── Valor del contexto ───────────────────────────────────────
   const value = {
-    grupo,          // objeto grupo | null
-    miembros,       // array de MiembroGrupo
-    rolActual,      // "admin" | "miembro" | null
+    grupo, // objeto grupo | null
+    miembros, // array de MiembroGrupo
+    rolActual, // "admin" | "miembro" | null
     loading,
     error,
     cargarGrupo,
@@ -154,7 +206,9 @@ export function GroupProvider({ children }) {
     limpiarGrupo,
   };
 
-  return <GroupContext.Provider value={value}>{children}</GroupContext.Provider>;
+  return (
+    <GroupContext.Provider value={value}>{children}</GroupContext.Provider>
+  );
 }
 
 export { GroupContext };

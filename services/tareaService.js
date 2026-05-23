@@ -5,23 +5,28 @@ import { prioridades } from "@/mocks/prioridades";
 import { usuarios } from "@/mocks/usuarios";
 
 const resolverTarea = (tarea) => {
-  const estado = estados.find((e) => e.id === tarea.estadoId);
-  const prioridad = prioridades.find((p) => p.id === tarea.prioridadId);
-  const asignado = usuarios.find((u) => u.idUsuario === tarea.asignadoA);
-  const creador = usuarios.find((u) => u.idUsuario === tarea.creadoPor);
+  const estadoObj = estados.find((e) => e.nombre === tarea.estado);
+  const prioridadObj = prioridades.find((p) => p.nombre === tarea.prioridad);
+  const asignado = usuarios.find((u) => u.idUsuario === tarea.idUsuarioAsignado);
 
   return {
-    ...tarea,
-    estado: estado ? { id: estado.id, nombre: estado.nombre } : null,
-    prioridad: prioridad ? { id: prioridad.id, nombre: prioridad.nombre } : null,
-    asignadoA: tarea.asignadoA,
+    id: tarea.idTarea,
+    titulo: tarea.nombre,
+    descripcion: tarea.descripcion,
+    grupoId: tarea.idGrupo,
+    creadoPor: null,
+    asignadoA: tarea.idUsuarioAsignado,
+    prioridadId: prioridadObj?.id,
+    estadoId: estadoObj?.id,
+    fechaLimite: tarea.fechaLimite,
+    fechaCreacion: tarea.fechaCreacion,
+    fechaFinalizacion: null,
+    estado: estadoObj ? { id: estadoObj.id, nombre: estadoObj.nombre, label: estadoObj.label } : null,
+    prioridad: prioridadObj ? { id: prioridadObj.id, nombre: prioridadObj.nombre, label: prioridadObj.label } : null,
     asignado: asignado
       ? { idUsuario: asignado.idUsuario, nombre: asignado.nombre, fotoPerfil: asignado.fotoPerfil }
       : null,
-    creadoPor: tarea.creadoPor,
-    creador: creador
-      ? { idUsuario: creador.idUsuario, nombre: creador.nombre }
-      : null,
+    creador: null,
   };
 };
 
@@ -29,7 +34,7 @@ const mock = {
   obtenerTareasDeGrupo: async (grupoId) => {
     await delay(400);
     const tareasDelGrupo = tareas
-      .filter((t) => t.grupoId === Number(grupoId))
+      .filter((t) => t.idGrupo === Number(grupoId))
       .map(resolverTarea);
     return tareasDelGrupo;
   },
