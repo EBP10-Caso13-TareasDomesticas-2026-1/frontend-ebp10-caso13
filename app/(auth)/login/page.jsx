@@ -201,9 +201,7 @@ export default function LoginPage() {
               <button
                 type="button"
                 className="text-xs text-secondary hover:text-primary hover:underline transition-colors"
-                onClick={() => {
-                  /* TODO: Future HU for password recovery */
-                }}
+                onClick={() => {router.push("/recuperar_contrasena")}}
               >
                 ¿Olvidaste tu contraseña?
               </button>
