@@ -91,14 +91,6 @@ function UnirseAlGrupoContent() {
 
   const navbarContent = mounted ? (
     <>
-      <Button
-        variant="secondary"
-        disabled
-        onClick={() => router.push("/perfil")}
-        className="hidden sm:inline-flex"
-      >
-        Perfil
-      </Button>
       <Button variant="primary" onClick={() => setShowLogoutModal(true)}>
         Cerrar sesión
       </Button>

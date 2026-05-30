@@ -39,7 +39,7 @@ export function GroupProvider({ children }) {
    */
   const determineUserRole = useCallback(
     (usuarioId, listaMiembros) => {
-      if (!usuarioId || !listaMiembros.length) return null;
+      if (!usuarioId || !Array.isArray(listaMiembros) || listaMiembros.length === 0) return null;
       const yo = listaMiembros.find((m) => m.usuarioId === usuarioId);
       if (!yo) return null;
       
