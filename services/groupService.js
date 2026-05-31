@@ -119,10 +119,11 @@ const mock = {
   },
 
   // HUS-024 — Eliminar miembro del grupo
-  async eliminarMiembro(idMiembroGrupo, _token) {
+  async eliminarMiembro(idGrupo, idMiembroAEliminar, _token, idMiembroGrupo = null) {
     await delay(600);
+    const idAUsar = idMiembroGrupo || idMiembroAEliminar;
     const miembro = miembrosGrupo.find(
-      (m) => m.id === Number(idMiembroGrupo) && m.activo !== false
+      (m) => m.id === Number(idAUsar) && m.activo !== false
     );
     if (!miembro) throw new Error("Miembro no encontrado.");
 
@@ -149,11 +150,13 @@ const mock = {
   // HU-025 — Abandonar grupo
   // Flujo 1: Miembro normal (sin nuevo admin) → solo DELETE
   // Flujo 2: Admin con delegación (con nuevo admin) → PUT (cambiar rol) + DELETE
-  async abandonarGrupo(idMiembroGrupo, idMiembroNuevoAdmin, _token) {
+  async abandonarGrupo(idGrupo, idNuevoAdminUsuario, _token, idMiembroGrupo = null, idMiembroNuevoAdminForMock = null) {
     await delay(600);
+    const idAUsar = idMiembroGrupo || idGrupo; // Para que el mock funcione sin dañar `idGrupo` en la API
     const miembroAbandonar = miembrosGrupo.find(
-      (m) => m.id === Number(idMiembroGrupo) && m.activo !== false
+      (m) => m.id === Number(idAUsar) && m.activo !== false
     );
+
     if (!miembroAbandonar) throw new Error("Miembro no encontrado.");
 
     // Validación común: verificar tareas activas
@@ -190,8 +193,9 @@ const mock = {
       throw new Error("Solo administradores pueden delegar el rol. Usa abandonarGrupo sin nuevo admin para salir.");
     }
 
+    const idNuevoAUsar = idMiembroNuevoAdminForMock || idNuevoAdminUsuario;
     const miembroNuevoAdmin = miembrosGrupo.find(
-      (m) => m.id === Number(idMiembroNuevoAdmin) && m.activo !== false
+      (m) => m.id === Number(idNuevoAUsar) && m.activo !== false
     );
     if (!miembroNuevoAdmin) throw new Error("Nuevo administrador no encontrado.");
     if (miembroNuevoAdmin.grupoId !== miembroAbandonar.grupoId) {
@@ -350,42 +354,32 @@ const api = {
   },
 
   // HUS-024 — Eliminar miembro del grupo
-  async eliminarMiembro(idMiembroGrupo, token) {
+  async eliminarMiembro(idGrupo, idMiembroAEliminar, token, idMiembroGrupo = null) {
     return apiRequest(
-      `/miembros-grupo/${idMiembroGrupo}`,
+      `/grupos/${idGrupo}/miembros/${idMiembroAEliminar}`,
       { method: "DELETE" },
       token
     );
   },
 
   // HU-025 — Abandonar grupo
-  // Flujo 1: Miembro normal (sin nuevo admin) → solo DELETE
-  // Flujo 2: Admin con delegación (con nuevo admin) → PUT + DELETE
-  async abandonarGrupo(idMiembroGrupo, idMiembroNuevoAdmin, token) {
-    // FLUJO 1: Miembro normal abandona sin delegación
-    if (!idMiembroNuevoAdmin) {
-      return apiRequest(
-        `/miembros-grupo/${idMiembroGrupo}`,
-        { method: "DELETE" },
+  // Flujo 1: Miembro normal (sin nuevo admin) → solo POST a /abandonar
+  // Flujo 2: Admin con delegación (con nuevo admin) → PATCH a /transferir-admin + POST a /abandonar
+  async abandonarGrupo(idGrupo, idNuevoAdminUsuario, token, idMiembroGrupo = null) {
+    if (idNuevoAdminUsuario) {
+      await apiRequest(
+        `/grupos/${idGrupo}/transferir-admin`,
+        {
+          method: "PATCH",
+          body: { idNuevoAdmin: Number(idNuevoAdminUsuario) },
+        },
         token
       );
     }
 
-    // FLUJO 2: Admin abandona con delegación
-    // Primero cambiar rol del nuevo admin a 1
-    await apiRequest(
-      `/miembros-grupo/${idMiembroNuevoAdmin}`,
-      {
-        method: "PUT",
-        body: { rolId: 1 },
-      },
-      token
-    );
-
-    // Luego remover el antiguo admin
     return apiRequest(
-      `/miembros-grupo/${idMiembroGrupo}`,
-      { method: "DELETE" },
+      `/grupos/${idGrupo}/abandonar`,
+      { method: "POST" },
       token
     );
   },

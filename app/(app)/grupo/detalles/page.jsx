@@ -22,7 +22,7 @@ function normalizarRanking(rankingData = [], grupoMiembros = []) {
     return {
       ...miembroGrupo,
       ...item,
-      id: miembroGrupo.id || item.id,
+      id: miembroGrupo.id || item.id || usuarioId,
       usuarioId: usuarioId,
       puntaje: item.puntos ?? item.puntaje ?? 0,
       nombre: item.nombre || miembroGrupo.nombre || "Usuario desconocido",
@@ -116,7 +116,10 @@ function GroupDetailsContent() {
     try {
       setLoadingDelete(true);
       setModalError(null);
-      await groupService.eliminarMiembro(selectedMemberId, token);
+      const miembroEliminar = ranking.find((m) => m.id === selectedMemberId);
+      if (!miembroEliminar) throw new Error("Miembro no encontrado");
+
+      await groupService.eliminarMiembro(grupo.id, miembroEliminar.usuarioId, token, miembroEliminar.id);
 
       // Remover de la lista local
       setRanking((prev) => normalizarRanking(prev.filter((m) => m.id !== selectedMemberId), grupo?.miembros || []));
@@ -155,7 +158,15 @@ function GroupDetailsContent() {
       if (!miembroActual) throw new Error("No se encontró tu membresía");
 
       const nuevoAdminId = esAdmin && newAdminSelected ? newAdminSelected : null;
-      await groupService.abandonarGrupo(miembroActual.id, nuevoAdminId, token);
+      const nuevoAdminMiembro = nuevoAdminId ? ranking.find(m => String(m.usuarioId) === String(nuevoAdminId)) : null;
+
+      await groupService.abandonarGrupo(
+        grupo.id, 
+        nuevoAdminId, 
+        token, 
+        miembroActual.id, 
+        nuevoAdminMiembro?.id
+      );
 
       setShowLeaveGroupModal(false);
       setNewAdminSelected(null);
@@ -384,7 +395,7 @@ function GroupDetailsContent() {
         showMemberSelector={esAdmin && ranking.length > 1}
         members={
           esAdmin && ranking.length > 1
-            ? ranking.filter((m) => m.usuarioId !== usuario?.idUsuario)
+            ? ranking.filter((m) => m.usuarioId !== usuario?.idUsuario).map(m => ({ ...m, id: m.usuarioId }))
             : []
         }
         selectedMemberId={newAdminSelected}
