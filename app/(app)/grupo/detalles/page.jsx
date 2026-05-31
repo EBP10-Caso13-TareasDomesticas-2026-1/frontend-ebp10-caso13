@@ -12,8 +12,25 @@ import { useAuth } from "@/hooks/useAuth";
 import { useGroup } from "@/hooks/useGroup";
 import groupService from "@/services/groupService";
 
-function normalizarRanking(rankingData = []) {
-  const lista = [...rankingData].sort((a, b) => {
+function normalizarRanking(rankingData = [], grupoMiembros = []) {
+  const data = Array.isArray(rankingData) ? rankingData : rankingData?.ranking || [];
+
+  const mapData = data.map((item) => {
+    const usuarioId = item.idUsuario || item.usuarioId;
+    const miembroGrupo = grupoMiembros.find((m) => m.usuarioId === usuarioId) || {};
+    
+    return {
+      ...miembroGrupo,
+      ...item,
+      id: miembroGrupo.id || item.id,
+      usuarioId: usuarioId,
+      puntaje: item.puntos ?? item.puntaje ?? 0,
+      nombre: item.nombre || miembroGrupo.nombre || "Usuario desconocido",
+      tareasCompletadas: item.tareasCompletadas ?? 0,
+    };
+  });
+
+  const lista = [...mapData].sort((a, b) => {
     if (b.puntaje !== a.puntaje) return b.puntaje - a.puntaje;
     return (a.nombre || "").localeCompare(b.nombre || "", "es", {
       sensitivity: "base",
@@ -69,7 +86,7 @@ function GroupDetailsContent() {
         setLoading(true);
         setError(null);
         const rankingData = await groupService.obtenerRanking(grupo.id, token);
-        setRanking(normalizarRanking(rankingData));
+        setRanking(normalizarRanking(rankingData, grupo?.miembros || []));
       } catch (err) {
         console.error("Error cargando ranking:", err);
         setError(err.message || "Error al cargar el ranking");
@@ -102,7 +119,7 @@ function GroupDetailsContent() {
       await groupService.eliminarMiembro(selectedMemberId, token);
 
       // Remover de la lista local
-      setRanking((prev) => normalizarRanking(prev.filter((m) => m.id !== selectedMemberId)));
+      setRanking((prev) => normalizarRanking(prev.filter((m) => m.id !== selectedMemberId), grupo?.miembros || []));
       setShowDeleteMemberModal(false);
       setSelectedMemberId(null);
       setSelectedMemberName("");

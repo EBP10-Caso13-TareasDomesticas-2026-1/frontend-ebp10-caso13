@@ -71,8 +71,20 @@ const mock = {
       });
   },
 
-  // HU-008 — Actualizar tarea
+  // HU-008 — Actualizar tarea (estado)
   async actualizarTarea(idTarea, data, _token) {
+    await delay(600);
+    const tarea = tareas.find((t) => t.idTarea === Number(idTarea));
+    if (!tarea) throw new Error("Tarea no encontrada.");
+
+    if (data.estado) tarea.estado = data.estado;
+    if (data.fechaLimite) tarea.fechaLimite = data.fechaLimite;
+
+    return tarea;
+  },
+
+  // Editar tarea (detalles)
+  async editarTarea(idTarea, data, _token) {
     await delay(600);
     const tarea = tareas.find((t) => t.idTarea === Number(idTarea));
     if (!tarea) throw new Error("Tarea no encontrada.");
@@ -80,11 +92,10 @@ const mock = {
     if (data.nombre !== undefined) tarea.nombre = data.nombre;
     if (data.descripcion !== undefined) tarea.descripcion = data.descripcion;
     if (data.prioridad) tarea.prioridad = data.prioridad;
-    if (data.estado) tarea.estado = data.estado;
+    if (data.fechaLimite) tarea.fechaLimite = data.fechaLimite;
     if (data.idUsuarioAsignado !== undefined && data.idUsuarioAsignado !== null) {
       tarea.idUsuarioAsignado = Number(data.idUsuarioAsignado);
     }
-    if (data.fechaLimite) tarea.fechaLimite = data.fechaLimite;
 
     return tarea;
   },
@@ -149,6 +160,22 @@ const api = {
         body: {
           estado: data.estado,
           ...(data.fechaLimite ? { fechaLimite: data.fechaLimite } : {}),
+        },
+      },
+      token
+    );
+  },
+
+  async editarTarea(idTarea, data, token) {
+    return apiRequest(
+      `/tareas/${idTarea}`,
+      {
+        method: "PATCH",
+        body: {
+          nombre: data.nombre,
+          descripcion: data.descripcion,
+          prioridad: data.prioridad,
+          fechaLimite: data.fechaLimite,
         },
       },
       token

@@ -130,8 +130,9 @@ export default function RecuperarContrasenaPage() {
     try {
       await authService.recuperarContrasena({
         correo: form.correo,
-        pin: form.pin,
+        pinSeguridad: form.pin,
         nuevaContrasena: form.nuevaContrasena,
+        confirmarContrasena: form.confirmarContrasena,
       });
 
       limpiarIntentos();

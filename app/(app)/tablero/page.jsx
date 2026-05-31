@@ -52,29 +52,33 @@ function TableroContent() {
         (m) => m.usuarioId === tarea.idUsuarioAsignado
       );
 
-      // Si no encontramos al miembro en la lista pero la tarea ya tiene
-      // `asignadoA`, interpretamos que es un ex-miembro y lo marcamos.
+      let asignadoFormat = tarea.asignadoA || null;
       if (!usuarioAsignado && tarea.asignadoA) {
-        return {
-          ...tarea,
-          asignadoA: {
-            ...tarea.asignadoA,
-            esExMiembro: true,
-          },
+        asignadoFormat = { ...tarea.asignadoA, esExMiembro: true };
+      } else if (usuarioAsignado) {
+        asignadoFormat = {
+          id: usuarioAsignado.usuarioId,
+          nombre: usuarioAsignado.nombre,
+          correo: usuarioAsignado.correo,
+          fotoPerfil: usuarioAsignado.fotoPerfil,
+          esExMiembro: false,
         };
       }
 
+      const estadoNombre = String(tarea.estado || "").toUpperCase().trim();
+      const prioridadNombre = String(tarea.prioridad || "").toUpperCase().trim();
+      const estadoObj = estadosList.find(
+        (e) => String(e.nombre || "").toUpperCase().trim() === estadoNombre
+      );
+      const prioridadObj = prioridadesList.find(
+        (p) => String(p.nombre || "").toUpperCase().trim() === prioridadNombre
+      );
+
       return {
         ...tarea,
-        asignadoA: usuarioAsignado
-          ? {
-              id: usuarioAsignado.usuarioId,
-              nombre: usuarioAsignado.nombre,
-              correo: usuarioAsignado.correo,
-              fotoPerfil: usuarioAsignado.fotoPerfil,
-              esExMiembro: false,
-            }
-          : tarea.asignadoA || null,
+        asignadoA: asignadoFormat,
+        estadoId: estadoObj?.id ?? null,
+        prioridadId: prioridadObj?.id ?? null,
       };
     });
   };
@@ -104,25 +108,12 @@ function TableroContent() {
           grupo.id,
           token
         );
+        console.log('Tareas obtenidas:', tareasData);
         // Enriquecer tareas con miembros y normalizar IDs de estado/prioridad
         const tareasEnriquecidas = enriquecerTareasConMiembros(
           tareasData,
           grupo.miembros || []
-        ).map((t) => {
-          const estadoNombre = String(t.estado || "").toUpperCase().trim();
-          const prioridadNombre = String(t.prioridad || "").toUpperCase().trim();
-          const estadoObj = estadosList.find(
-            (e) => String(e.nombre || "").toUpperCase().trim() === estadoNombre
-          );
-          const prioridadObj = prioridadesList.find(
-            (p) => String(p.nombre || "").toUpperCase().trim() === prioridadNombre
-          );
-          return {
-            ...t,
-            estadoId: estadoObj?.id ?? null,
-            prioridadId: prioridadObj?.id ?? null,
-          };
-        });
+        );
         setTareas(tareasEnriquecidas);
       } catch (err) {
         console.error("Error cargando tareas:", err);
@@ -199,15 +190,20 @@ function TableroContent() {
       setLoadingEstado(true);
       setError(null);
       setTareas((prev) =>
-        prev.map((t) =>
-          t.idTarea === idTarea
-            ? {
+        prev.map((t) => {
+          if (t.idTarea === idTarea) {
+            const estadoObj = estadosList.find(
+              (e) => String(e.nombre || "").toUpperCase().trim() === String(nuevoEstado).toUpperCase().trim()
+            );
+            return {
               ...t,
               estado: nuevoEstado,
+              estadoId: estadoObj?.id ?? null,
               ...(fechaLimite ? { fechaLimite } : {}),
-            }
-            : t
-        )
+            };
+          }
+          return t;
+        })
       );
       await taskService.actualizarTarea(
         idTarea,
@@ -265,7 +261,7 @@ function TableroContent() {
       setLoadingEdicion(true);
       setError(null);
 
-      const tareaActualizada = await taskService.actualizarTarea(
+      const tareaActualizada = await taskService.editarTarea(
         idTarea,
         datosActualizados,
         token
